@@ -276,18 +276,21 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {attentionItems.length === 0 ? (
+              {limitedAttention.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-4">All clear — no items need attention.</p>
               ) : (
                 <div className="space-y-2">
-                  {attentionItems.slice(0, 8).map((item) => (
+                  {limitedAttention.map((item) => (
                     <div key={item.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/50 transition-colors">
                       <div className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{item.label}</p>
                         <p className="text-xs text-muted-foreground">{item.detail}</p>
                       </div>
-                      <Button variant="ghost" size="sm" className="shrink-0 text-xs" onClick={() => navigate(item.route)}>
+                      <Button variant="ghost" size="sm" className="shrink-0 text-xs" onClick={() => {
+                        if (item.onAction) { item.onAction(); return; }
+                        navigate(item.route);
+                      }}>
                         {item.action}
                         <ArrowRight className="h-3 w-3 ml-1" />
                       </Button>
