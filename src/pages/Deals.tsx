@@ -303,9 +303,16 @@ function DealCard({ deal, onClick, onDragStart }: { deal: Deal; onClick: () => v
             </Avatar>
           )}
         </div>
-        {deal.service_type && (
-          <Badge className={cn("text-[10px]", serviceTypeColors[deal.service_type] || "bg-muted")}>{deal.service_type}</Badge>
-        )}
+        <div className="flex items-center gap-1 flex-wrap">
+          {deal.service_type && (
+            <Badge className={cn("text-[10px]", serviceTypeColors[deal.service_type] || "bg-muted")}>{deal.service_type}</Badge>
+          )}
+          {(deal as any).package_size && (deal as any).total_workshops > 0 && (
+            <Badge variant="secondary" className="text-[9px]">
+              {(deal as any).total_workshops} ws · {(deal as any).package_size?.charAt(0).toUpperCase()}{(deal as any).package_size?.slice(1)}
+            </Badge>
+          )}
+        </div>
         <div className="flex items-center justify-between">
           <div>
             <span className="text-sm font-semibold text-primary">£{(deal.value || 0).toLocaleString()}</span>
