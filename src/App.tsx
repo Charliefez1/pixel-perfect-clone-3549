@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
@@ -26,6 +26,7 @@ import Scheduling from "@/pages/Scheduling";
 import PurchaseOrders from "@/pages/PurchaseOrders";
 import RateCards from "@/pages/RateCards";
 import Services from "@/pages/Services";
+import Templates from "@/pages/Templates";
 import Auth from "@/pages/Auth";
 import NotFound from "@/pages/NotFound";
 import { CommandPalette } from "@/components/layout/CommandPalette";
@@ -36,7 +37,7 @@ import { CreateContactDialog } from "@/components/dialogs/CreateContactDialog";
 import { CreateProjectDialog } from "@/components/dialogs/CreateProjectDialog";
 import { CreateSessionDialog } from "@/components/dialogs/CreateSessionDialog";
 import { CreateInvoiceDialog } from "@/components/dialogs/CreateInvoiceDialog";
-import { useState, createContext, useContext, useCallback } from "react";
+import { useState, useEffect, createContext, useContext, useCallback } from "react";
 
 const queryClient = new QueryClient();
 
@@ -82,6 +83,45 @@ function ProtectedRoutes() {
   return <AppLayout />;
 }
 
+function KeyboardShortcuts({ dialogs }: { dialogs: DialogContextType }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Don't trigger in inputs
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) return;
+
+      if (e.key === "d" && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        navigate("/");
+      }
+      if (e.key === "n" && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        // Context-aware new item
+        if (location.pathname === "/deals") dialogs.openCreateDeal();
+        else if (location.pathname === "/tasks") dialogs.openCreateTask();
+        else if (location.pathname === "/clients") dialogs.openCreateClient();
+        else if (location.pathname === "/contacts") dialogs.openCreateContact();
+        else if (location.pathname === "/projects") dialogs.openCreateProject();
+        else if (location.pathname === "/invoices") dialogs.openCreateInvoice();
+        else if (location.pathname === "/meetings") dialogs.openCreateSession();
+        else dialogs.openCreateDeal(); // default
+      }
+      if ((e.key === "f" || e.key === "/") && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        const searchInput = document.querySelector<HTMLInputElement>('[placeholder*="Search"]');
+        searchInput?.focus();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [navigate, location, dialogs]);
+
+  return null;
+}
+
 function AppShell() {
   const [dealOpen, setDealOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(false);
@@ -103,6 +143,7 @@ function AppShell() {
 
   return (
     <DialogContext.Provider value={dialogs}>
+      <KeyboardShortcuts dialogs={dialogs} />
       <CommandPalette
         onCreateDeal={dialogs.openCreateDeal}
         onCreateTask={dialogs.openCreateTask}
@@ -140,6 +181,7 @@ function AppShell() {
           <Route path="/purchase-orders" element={<PurchaseOrders />} />
           <Route path="/rate-cards" element={<RateCards />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/templates" element={<Templates />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

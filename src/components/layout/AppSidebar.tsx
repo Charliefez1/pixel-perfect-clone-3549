@@ -54,6 +54,10 @@ const workspaceNav = [
   { to: "/services", icon: Layers, label: "Services" },
 ];
 
+const settingsNav = [
+  { to: "/templates", icon: Layers, label: "Templates" },
+];
+
 function NavItem({ item, collapsed }: { item: typeof mainNav[0]; collapsed: boolean }) {
   return (
     <NavLink
