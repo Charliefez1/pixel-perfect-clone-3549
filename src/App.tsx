@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import Pipeline from "@/pages/Pipeline";
 import Contacts from "@/pages/Contacts";
+import Organisations from "@/pages/Organisations";
 import Projects from "@/pages/Projects";
 import Tasks from "@/pages/Tasks";
 import Invoices from "@/pages/Invoices";
