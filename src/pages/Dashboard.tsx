@@ -132,26 +132,32 @@ export default function Dashboard() {
   });
   upcomingItems.sort((a, b) => a.date.getTime() - b.date.getTime());
 
-  // Needs attention items
-  const attentionItems: Array<{ id: string; label: string; detail: string; action: string; route: string }> = [];
+  // Deliveries needing feedback (delivered 2+ days ago, feedback not sent)
+  const feedbackNeeded = deliveries?.filter((d) => 
+    d.status === "delivered" && !d.feedback_sent && d.delivery_date && 
+    differenceInDays(new Date(), new Date(d.delivery_date)) >= 2
+  ) || [];
+
+  // Needs attention items — sorted by urgency, max 5
+  const attentionItems: Array<{ id: string; label: string; detail: string; action: string; route: string; onAction?: () => void }> = [];
   staleDeals.forEach((d) => {
     attentionItems.push({
       id: `stale-${d.id}`,
       label: d.title,
       detail: `${d.organisations?.name || "Unknown"} · ${differenceInDays(new Date(), new Date(d.stage_entered_at))}d stale`,
-      action: "Follow up",
-      route: "/deals",
+      action: "View Deal",
+      route: `/deals?open=${d.id}`,
     });
   });
-  if (overdueInvoices.length > 0) {
+  overdueInvoices.forEach((inv) => {
     attentionItems.push({
-      id: "overdue-invoices",
-      label: `${overdueInvoices.length} overdue invoice${overdueInvoices.length > 1 ? "s" : ""}`,
-      detail: `£${overdueAmount.toLocaleString()} outstanding`,
-      action: "View",
+      id: `inv-${inv.id}`,
+      label: `Invoice ${inv.invoice_number}`,
+      detail: `${(inv as any).organisations?.name || "Unknown"} · £${(inv.total || 0).toLocaleString()} · ${inv.due_date ? differenceInDays(new Date(), new Date(inv.due_date)) + "d overdue" : "overdue"}`,
+      action: "View Invoice",
       route: "/invoices",
     });
-  }
+  });
   overdueTasks.slice(0, 3).forEach((t) => {
     attentionItems.push({
       id: `task-${t.id}`,
@@ -161,6 +167,22 @@ export default function Dashboard() {
       route: "/tasks",
     });
   });
+  feedbackNeeded.slice(0, 2).forEach((d) => {
+    attentionItems.push({
+      id: `feedback-${d.id}`,
+      label: d.title,
+      detail: `${d.organisations?.name || "Unknown"} · Feedback not sent`,
+      action: "Send Feedback",
+      route: "/deliveries",
+      onAction: async () => {
+        await supabase.from("deliveries").update({ feedback_sent: true }).eq("id", d.id);
+        queryClient.invalidateQueries({ queryKey: ["deliveries"] });
+        toast.success("Feedback form queued");
+      },
+    });
+  });
+  // Sort and limit to 5
+  const limitedAttention = attentionItems.slice(0, 5);
 
   const statCards = [
     {
