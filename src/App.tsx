@@ -127,6 +127,7 @@ function AppShell() {
           <Route path="/meetings" element={<Meetings />} />
           <Route path="/proposals" element={<Proposals />} />
           <Route path="/contracts" element={<Contracts />} />
+          <Route path="/deliveries" element={<Deliveries />} />
           <Route path="/forms" element={<Forms />} />
           <Route path="/client-portal" element={<ClientPortal />} />
           <Route path="/projects" element={<Projects />} />

@@ -36,6 +36,7 @@ const mainNav = [
 
 const workspaceNav = [
   { to: "/deals", icon: Briefcase, label: "Deals" },
+  { to: "/deliveries", icon: FolderKanban, label: "Deliveries" },
   { to: "/meetings", icon: CalendarDays, label: "Sessions" },
   { to: "/proposals", icon: FileText, label: "Proposals" },
   { to: "/contracts", icon: FileSignature, label: "Contracts" },
