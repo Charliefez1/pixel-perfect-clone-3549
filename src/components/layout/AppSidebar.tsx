@@ -54,6 +54,10 @@ const workspaceNav = [
   { to: "/services", icon: Layers, label: "Services" },
 ];
 
+const settingsNav = [
+  { to: "/templates", icon: Layers, label: "Templates" },
+];
+
 function NavItem({ item, collapsed }: { item: typeof mainNav[0]; collapsed: boolean }) {
   return (
     <NavLink
@@ -121,6 +125,17 @@ export function AppSidebar() {
         )}
         {collapsed && <div className="h-4" />}
         {workspaceNav.map((item) => (
+          <NavItem key={item.to} item={item} collapsed={collapsed} />
+        ))}
+
+        {/* Settings Section */}
+        {!collapsed && (
+          <p className="px-3 pt-6 pb-2 text-overline text-sidebar-foreground/40">
+            Settings
+          </p>
+        )}
+        {collapsed && <div className="h-4" />}
+        {settingsNav.map((item) => (
           <NavItem key={item.to} item={item} collapsed={collapsed} />
         ))}
       </nav>
