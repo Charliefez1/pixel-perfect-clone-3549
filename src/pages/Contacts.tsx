@@ -5,9 +5,17 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Mail } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useContacts, Contact } from "@/hooks/useContacts";
+import { useUpdateContact } from "@/hooks/useUpdateContact";
+import { useDeals } from "@/hooks/useDeals";
+import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DetailPanel } from "@/components/layout/DetailPanel";
 import { useDialogs } from "@/App";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 
 export default function Contacts() {
   const { data: contacts, isLoading } = useContacts();
@@ -21,15 +29,9 @@ export default function Contacts() {
         <Card className="border-0 rounded-none shadow-none">
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="p-6 space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
+              <div className="p-6 space-y-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
             ) : !contacts?.length ? (
-              <div className="p-12 text-center text-muted-foreground">
-                <p>No contacts yet. Add your first contact to get started.</p>
-              </div>
+              <div className="p-12 text-center text-muted-foreground"><p>No contacts yet. Add your first contact to get started.</p></div>
             ) : (
               <Table>
                 <TableHeader>
@@ -48,9 +50,7 @@ export default function Contacts() {
                       <TableCell className="pl-6">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-7 w-7">
-                            <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-                              {c.first_name[0]}{c.last_name[0]}
-                            </AvatarFallback>
+                            <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{c.first_name[0]}{c.last_name[0]}</AvatarFallback>
                           </Avatar>
                           <span className="font-medium text-sm">{c.first_name} {c.last_name}</span>
                         </div>
@@ -61,16 +61,12 @@ export default function Contacts() {
                             {c.email}
                             <Mail className="h-3.5 w-3.5 text-primary/50 hover:text-primary cursor-pointer" />
                           </div>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
+                        ) : <span className="text-muted-foreground">—</span>}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{c.job_title || "—"}</TableCell>
                       <TableCell className="text-sm">{c.organisations?.name || "—"}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{c.phone || "—"}</TableCell>
-                      <TableCell>
-                        <button className="text-muted-foreground hover:text-foreground">⋯</button>
-                      </TableCell>
+                      <TableCell><button className="text-muted-foreground hover:text-foreground">⋯</button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -80,20 +76,107 @@ export default function Contacts() {
         </Card>
       </div>
 
-      {selected && (
-        <DetailPanel
-          open={!!selected}
-          onOpenChange={() => setSelected(null)}
-          title={`${selected.first_name} ${selected.last_name}`}
-          fields={[
-            { label: "Email", value: selected.email },
-            { label: "Phone", value: selected.phone },
-            { label: "Job Title", value: selected.job_title },
-            { label: "Organisation", value: selected.organisations?.name },
-            { label: "Notes", value: selected.notes },
-          ]}
-        />
-      )}
+      {selected && <ContactDetailPanel contact={selected} onClose={() => setSelected(null)} />}
     </>
+  );
+}
+
+function ContactDetailPanel({ contact, onClose }: { contact: Contact; onClose: () => void }) {
+  const { data: deals } = useDeals();
+  const updateContact = useUpdateContact();
+  const [editing, setEditing] = useState(false);
+  const [editValues, setEditValues] = useState({
+    first_name: contact.first_name,
+    last_name: contact.last_name,
+    email: contact.email || "",
+    phone: contact.phone || "",
+    job_title: contact.job_title || "",
+    notes: contact.notes || "",
+  });
+
+  const linkedDeals = deals?.filter((d) => d.contact_id === contact.id) || [];
+
+  const handleSave = () => {
+    updateContact.mutate(
+      { id: contact.id, ...editValues },
+      { onSuccess: () => { toast.success("Contact updated"); setEditing(false); } }
+    );
+  };
+
+  return (
+    <DetailPanel
+      open={!!contact}
+      onOpenChange={onClose}
+      title={`${contact.first_name} ${contact.last_name}`}
+      fields={editing ? [] : [
+        { label: "Email", value: contact.email },
+        { label: "Phone", value: contact.phone },
+        { label: "Job Title", value: contact.job_title },
+        { label: "Organisation", value: contact.organisations?.name },
+        { label: "Notes", value: contact.notes },
+      ]}
+    >
+      {editing ? (
+        <div className="space-y-3 mb-4">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">First Name</label>
+              <Input value={editValues.first_name} onChange={(e) => setEditValues({ ...editValues, first_name: e.target.value })} className="h-9" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Last Name</label>
+              <Input value={editValues.last_name} onChange={(e) => setEditValues({ ...editValues, last_name: e.target.value })} className="h-9" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Email</label>
+              <Input value={editValues.email} onChange={(e) => setEditValues({ ...editValues, email: e.target.value })} className="h-9" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Phone</label>
+              <Input value={editValues.phone} onChange={(e) => setEditValues({ ...editValues, phone: e.target.value })} className="h-9" />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Job Title</label>
+            <Input value={editValues.job_title} onChange={(e) => setEditValues({ ...editValues, job_title: e.target.value })} className="h-9" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Notes</label>
+            <Textarea value={editValues.notes} onChange={(e) => setEditValues({ ...editValues, notes: e.target.value })} rows={2} />
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleSave}>Save</Button>
+            <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+          </div>
+        </div>
+      ) : (
+        <Button variant="outline" size="sm" className="mb-4" onClick={() => setEditing(true)}>Edit Contact</Button>
+      )}
+
+      <Tabs defaultValue="deals" className="w-full">
+        <TabsList className="w-full">
+          <TabsTrigger value="deals" className="flex-1">Linked Deals ({linkedDeals.length})</TabsTrigger>
+        </TabsList>
+        <TabsContent value="deals" className="pt-4">
+          {!linkedDeals.length ? (
+            <p className="text-sm text-muted-foreground">No deals linked to this contact.</p>
+          ) : (
+            <div className="space-y-2">
+              {linkedDeals.map((d) => (
+                <div key={d.id} className="flex items-center gap-3 p-2 rounded-md border">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">{d.title}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{d.stage} · {d.organisations?.name || "—"}</p>
+                  </div>
+                  <span className="text-sm font-semibold text-primary">£{(d.value || 0).toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </DetailPanel>
   );
 }

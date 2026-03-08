@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,13 +6,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useTasks, Task } from "@/hooks/useTasks";
+import { useTasks, Task, useUpdateTask } from "@/hooks/useTasks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ViewToggle, ViewMode } from "@/components/layout/ViewToggle";
 import { DetailPanel } from "@/components/layout/DetailPanel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useDialogs } from "@/App";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const columns = [
   { id: "todo", label: "To Do" },
@@ -30,9 +32,35 @@ const priorityStyles: Record<string, string> = {
 
 export default function Tasks() {
   const { data: tasks, isLoading } = useTasks();
+  const updateTask = useUpdateTask();
   const [view, setView] = useState<ViewMode>("board");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const { openCreateTask } = useDialogs();
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+
+  const handleDragStart = useCallback((e: React.DragEvent, id: string) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", id);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, statusId: string) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData("text/plain");
+    if (!id) return;
+    const task = tasks?.find((t) => t.id === id);
+    if (!task || task.status === statusId) { setDraggedId(null); return; }
+    updateTask.mutate(
+      { id, status: statusId as any },
+      { onSuccess: () => toast.success(`Moved "${task.title}" to ${columns.find(c => c.id === statusId)?.label}`) }
+    );
+    setDraggedId(null);
+  }, [tasks, updateTask]);
 
   return (
     <>
@@ -55,33 +83,38 @@ export default function Tasks() {
             {columns.map((col) => {
               const colTasks = tasks?.filter((t) => t.status === col.id) || [];
               return (
-                <div key={col.id} className="flex-shrink-0 w-72 flex flex-col">
+                <div
+                  key={col.id}
+                  className={cn("flex-shrink-0 w-72 flex flex-col rounded-lg transition-colors", draggedId ? "bg-accent/30" : "")}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, col.id)}
+                >
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-sm font-semibold">{col.label}</span>
                     <Badge variant="secondary" className="text-[10px]">{colTasks.length}</Badge>
                   </div>
                   <div className="space-y-2 flex-1">
                     {colTasks.map((task) => (
-                      <Card key={task.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedTask(task)}>
+                      <Card
+                        key={task.id}
+                        className="cursor-grab hover:shadow-md transition-shadow active:cursor-grabbing"
+                        onClick={() => setSelectedTask(task)}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, task.id)}
+                      >
                         <CardContent className="p-3 space-y-2">
                           <div className="flex items-start justify-between gap-2">
                             <p className="text-sm font-medium leading-tight">{task.title}</p>
-                            <Badge className={`${priorityStyles[task.priority]} text-[10px] px-1.5 py-0.5 shrink-0`}>
-                              {task.priority}
-                            </Badge>
+                            <Badge className={`${priorityStyles[task.priority]} text-[10px] px-1.5 py-0.5 shrink-0`}>{task.priority}</Badge>
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            {task.projects?.name || "No project"}
-                          </p>
+                          <p className="text-xs text-muted-foreground">{task.projects?.name || "No project"}</p>
                           <div className="flex items-center justify-between">
                             <span className="flex items-center gap-1 text-xs text-muted-foreground">
                               <Calendar className="h-3 w-3" />
-                              {task.due_date ? format(new Date(task.due_date), "MMM d") : "No due date"}
+                              {task.due_date ? format(new Date(task.due_date), "dd/MM") : "No due date"}
                             </span>
                             <Avatar className="h-6 w-6">
-                              <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-                                {task.assignee_id ? "A" : "?"}
-                              </AvatarFallback>
+                              <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{task.assignee_id ? "A" : "?"}</AvatarFallback>
                             </Avatar>
                           </div>
                         </CardContent>
@@ -108,7 +141,7 @@ export default function Tasks() {
                   <Badge className={`${priorityStyles[task.priority]} text-[10px]`}>{task.priority}</Badge>
                   <Badge variant="secondary">{columns.find(c => c.id === task.status)?.label}</Badge>
                   <span className="text-xs text-muted-foreground w-20 text-right">
-                    {task.due_date ? format(new Date(task.due_date), "MMM d") : "—"}
+                    {task.due_date ? format(new Date(task.due_date), "dd/MM/yyyy") : "—"}
                   </span>
                 </CardContent>
               </Card>
@@ -133,9 +166,7 @@ export default function Tasks() {
                     <TableCell className="text-muted-foreground">{task.projects?.name || "—"}</TableCell>
                     <TableCell><Badge variant="secondary">{columns.find(c => c.id === task.status)?.label}</Badge></TableCell>
                     <TableCell><Badge className={`${priorityStyles[task.priority]} text-[10px]`}>{task.priority}</Badge></TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {task.due_date ? format(new Date(task.due_date), "MMM d, yyyy") : "—"}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{task.due_date ? format(new Date(task.due_date), "dd/MM/yyyy") : "—"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -153,7 +184,7 @@ export default function Tasks() {
           fields={[
             { label: "Status", value: columns.find(c => c.id === selectedTask.status)?.label },
             { label: "Project", value: selectedTask.projects?.name },
-            { label: "Due Date", value: selectedTask.due_date ? format(new Date(selectedTask.due_date), "MMM d, yyyy") : undefined },
+            { label: "Due Date", value: selectedTask.due_date ? format(new Date(selectedTask.due_date), "dd/MM/yyyy") : undefined },
             { label: "Description", value: selectedTask.description },
           ]}
         />
