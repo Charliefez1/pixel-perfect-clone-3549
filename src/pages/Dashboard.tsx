@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { TrendingUp, Briefcase, FolderKanban, CheckSquare, Receipt, Calendar, AlertTriangle, PieChart, ArrowRight, Clock, Mail, Loader2 } from "lucide-react";
+import { TrendingUp, Briefcase, FolderKanban, CheckSquare, Receipt, Calendar, AlertTriangle, PieChart, ArrowRight, Clock, Mail, Loader2, Plus } from "lucide-react";
+import { useDialogs } from "@/App";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart as RPieChart, Pie } from "recharts";
 import { useDashboardStats, usePipelineByStage } from "@/hooks/useDashboardStats";
 import { useUpcomingSessions } from "@/hooks/useSessions";
@@ -38,6 +39,7 @@ const sectorColors: Record<string, string> = {
 
 export default function Dashboard() {
   const [syncing, setSyncing] = useState(false);
+  const { openCreateDeal, openCreateContact, openCreateInvoice } = useDialogs();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: pipelineData, isLoading: pipelineLoading } = usePipelineByStage();
   const { data: sessions, isLoading: sessionsLoading } = useUpcomingSessions();
@@ -228,6 +230,13 @@ export default function Dashboard() {
         </Button>
       </div>
       <div className="flex-1 overflow-auto p-6 space-y-6">
+        {/* Quick Actions */}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => openCreateDeal()}><Plus className="h-4 w-4" />Deal</Button>
+          <Button variant="outline" size="sm" onClick={() => openCreateContact()}><Plus className="h-4 w-4" />Contact</Button>
+          <Button variant="outline" size="sm" onClick={() => openCreateInvoice()}><Plus className="h-4 w-4" />Invoice</Button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/deliveries")}><Plus className="h-4 w-4" />Delivery</Button>
+        </div>
         {/* Overdue alert banner */}
         {(overdueTasks.length > 0 || overdueInvoices.length > 0) && (
           <Card className="border-destructive/30 bg-destructive/5">
