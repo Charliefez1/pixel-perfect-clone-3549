@@ -111,6 +111,35 @@ export type Database = {
         }
         Relationships: []
       }
+      client_portal_access: {
+        Row: {
+          created_at: string
+          id: string
+          organisation_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organisation_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organisation_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_portal_access_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           author_id: string
@@ -234,6 +263,7 @@ export type Database = {
           id: string
           notes: string | null
           organisation_id: string | null
+          proposal_id: string | null
           signed_at: string | null
           start_date: string | null
           status: string
@@ -249,6 +279,7 @@ export type Database = {
           id?: string
           notes?: string | null
           organisation_id?: string | null
+          proposal_id?: string | null
           signed_at?: string | null
           start_date?: string | null
           status?: string
@@ -264,6 +295,7 @@ export type Database = {
           id?: string
           notes?: string | null
           organisation_id?: string | null
+          proposal_id?: string | null
           signed_at?: string | null
           start_date?: string | null
           status?: string
@@ -284,6 +316,13 @@ export type Database = {
             columns: ["organisation_id"]
             isOneToOne: false
             referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
             referencedColumns: ["id"]
           },
         ]
@@ -594,6 +633,7 @@ export type Database = {
       }
       invoices: {
         Row: {
+          contract_id: string | null
           created_at: string
           created_by: string | null
           deal_id: string | null
@@ -617,6 +657,7 @@ export type Database = {
           viewed_at: string | null
         }
         Insert: {
+          contract_id?: string | null
           created_at?: string
           created_by?: string | null
           deal_id?: string | null
@@ -640,6 +681,7 @@ export type Database = {
           viewed_at?: string | null
         }
         Update: {
+          contract_id?: string | null
           created_at?: string
           created_by?: string | null
           deal_id?: string | null
@@ -663,6 +705,13 @@ export type Database = {
           viewed_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "invoices_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invoices_deal_id_fkey"
             columns: ["deal_id"]
@@ -1271,6 +1320,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_org: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

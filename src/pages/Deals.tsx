@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +59,20 @@ export default function Deals() {
   const updateDeal = useUpdateDeal();
   const logActivity = useLogActivity();
   const [draggedDealId, setDraggedDealId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Deep-link: auto-open deal from ?open=DEAL_ID
+  useEffect(() => {
+    const openId = searchParams.get("open");
+    if (openId && deals) {
+      const deal = deals.find((d) => d.id === openId);
+      if (deal) {
+        setSelectedDeal(deal);
+        searchParams.delete("open");
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+  }, [deals, searchParams, setSearchParams]);
 
   const totalPipeline = deals?.filter((d) => !["won", "lost"].includes(d.stage)).reduce((sum, d) => sum + (d.value || 0), 0) || 0;
   const weightedPipeline = deals?.filter((d) => !["won", "lost"].includes(d.stage)).reduce((sum, d) => sum + ((d.value || 0) * (d.probability || 0) / 100), 0) || 0;

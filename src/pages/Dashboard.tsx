@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { TrendingUp, Briefcase, FolderKanban, CheckSquare, Receipt, Calendar, AlertTriangle, PieChart, ArrowRight, Clock } from "lucide-react";
+import { TrendingUp, Briefcase, FolderKanban, CheckSquare, Receipt, Calendar, AlertTriangle, PieChart, ArrowRight, Clock, Mail, Loader2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart as RPieChart, Pie } from "recharts";
 import { useDashboardStats, usePipelineByStage } from "@/hooks/useDashboardStats";
 import { useUpcomingSessions } from "@/hooks/useSessions";
@@ -9,10 +10,14 @@ import { useTasks } from "@/hooks/useTasks";
 import { useProjects } from "@/hooks/useProjects";
 import { useDeals } from "@/hooks/useDeals";
 import { useInvoices } from "@/hooks/useInvoices";
+import { useDeliveries } from "@/hooks/useDeliveries";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { format, parseISO, isPast, differenceInDays, isThisWeek } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const neuroColors = [
   { name: "Needs", color: "hsl(210, 100%, 61%)" },
@@ -32,6 +37,7 @@ const sectorColors: Record<string, string> = {
 };
 
 export default function Dashboard() {
+  const [syncing, setSyncing] = useState(false);
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: pipelineData, isLoading: pipelineLoading } = usePipelineByStage();
   const { data: sessions, isLoading: sessionsLoading } = useUpcomingSessions();
@@ -39,7 +45,23 @@ export default function Dashboard() {
   const { data: projects } = useProjects();
   const { data: deals } = useDeals();
   const { data: invoices } = useInvoices();
+  const { data: deliveries } = useDeliveries();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const handleSyncGmail = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-gmail");
+      if (error) throw error;
+      toast.success(`Synced ${data.synced} emails, skipped ${data.skipped}`);
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+    } catch (e: any) {
+      toast.error(e.message || "Gmail sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   // NEURO phase distribution
   const neuroData = neuroColors.map((n) => ({
@@ -110,26 +132,32 @@ export default function Dashboard() {
   });
   upcomingItems.sort((a, b) => a.date.getTime() - b.date.getTime());
 
-  // Needs attention items
-  const attentionItems: Array<{ id: string; label: string; detail: string; action: string; route: string }> = [];
+  // Deliveries needing feedback (delivered 2+ days ago, feedback not sent)
+  const feedbackNeeded = deliveries?.filter((d) => 
+    d.status === "delivered" && !d.feedback_sent && d.delivery_date && 
+    differenceInDays(new Date(), new Date(d.delivery_date)) >= 2
+  ) || [];
+
+  // Needs attention items — sorted by urgency, max 5
+  const attentionItems: Array<{ id: string; label: string; detail: string; action: string; route: string; onAction?: () => void }> = [];
   staleDeals.forEach((d) => {
     attentionItems.push({
       id: `stale-${d.id}`,
       label: d.title,
       detail: `${d.organisations?.name || "Unknown"} · ${differenceInDays(new Date(), new Date(d.stage_entered_at))}d stale`,
-      action: "Follow up",
-      route: "/deals",
+      action: "View Deal",
+      route: `/deals?open=${d.id}`,
     });
   });
-  if (overdueInvoices.length > 0) {
+  overdueInvoices.forEach((inv) => {
     attentionItems.push({
-      id: "overdue-invoices",
-      label: `${overdueInvoices.length} overdue invoice${overdueInvoices.length > 1 ? "s" : ""}`,
-      detail: `£${overdueAmount.toLocaleString()} outstanding`,
-      action: "View",
+      id: `inv-${inv.id}`,
+      label: `Invoice ${inv.invoice_number}`,
+      detail: `${(inv as any).organisations?.name || "Unknown"} · £${(inv.total || 0).toLocaleString()} · ${inv.due_date ? differenceInDays(new Date(), new Date(inv.due_date)) + "d overdue" : "overdue"}`,
+      action: "View Invoice",
       route: "/invoices",
     });
-  }
+  });
   overdueTasks.slice(0, 3).forEach((t) => {
     attentionItems.push({
       id: `task-${t.id}`,
@@ -139,6 +167,22 @@ export default function Dashboard() {
       route: "/tasks",
     });
   });
+  feedbackNeeded.slice(0, 2).forEach((d) => {
+    attentionItems.push({
+      id: `feedback-${d.id}`,
+      label: d.title,
+      detail: `${d.organisations?.name || "Unknown"} · Feedback not sent`,
+      action: "Send Feedback",
+      route: "/deliveries",
+      onAction: async () => {
+        await supabase.from("deliveries").update({ feedback_sent: true }).eq("id", d.id);
+        queryClient.invalidateQueries({ queryKey: ["deliveries"] });
+        toast.success("Feedback form queued");
+      },
+    });
+  });
+  // Sort and limit to 5
+  const limitedAttention = attentionItems.slice(0, 5);
 
   const statCards = [
     {
@@ -173,9 +217,15 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="border-b border-border bg-card px-6 py-4 sticky top-0 z-10">
-        <h1 className="text-xl font-bold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Welcome back to NDG Hub</p>
+      <div className="border-b border-border bg-card px-6 py-4 sticky top-0 z-10 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold">Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">Welcome back to NDG Hub</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleSyncGmail} disabled={syncing}>
+          {syncing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
+          Sync Gmail
+        </Button>
       </div>
       <div className="flex-1 overflow-auto p-6 space-y-6">
         {/* Overdue alert banner */}
@@ -226,18 +276,21 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {attentionItems.length === 0 ? (
+              {limitedAttention.length === 0 ? (
                 <p className="text-sm text-muted-foreground py-4">All clear — no items need attention.</p>
               ) : (
                 <div className="space-y-2">
-                  {attentionItems.slice(0, 8).map((item) => (
+                  {limitedAttention.map((item) => (
                     <div key={item.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/50 transition-colors">
                       <div className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{item.label}</p>
                         <p className="text-xs text-muted-foreground">{item.detail}</p>
                       </div>
-                      <Button variant="ghost" size="sm" className="shrink-0 text-xs" onClick={() => navigate(item.route)}>
+                      <Button variant="ghost" size="sm" className="shrink-0 text-xs" onClick={() => {
+                        if (item.onAction) { item.onAction(); return; }
+                        navigate(item.route);
+                      }}>
                         {item.action}
                         <ArrowRight className="h-3 w-3 ml-1" />
                       </Button>
