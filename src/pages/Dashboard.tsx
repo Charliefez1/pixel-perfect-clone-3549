@@ -37,6 +37,7 @@ const sectorColors: Record<string, string> = {
 };
 
 export default function Dashboard() {
+  const [syncing, setSyncing] = useState(false);
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: pipelineData, isLoading: pipelineLoading } = usePipelineByStage();
   const { data: sessions, isLoading: sessionsLoading } = useUpcomingSessions();
@@ -44,7 +45,23 @@ export default function Dashboard() {
   const { data: projects } = useProjects();
   const { data: deals } = useDeals();
   const { data: invoices } = useInvoices();
+  const { data: deliveries } = useDeliveries();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const handleSyncGmail = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-gmail");
+      if (error) throw error;
+      toast.success(`Synced ${data.synced} emails, skipped ${data.skipped}`);
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+    } catch (e: any) {
+      toast.error(e.message || "Gmail sync failed");
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   // NEURO phase distribution
   const neuroData = neuroColors.map((n) => ({
