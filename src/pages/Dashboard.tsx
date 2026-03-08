@@ -217,9 +217,15 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="border-b border-border bg-card px-6 py-4 sticky top-0 z-10">
-        <h1 className="text-xl font-bold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Welcome back to NDG Hub</p>
+      <div className="border-b border-border bg-card px-6 py-4 sticky top-0 z-10 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold">Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">Welcome back to NDG Hub</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleSyncGmail} disabled={syncing}>
+          {syncing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
+          Sync Gmail
+        </Button>
       </div>
       <div className="flex-1 overflow-auto p-6 space-y-6">
         {/* Overdue alert banner */}
