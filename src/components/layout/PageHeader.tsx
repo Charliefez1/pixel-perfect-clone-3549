@@ -22,23 +22,23 @@ export function PageHeader({
   children,
 }: PageHeaderProps) {
   return (
-    <div className="border-b border-border bg-card px-6 py-4 space-y-4 sticky top-0 z-10">
-      <h1 className="text-xl font-bold">{title}</h1>
+    <div className="border-b border-border bg-background-elevated px-6 py-5 space-y-4 sticky top-0 z-10">
+      <h1 className="text-page-title">{title}</h1>
       <div className="flex items-center gap-3">
         {/* Search */}
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-subtle" strokeWidth={2} />
           <Input
             placeholder={searchPlaceholder}
-            className="pl-9 h-9 bg-background"
+            className="pl-9 h-10 bg-background rounded-lg"
             onChange={(e) => onSearch?.(e.target.value)}
           />
         </div>
 
         {/* Filter */}
         {showFilter && (
-          <Button variant="outline" size="sm" className="gap-2">
-            <SlidersHorizontal className="h-3.5 w-3.5" />
+          <Button variant="outline" size="sm" className="gap-2 rounded-lg">
+            <SlidersHorizontal className="h-4 w-4" strokeWidth={2} />
             Filter
           </Button>
         )}
@@ -47,11 +47,11 @@ export function PageHeader({
 
         {/* Spacer + Actions */}
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-9 w-9">
-            <MoreHorizontal className="h-4 w-4" />
+          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-lg">
+            <MoreHorizontal className="h-4 w-4" strokeWidth={2} />
           </Button>
           {actionLabel && (
-            <Button size="sm" onClick={onAction}>
+            <Button size="sm" onClick={onAction} className="rounded-lg">
               {actionLabel}
             </Button>
           )}

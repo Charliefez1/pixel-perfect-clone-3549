@@ -1,116 +1,163 @@
+@import "@fontsource/plus-jakarta-sans/400.css";
+@import "@fontsource/plus-jakarta-sans/500.css";
+@import "@fontsource/plus-jakarta-sans/600.css";
+@import "@fontsource/plus-jakarta-sans/700.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* NDG Hub Design System
-   Brand: Archivo Black headings, Inter body
-   Primary accent: #48BA59 (NDG Green) → HSL 129 44% 50.6%
+/* NDG Hub Design System - Sera Blue Theme
+   Primary Font: Plus Jakarta Sans
+   Primary Accent: #3895FF (Sera Blue) → HSL 210 100% 61%
    All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 220 20% 10%;
+    /* Core palette */
+    --background: 0 0% 98%;
+    --background-elevated: 0 0% 100%;
+    --background-subtle: 0 0% 96%;
+    --foreground: 0 0% 9%;
+    --foreground-muted: 0 0% 45%;
+    --foreground-subtle: 0 0% 64%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
+    --card-foreground: 0 0% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
+    --popover-foreground: 0 0% 9%;
 
-    --primary: 129 44% 50.6%;
+    --primary: 210 100% 61%;
+    --primary-hover: 210 100% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 220 20% 10%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
 
-    --muted: 210 15% 94%;
-    --muted-foreground: 215 14% 46%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 129 44% 50.6%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 20% 90%;
-    --input: 214 20% 90%;
-    --ring: 129 44% 50.6%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
 
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 9%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 210 100% 61%;
+
+    /* Radius scale */
     --radius: 0.5rem;
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
 
-    --sidebar-background: 220 20% 10%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 129 44% 50.6%;
+    /* Shadow scale */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-lg: 0 12px 32px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
+
+    /* Motion */
+    --duration-fast: 100ms;
+    --duration-normal: 200ms;
+    --duration-slow: 300ms;
+
+    /* Sidebar - dark variant */
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 210 100% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 18% 15%;
-    --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 220 15% 18%;
-    --sidebar-ring: 129 44% 50.6%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 210 100% 65%;
 
-    /* NDG-specific tokens */
-    --ndg-green: 129 44% 50.6%;
-    --ndg-green-light: 129 44% 60%;
-    --ndg-green-dark: 129 44% 40%;
-    --ndg-sidebar: 220 20% 10%;
+    /* Cognitive state colors */
+    --state-clear: 142 71% 45%;
+    --state-stretched: 38 92% 50%;
+    --state-overloaded: 25 95% 53%;
+    --state-critical: 0 84% 60%;
 
     /* Pipeline stage colors */
     --stage-lead: 210 60% 55%;
     --stage-qualified: 190 60% 50%;
     --stage-proposal: 45 90% 55%;
     --stage-negotiation: 30 90% 55%;
-    --stage-verbal: 129 44% 50.6%;
-    --stage-won: 129 60% 40%;
+    --stage-verbal: 142 71% 45%;
+    --stage-won: 142 60% 40%;
     --stage-lost: 0 60% 50%;
 
     /* Priority colors */
-    --priority-critical: 0 72% 51%;
+    --priority-critical: 0 84% 60%;
     --priority-high: 25 95% 53%;
-    --priority-medium: 45 93% 47%;
-    --priority-low: 215 14% 65%;
-
-    /* Shadows */
-    --shadow-card: 0 1px 3px 0 hsl(220 20% 10% / 0.06);
+    --priority-medium: 38 92% 50%;
+    --priority-low: 0 0% 64%;
   }
 
   .dark {
-    --background: 220 20% 7%;
-    --foreground: 210 20% 95%;
+    --background: 0 0% 7%;
+    --background-elevated: 0 0% 10%;
+    --background-subtle: 0 0% 12%;
+    --foreground: 0 0% 95%;
+    --foreground-muted: 0 0% 55%;
+    --foreground-subtle: 0 0% 45%;
 
-    --card: 220 18% 12%;
-    --card-foreground: 210 20% 95%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 220 18% 12%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 129 44% 50.6%;
+    --primary: 210 100% 65%;
+    --primary-hover: 210 100% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 15% 18%;
-    --secondary-foreground: 210 20% 95%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 220 15% 18%;
-    --muted-foreground: 215 14% 55%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 55%;
 
-    --accent: 220 15% 18%;
-    --accent-foreground: 210 20% 95%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 95%;
 
     --destructive: 0 62% 30%;
-    --destructive-foreground: 210 20% 95%;
+    --destructive-foreground: 0 0% 95%;
 
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 129 44% 50.6%;
+    --success: 142 71% 40%;
+    --success-foreground: 0 0% 100%;
 
-    --sidebar-background: 220 22% 6%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 129 44% 50.6%;
+    --warning: 38 92% 45%;
+    --warning-foreground: 0 0% 9%;
+
+    --info: 199 89% 45%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 210 100% 65%;
+
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 210 100% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 18% 12%;
-    --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 220 15% 14%;
-    --sidebar-ring: 129 44% 50.6%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 14%;
+    --sidebar-ring: 210 100% 65%;
   }
 }
 
@@ -120,11 +167,64 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans;
-    font-family: 'Inter', system-ui, sans-serif;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Archivo Black', sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    @apply font-semibold tracking-tight;
+  }
+
+  /* Focus rings for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Custom scrollbars */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+}
+
+/* Typography utilities */
+@layer utilities {
+  .text-page-title {
+    @apply text-[28px] font-semibold tracking-tight;
+  }
+
+  .text-section-title {
+    @apply text-base font-semibold;
+  }
+
+  .text-body-medium {
+    @apply text-sm font-medium;
+  }
+
+  .text-label {
+    @apply text-xs font-medium;
+  }
+
+  .text-caption {
+    @apply text-xs text-muted-foreground;
+  }
+
+  .text-overline {
+    @apply text-[11px] font-medium uppercase tracking-widest;
   }
 }
