@@ -14,6 +14,70 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          activity_date: string
+          body: string | null
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          deal_id: string | null
+          id: string
+          organisation_id: string | null
+          source: string | null
+          subject: string | null
+          type: string
+        }
+        Insert: {
+          activity_date?: string
+          body?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          id?: string
+          organisation_id?: string | null
+          source?: string | null
+          subject?: string | null
+          type?: string
+        }
+        Update: {
+          activity_date?: string
+          body?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          id?: string
+          organisation_id?: string | null
+          source?: string | null
+          subject?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activities_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activities_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_log: {
         Row: {
           action: string
@@ -226,6 +290,7 @@ export type Database = {
       }
       deals: {
         Row: {
+          bespoke_details: Json | null
           contact_id: string | null
           contract_signed_at: string | null
           created_at: string
@@ -236,6 +301,7 @@ export type Database = {
           organisation_id: string | null
           owner: string | null
           owner_id: string | null
+          package_size: string | null
           probability: number | null
           proposal_sent_at: string | null
           proposal_url: string | null
@@ -243,11 +309,18 @@ export type Database = {
           stage: Database["public"]["Enums"]["deal_stage"]
           stage_entered_at: string
           title: string
+          total_workshops: number | null
           updated_at: string
           value: number | null
           weighted_value: number | null
+          workshops_aware: number | null
+          workshops_bespoke: number | null
+          workshops_champion: number | null
+          workshops_leader: number | null
+          workshops_manager: number | null
         }
         Insert: {
+          bespoke_details?: Json | null
           contact_id?: string | null
           contract_signed_at?: string | null
           created_at?: string
@@ -258,6 +331,7 @@ export type Database = {
           organisation_id?: string | null
           owner?: string | null
           owner_id?: string | null
+          package_size?: string | null
           probability?: number | null
           proposal_sent_at?: string | null
           proposal_url?: string | null
@@ -265,11 +339,18 @@ export type Database = {
           stage?: Database["public"]["Enums"]["deal_stage"]
           stage_entered_at?: string
           title: string
+          total_workshops?: number | null
           updated_at?: string
           value?: number | null
           weighted_value?: number | null
+          workshops_aware?: number | null
+          workshops_bespoke?: number | null
+          workshops_champion?: number | null
+          workshops_leader?: number | null
+          workshops_manager?: number | null
         }
         Update: {
+          bespoke_details?: Json | null
           contact_id?: string | null
           contract_signed_at?: string | null
           created_at?: string
@@ -280,6 +361,7 @@ export type Database = {
           organisation_id?: string | null
           owner?: string | null
           owner_id?: string | null
+          package_size?: string | null
           probability?: number | null
           proposal_sent_at?: string | null
           proposal_url?: string | null
@@ -287,9 +369,15 @@ export type Database = {
           stage?: Database["public"]["Enums"]["deal_stage"]
           stage_entered_at?: string
           title?: string
+          total_workshops?: number | null
           updated_at?: string
           value?: number | null
           weighted_value?: number | null
+          workshops_aware?: number | null
+          workshops_bespoke?: number | null
+          workshops_champion?: number | null
+          workshops_leader?: number | null
+          workshops_manager?: number | null
         }
         Relationships: [
           {
@@ -1084,6 +1172,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          package_size: string | null
           service_type: string | null
           tasks_json: Json | null
         }
@@ -1091,6 +1180,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          package_size?: string | null
           service_type?: string | null
           tasks_json?: Json | null
         }
@@ -1098,6 +1188,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          package_size?: string | null
           service_type?: string | null
           tasks_json?: Json | null
         }
