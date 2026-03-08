@@ -155,48 +155,69 @@ export type Database = {
       deals: {
         Row: {
           contact_id: string | null
+          contract_signed_at: string | null
           created_at: string
           expected_close_date: string | null
           id: string
+          lost_reason: string | null
           notes: string | null
           organisation_id: string | null
+          owner: string | null
           owner_id: string | null
           probability: number | null
+          proposal_sent_at: string | null
+          proposal_url: string | null
+          service_type: string | null
           stage: Database["public"]["Enums"]["deal_stage"]
           stage_entered_at: string
           title: string
           updated_at: string
           value: number | null
+          weighted_value: number | null
         }
         Insert: {
           contact_id?: string | null
+          contract_signed_at?: string | null
           created_at?: string
           expected_close_date?: string | null
           id?: string
+          lost_reason?: string | null
           notes?: string | null
           organisation_id?: string | null
+          owner?: string | null
           owner_id?: string | null
           probability?: number | null
+          proposal_sent_at?: string | null
+          proposal_url?: string | null
+          service_type?: string | null
           stage?: Database["public"]["Enums"]["deal_stage"]
           stage_entered_at?: string
           title: string
           updated_at?: string
           value?: number | null
+          weighted_value?: number | null
         }
         Update: {
           contact_id?: string | null
+          contract_signed_at?: string | null
           created_at?: string
           expected_close_date?: string | null
           id?: string
+          lost_reason?: string | null
           notes?: string | null
           organisation_id?: string | null
+          owner?: string | null
           owner_id?: string | null
           probability?: number | null
+          proposal_sent_at?: string | null
+          proposal_url?: string | null
+          service_type?: string | null
           stage?: Database["public"]["Enums"]["deal_stage"]
           stage_entered_at?: string
           title?: string
           updated_at?: string
           value?: number | null
+          weighted_value?: number | null
         }
         Relationships: [
           {
@@ -211,6 +232,125 @@ export type Database = {
             columns: ["organisation_id"]
             isOneToOne: false
             referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deliveries: {
+        Row: {
+          created_at: string
+          deal_id: string | null
+          delegate_count: number | null
+          delivery_date: string | null
+          feedback_received: boolean | null
+          feedback_sent: boolean | null
+          id: string
+          kirkpatrick_level: number | null
+          neuro_stage: string | null
+          notes: string | null
+          organisation_id: string | null
+          post_assessment_complete: boolean | null
+          pre_assessment_complete: boolean | null
+          satisfaction_score: number | null
+          service_type: string | null
+          status: Database["public"]["Enums"]["delivery_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deal_id?: string | null
+          delegate_count?: number | null
+          delivery_date?: string | null
+          feedback_received?: boolean | null
+          feedback_sent?: boolean | null
+          id?: string
+          kirkpatrick_level?: number | null
+          neuro_stage?: string | null
+          notes?: string | null
+          organisation_id?: string | null
+          post_assessment_complete?: boolean | null
+          pre_assessment_complete?: boolean | null
+          satisfaction_score?: number | null
+          service_type?: string | null
+          status?: Database["public"]["Enums"]["delivery_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string | null
+          delegate_count?: number | null
+          delivery_date?: string | null
+          feedback_received?: boolean | null
+          feedback_sent?: boolean | null
+          id?: string
+          kirkpatrick_level?: number | null
+          neuro_stage?: string | null
+          notes?: string | null
+          organisation_id?: string | null
+          post_assessment_complete?: boolean | null
+          pre_assessment_complete?: boolean | null
+          satisfaction_score?: number | null
+          service_type?: string | null
+          status?: Database["public"]["Enums"]["delivery_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliveries_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliveries_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_tasks: {
+        Row: {
+          assignee: string | null
+          created_at: string
+          delivery_id: string
+          due_date: string | null
+          id: string
+          sort_order: number | null
+          status: string
+          title: string
+        }
+        Insert: {
+          assignee?: string | null
+          created_at?: string
+          delivery_id: string
+          due_date?: string | null
+          id?: string
+          sort_order?: number | null
+          status?: string
+          title: string
+        }
+        Update: {
+          assignee?: string | null
+          created_at?: string
+          delivery_id?: string
+          due_date?: string | null
+          id?: string
+          sort_order?: number | null
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_tasks_delivery_id_fkey"
+            columns: ["delivery_id"]
+            isOneToOne: false
+            referencedRelation: "deliveries"
             referencedColumns: ["id"]
           },
         ]
@@ -590,6 +730,30 @@ export type Database = {
           },
         ]
       }
+      templates: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          service_type: string | null
+          tasks_json: Json | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          service_type?: string | null
+          tasks_json?: Json | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          service_type?: string | null
+          tasks_json?: Json | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -631,9 +795,24 @@ export type Database = {
         | "verbal"
         | "won"
         | "lost"
+      delivery_status:
+        | "planning"
+        | "materials_prep"
+        | "scheduled"
+        | "in_progress"
+        | "delivered"
+        | "follow_up"
+        | "complete"
       invoice_status: "draft" | "sent" | "viewed" | "paid" | "overdue"
       neuro_phase: "needs" | "engage" | "understand" | "realise" | "ongoing"
       project_status: "setup" | "active" | "paused" | "completed"
+      service_type:
+        | "workshop"
+        | "programme"
+        | "coaching"
+        | "keynote"
+        | "audit"
+        | "sera_pilot"
       task_priority: "critical" | "high" | "medium" | "low"
       task_status: "todo" | "in_progress" | "blocked" | "done"
     }
@@ -773,9 +952,26 @@ export const Constants = {
         "won",
         "lost",
       ],
+      delivery_status: [
+        "planning",
+        "materials_prep",
+        "scheduled",
+        "in_progress",
+        "delivered",
+        "follow_up",
+        "complete",
+      ],
       invoice_status: ["draft", "sent", "viewed", "paid", "overdue"],
       neuro_phase: ["needs", "engage", "understand", "realise", "ongoing"],
       project_status: ["setup", "active", "paused", "completed"],
+      service_type: [
+        "workshop",
+        "programme",
+        "coaching",
+        "keynote",
+        "audit",
+        "sera_pilot",
+      ],
       task_priority: ["critical", "high", "medium", "low"],
       task_status: ["todo", "in_progress", "blocked", "done"],
     },

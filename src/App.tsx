@@ -13,6 +13,7 @@ import Deals from "@/pages/Deals";
 import Meetings from "@/pages/Meetings";
 import Proposals from "@/pages/Proposals";
 import Contracts from "@/pages/Contracts";
+import Deliveries from "@/pages/Deliveries";
 import Forms from "@/pages/Forms";
 import ClientPortal from "@/pages/ClientPortal";
 import Projects from "@/pages/Projects";
@@ -126,6 +127,7 @@ function AppShell() {
           <Route path="/meetings" element={<Meetings />} />
           <Route path="/proposals" element={<Proposals />} />
           <Route path="/contracts" element={<Contracts />} />
+          <Route path="/deliveries" element={<Deliveries />} />
           <Route path="/forms" element={<Forms />} />
           <Route path="/client-portal" element={<ClientPortal />} />
           <Route path="/projects" element={<Projects />} />
