@@ -158,7 +158,8 @@ function ContactDetailPanel({ contact, onClose }: { contact: Contact; onClose: (
 
       <Tabs defaultValue="deals" className="w-full">
         <TabsList className="w-full">
-          <TabsTrigger value="deals" className="flex-1">Linked Deals ({linkedDeals.length})</TabsTrigger>
+          <TabsTrigger value="deals" className="flex-1">Deals ({linkedDeals.length})</TabsTrigger>
+          <TabsTrigger value="activity" className="flex-1">Activity</TabsTrigger>
         </TabsList>
         <TabsContent value="deals" className="pt-4">
           {!linkedDeals.length ? (
@@ -176,6 +177,9 @@ function ContactDetailPanel({ contact, onClose }: { contact: Contact; onClose: (
               ))}
             </div>
           )}
+        </TabsContent>
+        <TabsContent value="activity" className="pt-4">
+          <ActivityTimeline entityType="contact" entityId={contact.id} contactId={contact.id} organisationId={contact.organisation_id || undefined} />
         </TabsContent>
       </Tabs>
     </DetailPanel>

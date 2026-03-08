@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCreateDeal } from "@/hooks/useDeals";
 import { useOrganisations } from "@/hooks/useOrganisations";
 import { useContacts } from "@/hooks/useContacts";
+import { WorkshopQuantityEditor, WorkshopConfig } from "@/components/deals/WorkshopQuantityEditor";
+import { VoiceInput } from "@/components/ai/VoiceInput";
 import { toast } from "sonner";
 
 interface Props {
@@ -24,6 +26,15 @@ const serviceTypes = [
   { value: "sera_pilot", label: "SERA Pilot" },
 ];
 
+const defaultWorkshops: WorkshopConfig = {
+  workshops_aware: 0,
+  workshops_champion: 0,
+  workshops_manager: 0,
+  workshops_leader: 0,
+  workshops_bespoke: 0,
+  bespoke_details: [],
+};
+
 export function CreateDealDialog({ open, onOpenChange }: Props) {
   const [title, setTitle] = useState("");
   const [value, setValue] = useState("");
@@ -34,6 +45,7 @@ export function CreateDealDialog({ open, onOpenChange }: Props) {
   const [owner, setOwner] = useState("");
   const [expectedClose, setExpectedClose] = useState("");
   const [notes, setNotes] = useState("");
+  const [workshops, setWorkshops] = useState<WorkshopConfig>(defaultWorkshops);
   const { data: orgs } = useOrganisations();
   const { data: contacts } = useContacts();
   const createDeal = useCreateDeal();
@@ -54,9 +66,17 @@ export function CreateDealDialog({ open, onOpenChange }: Props) {
         contact_id: contactId || null,
         expected_close_date: expectedClose || null,
         notes: notes || null,
+        service_type: serviceType || null,
+        owner: owner || null,
+        workshops_aware: workshops.workshops_aware,
+        workshops_champion: workshops.workshops_champion,
+        workshops_manager: workshops.workshops_manager,
+        workshops_leader: workshops.workshops_leader,
+        workshops_bespoke: workshops.workshops_bespoke,
+        bespoke_details: workshops.bespoke_details as any,
       } as any);
       toast.success("Deal created");
-      setTitle(""); setValue(""); setProbability("50"); setOrgId(""); setContactId(""); setServiceType(""); setOwner(""); setExpectedClose(""); setNotes("");
+      setTitle(""); setValue(""); setProbability("50"); setOrgId(""); setContactId(""); setServiceType(""); setOwner(""); setExpectedClose(""); setNotes(""); setWorkshops(defaultWorkshops);
       onOpenChange(false);
     } catch {
       toast.error("Failed to create deal");
@@ -134,13 +154,19 @@ export function CreateDealDialog({ open, onOpenChange }: Props) {
             </div>
           </div>
 
+          {/* Workshop Configuration */}
+          <WorkshopQuantityEditor value={workshops} onChange={setWorkshops} />
+
           <div className="space-y-2">
             <Label htmlFor="deal-close">Expected Close Date</Label>
             <Input id="deal-close" type="date" value={expectedClose} onChange={(e) => setExpectedClose(e.target.value)} />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="deal-notes">Notes</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="deal-notes">Notes</Label>
+              <VoiceInput onTranscript={(t) => setNotes((prev) => (prev ? prev + " " : "") + t)} textToSpeak={notes} />
+            </div>
             <Textarea id="deal-notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Deal notes…" rows={3} />
           </div>
 
