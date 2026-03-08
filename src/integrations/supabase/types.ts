@@ -161,6 +161,69 @@ export type Database = {
           },
         ]
       }
+      contracts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deal_id: string | null
+          end_date: string | null
+          id: string
+          notes: string | null
+          organisation_id: string | null
+          signed_at: string | null
+          start_date: string | null
+          status: string
+          title: string
+          updated_at: string
+          value: number | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          organisation_id?: string | null
+          signed_at?: string | null
+          start_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          value?: number | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          organisation_id?: string | null
+          signed_at?: string | null
+          start_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deals: {
         Row: {
           contact_id: string | null
@@ -363,6 +426,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      forms: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          fields_json: Json | null
+          id: string
+          responses_count: number | null
+          title: string
+          type: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          fields_json?: Json | null
+          id?: string
+          responses_count?: number | null
+          title: string
+          type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          fields_json?: Json | null
+          id?: string
+          responses_count?: number | null
+          title?: string
+          type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       invoice_items: {
         Row: {
@@ -667,6 +769,219 @@ export type Database = {
           },
         ]
       }
+      proposals: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          created_by: string | null
+          deal_id: string | null
+          declined_at: string | null
+          id: string
+          notes: string | null
+          organisation_id: string | null
+          sent_at: string | null
+          status: string
+          title: string
+          updated_at: string
+          valid_until: string | null
+          value: number | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          declined_at?: string | null
+          id?: string
+          notes?: string | null
+          organisation_id?: string | null
+          sent_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          valid_until?: string | null
+          value?: number | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          deal_id?: string | null
+          declined_at?: string | null
+          id?: string
+          notes?: string | null
+          organisation_id?: string | null
+          sent_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          valid_until?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          amount: number | null
+          approved_at: string | null
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          issue_date: string | null
+          notes: string | null
+          organisation_id: string | null
+          po_number: string
+          project_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          approved_at?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          issue_date?: string | null
+          notes?: string | null
+          organisation_id?: string | null
+          po_number: string
+          project_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          approved_at?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          issue_date?: string | null
+          notes?: string | null
+          organisation_id?: string | null
+          po_number?: string
+          project_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rate_cards: {
+        Row: {
+          created_at: string
+          currency: string | null
+          day_rate: number | null
+          half_day_rate: number | null
+          hourly_rate: number | null
+          id: string
+          name: string
+          notes: string | null
+          role: string | null
+          updated_at: string
+          valid_from: string | null
+          valid_to: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          day_rate?: number | null
+          half_day_rate?: number | null
+          hourly_rate?: number | null
+          id?: string
+          name: string
+          notes?: string | null
+          role?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          day_rate?: number | null
+          half_day_rate?: number | null
+          hourly_rate?: number | null
+          id?: string
+          name?: string
+          notes?: string | null
+          role?: string | null
+          updated_at?: string
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          active: boolean | null
+          category: string | null
+          created_at: string
+          default_duration_days: number | null
+          default_price: number | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          category?: string | null
+          created_at?: string
+          default_duration_days?: number | null
+          default_price?: number | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          category?: string | null
+          created_at?: string
+          default_duration_days?: number | null
+          default_price?: number | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
           created_at: string
@@ -787,6 +1102,60 @@ export type Database = {
           tasks_json?: Json | null
         }
         Relationships: []
+      }
+      time_entries: {
+        Row: {
+          billable: boolean | null
+          created_at: string
+          date: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          project_id: string | null
+          task_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          billable?: boolean | null
+          created_at?: string
+          date?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          project_id?: string | null
+          task_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          billable?: boolean | null
+          created_at?: string
+          date?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          project_id?: string | null
+          task_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
