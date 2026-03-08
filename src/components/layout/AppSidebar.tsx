@@ -30,33 +30,21 @@ import { useState } from "react";
 
 const mainNav = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
-  { to: "/notifications", icon: Bell, label: "Notifications" },
-  { to: "/clients", icon: Building2, label: "Clients" },
-  { to: "/contacts", icon: Users, label: "Contacts" },
+  { to: "/deals", icon: Briefcase, label: "Deals" },
+  { to: "/deliveries", icon: FolderKanban, label: "Deliveries" },
+  { to: "/invoices", icon: Receipt, label: "Invoices" },
 ];
 
 const workspaceNav = [
-  { to: "/deals", icon: Briefcase, label: "Deals" },
-  { to: "/deliveries", icon: FolderKanban, label: "Deliveries" },
-  { to: "/meetings", icon: CalendarDays, label: "Sessions" },
+  { to: "/clients", icon: Building2, label: "Clients" },
+  { to: "/contacts", icon: Users, label: "Contacts" },
   { to: "/proposals", icon: FileText, label: "Proposals" },
   { to: "/contracts", icon: FileSignature, label: "Contracts" },
-  { to: "/forms", icon: ClipboardList, label: "Forms" },
-  { to: "/client-portal", icon: Globe, label: "Client Portal" },
-  { to: "/projects", icon: FolderKanban, label: "Projects" },
-  { to: "/tasks", icon: CheckSquare, label: "Tasks" },
-  { to: "/time-tracking", icon: Clock, label: "Time Tracking" },
-  { to: "/resourcing", icon: UserCog, label: "Resourcing" },
-  { to: "/timesheets", icon: Timer, label: "Timesheets" },
-  { to: "/invoices", icon: Receipt, label: "Invoices" },
-  { to: "/scheduling", icon: CalendarClock, label: "Scheduling" },
-  { to: "/purchase-orders", icon: ShoppingCart, label: "Purchase Orders" },
-  { to: "/rate-cards", icon: CreditCard, label: "Rate Cards" },
-  { to: "/services", icon: Layers, label: "Services" },
 ];
 
 const settingsNav = [
   { to: "/templates", icon: Layers, label: "Templates" },
+  { to: "/services", icon: Layers, label: "Services" },
 ];
 
 function NavItem({ item, collapsed }: { item: typeof mainNav[0]; collapsed: boolean }) {
