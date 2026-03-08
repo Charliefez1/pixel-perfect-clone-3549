@@ -109,8 +109,11 @@ export type Database = {
           email: string | null
           first_name: string
           id: string
+          is_primary: boolean | null
           job_title: string | null
+          last_contacted: string | null
           last_name: string
+          linkedin_url: string | null
           notes: string | null
           organisation_id: string | null
           phone: string | null
@@ -122,8 +125,11 @@ export type Database = {
           email?: string | null
           first_name: string
           id?: string
+          is_primary?: boolean | null
           job_title?: string | null
+          last_contacted?: string | null
           last_name: string
+          linkedin_url?: string | null
           notes?: string | null
           organisation_id?: string | null
           phone?: string | null
@@ -135,8 +141,11 @@ export type Database = {
           email?: string | null
           first_name?: string
           id?: string
+          is_primary?: boolean | null
           job_title?: string | null
+          last_contacted?: string | null
           last_name?: string
+          linkedin_url?: string | null
           notes?: string | null
           organisation_id?: string | null
           phone?: string | null
@@ -397,58 +406,80 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          deal_id: string | null
           due_date: string | null
           id: string
           invoice_number: string
           issue_date: string | null
           notes: string | null
           organisation_id: string | null
+          paid_at: string | null
           paid_date: string | null
+          pdf_url: string | null
           project_id: string | null
+          sent_at: string | null
           status: Database["public"]["Enums"]["invoice_status"]
           subtotal: number | null
           total: number | null
           updated_at: string
           vat_amount: number | null
           vat_rate: number | null
+          viewed_at: string | null
         }
         Insert: {
           created_at?: string
           created_by?: string | null
+          deal_id?: string | null
           due_date?: string | null
           id?: string
           invoice_number: string
           issue_date?: string | null
           notes?: string | null
           organisation_id?: string | null
+          paid_at?: string | null
           paid_date?: string | null
+          pdf_url?: string | null
           project_id?: string | null
+          sent_at?: string | null
           status?: Database["public"]["Enums"]["invoice_status"]
           subtotal?: number | null
           total?: number | null
           updated_at?: string
           vat_amount?: number | null
           vat_rate?: number | null
+          viewed_at?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string | null
+          deal_id?: string | null
           due_date?: string | null
           id?: string
           invoice_number?: string
           issue_date?: string | null
           notes?: string | null
           organisation_id?: string | null
+          paid_at?: string | null
           paid_date?: string | null
+          pdf_url?: string | null
           project_id?: string | null
+          sent_at?: string | null
           status?: Database["public"]["Enums"]["invoice_status"]
           subtotal?: number | null
           total?: number | null
           updated_at?: string
           vat_amount?: number | null
           vat_rate?: number | null
+          viewed_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "invoices_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invoices_organisation_id_fkey"
             columns: ["organisation_id"]
@@ -507,6 +538,7 @@ export type Database = {
           phone: string | null
           sector: string | null
           updated_at: string
+          vat_number: string | null
           website: string | null
         }
         Insert: {
@@ -520,6 +552,7 @@ export type Database = {
           phone?: string | null
           sector?: string | null
           updated_at?: string
+          vat_number?: string | null
           website?: string | null
         }
         Update: {
@@ -533,6 +566,7 @@ export type Database = {
           phone?: string | null
           sector?: string | null
           updated_at?: string
+          vat_number?: string | null
           website?: string | null
         }
         Relationships: []
