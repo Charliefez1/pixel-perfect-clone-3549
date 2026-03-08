@@ -6,14 +6,25 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
-import Pipeline from "@/pages/Pipeline";
+import Notifications from "@/pages/Notifications";
+import Clients from "@/pages/Clients";
 import Contacts from "@/pages/Contacts";
-import Organisations from "@/pages/Organisations";
+import Deals from "@/pages/Deals";
+import Meetings from "@/pages/Meetings";
+import Proposals from "@/pages/Proposals";
+import Contracts from "@/pages/Contracts";
+import Forms from "@/pages/Forms";
+import ClientPortal from "@/pages/ClientPortal";
 import Projects from "@/pages/Projects";
 import Tasks from "@/pages/Tasks";
+import TimeTracking from "@/pages/TimeTracking";
+import Resourcing from "@/pages/Resourcing";
+import Timesheets from "@/pages/Timesheets";
 import Invoices from "@/pages/Invoices";
-import ActivityPage from "@/pages/ActivityPage";
-import SettingsPage from "@/pages/SettingsPage";
+import Scheduling from "@/pages/Scheduling";
+import PurchaseOrders from "@/pages/PurchaseOrders";
+import RateCards from "@/pages/RateCards";
+import Services from "@/pages/Services";
 import Auth from "@/pages/Auth";
 import NotFound from "@/pages/NotFound";
 
@@ -36,9 +47,7 @@ function ProtectedRoutes() {
     return <Navigate to="/auth" replace />;
   }
 
-  return (
-    <AppLayout />
-  );
+  return <AppLayout />;
 }
 
 const App = () => (
@@ -52,14 +61,25 @@ const App = () => (
             <Route path="/auth" element={<AuthRoute />} />
             <Route element={<ProtectedRoutes />}>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/pipeline" element={<Pipeline />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/clients" element={<Clients />} />
               <Route path="/contacts" element={<Contacts />} />
-              <Route path="/organisations" element={<Organisations />} />
+              <Route path="/deals" element={<Deals />} />
+              <Route path="/meetings" element={<Meetings />} />
+              <Route path="/proposals" element={<Proposals />} />
+              <Route path="/contracts" element={<Contracts />} />
+              <Route path="/forms" element={<Forms />} />
+              <Route path="/client-portal" element={<ClientPortal />} />
               <Route path="/projects" element={<Projects />} />
               <Route path="/tasks" element={<Tasks />} />
+              <Route path="/time-tracking" element={<TimeTracking />} />
+              <Route path="/resourcing" element={<Resourcing />} />
+              <Route path="/timesheets" element={<Timesheets />} />
               <Route path="/invoices" element={<Invoices />} />
-              <Route path="/activity" element={<ActivityPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/scheduling" element={<Scheduling />} />
+              <Route path="/purchase-orders" element={<PurchaseOrders />} />
+              <Route path="/rate-cards" element={<RateCards />} />
+              <Route path="/services" element={<Services />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
