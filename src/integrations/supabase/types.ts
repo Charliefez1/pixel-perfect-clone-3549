@@ -450,6 +450,7 @@ export type Database = {
           organisation_id: string | null
           post_assessment_complete: boolean | null
           pre_assessment_complete: boolean | null
+          project_id: string | null
           satisfaction_score: number | null
           service_type: string | null
           status: Database["public"]["Enums"]["delivery_status"]
@@ -470,6 +471,7 @@ export type Database = {
           organisation_id?: string | null
           post_assessment_complete?: boolean | null
           pre_assessment_complete?: boolean | null
+          project_id?: string | null
           satisfaction_score?: number | null
           service_type?: string | null
           status?: Database["public"]["Enums"]["delivery_status"]
@@ -490,6 +492,7 @@ export type Database = {
           organisation_id?: string | null
           post_assessment_complete?: boolean | null
           pre_assessment_complete?: boolean | null
+          project_id?: string | null
           satisfaction_score?: number | null
           service_type?: string | null
           status?: Database["public"]["Enums"]["delivery_status"]
@@ -509,6 +512,13 @@ export type Database = {
             columns: ["organisation_id"]
             isOneToOne: false
             referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliveries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]

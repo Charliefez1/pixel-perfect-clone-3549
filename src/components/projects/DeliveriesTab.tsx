@@ -14,9 +14,8 @@ const statusColors: Record<string, string> = {
 
 export function DeliveriesTab({ projectId, dealId }: { projectId: string; dealId?: string | null }) {
   const { data: deliveries } = useDeliveries();
-  // Match by deal_id since deliveries link via deal, not project directly
   const projectDeliveries = deliveries?.filter(
-    (d) => (dealId && d.deal_id === dealId)
+    (d) => d.project_id === projectId || (dealId && d.deal_id === dealId)
   ) || [];
 
   if (!projectDeliveries.length) {
