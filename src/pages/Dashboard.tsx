@@ -230,6 +230,13 @@ export default function Dashboard() {
         </Button>
       </div>
       <div className="flex-1 overflow-auto p-6 space-y-6">
+        {/* Quick Actions */}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => openCreateDeal()}><Plus className="h-4 w-4" />Deal</Button>
+          <Button variant="outline" size="sm" onClick={() => openCreateContact()}><Plus className="h-4 w-4" />Contact</Button>
+          <Button variant="outline" size="sm" onClick={() => openCreateInvoice()}><Plus className="h-4 w-4" />Invoice</Button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/deliveries")}><Plus className="h-4 w-4" />Delivery</Button>
+        </div>
         {/* Overdue alert banner */}
         {(overdueTasks.length > 0 || overdueInvoices.length > 0) && (
           <Card className="border-destructive/30 bg-destructive/5">
