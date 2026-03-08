@@ -2,45 +2,101 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-
-const notifications = [
-  { action: "Moved deal to Proposal Sent", entity: "Barclays Leadership Programme", user: "Charlie", initials: "CW", time: "2 hours ago", type: "deal" },
-  { action: "Added new contact", entity: "Sarah Mitchell (NHS Yorkshire)", user: "Rich", initials: "RB", time: "4 hours ago", type: "contact" },
-  { action: "Completed task", entity: "Prepare workshop materials", user: "Charlie", initials: "CW", time: "Yesterday", type: "task" },
-  { action: "Invoice paid", entity: "INV-2024-041 — £10,200", user: "System", initials: "SY", time: "Yesterday", type: "invoice" },
-  { action: "Session delivered", entity: "Deloitte Resilience Workshop", user: "Rich", initials: "RB", time: "2 days ago", type: "session" },
-  { action: "New deal created", entity: "Unilever Mental Health First Aid — £18,500", user: "Charlie", initials: "CW", time: "3 days ago", type: "deal" },
-];
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatDistanceToNow } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
 
 export default function Notifications() {
+  const { session } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data: notifications, isLoading } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const markRead = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+  });
+
+  const markAllRead = useMutation({
+    mutationFn: async () => {
+      if (!session?.user?.id) return;
+      const { error } = await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("user_id", session.user.id)
+        .eq("read", false);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+  });
+
+  const unreadCount = notifications?.filter(n => !n.read).length || 0;
+
   return (
     <>
-      <PageHeader title="Notifications" searchPlaceholder="Search..." showFilter={false} />
+      <PageHeader title="Notifications" searchPlaceholder="Search..." showFilter={false}>
+        {unreadCount > 0 && (
+          <Button variant="outline" size="sm" onClick={() => markAllRead.mutate()} className="gap-2">
+            <Check className="h-4 w-4" />
+            Mark all read
+          </Button>
+        )}
+      </PageHeader>
       <div className="flex-1 overflow-auto p-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="space-y-6">
-              {notifications.map((item, i) => (
-                <div key={i} className="flex items-start gap-4">
-                  <Avatar className="h-8 w-8 shrink-0">
-                    <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{item.initials}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm">
-                      <span className="font-semibold">{item.user}</span>{" "}
-                      <span className="text-muted-foreground">{item.action}</span>
-                    </p>
-                    <p className="text-sm font-medium mt-0.5">{item.entity}</p>
+        {isLoading ? (
+          <div className="space-y-4 max-w-3xl">
+            {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
+          </div>
+        ) : !notifications?.length ? (
+          <div className="p-12 text-center text-muted-foreground">
+            <p>No notifications yet.</p>
+          </div>
+        ) : (
+          <Card className="max-w-3xl">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {notifications.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`flex items-start gap-4 p-3 rounded-lg transition-colors cursor-pointer ${
+                      item.read ? "" : "bg-primary/5"
+                    }`}
+                    onClick={() => !item.read && markRead.mutate(item.id)}
+                  >
+                    <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${item.read ? "bg-transparent" : "bg-primary"}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{item.title}</p>
+                      {item.message && <p className="text-sm text-muted-foreground mt-0.5">{item.message}</p>}
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge variant="secondary" className="text-[10px]">{item.type}</Badge>
-                    <span className="text-xs text-muted-foreground">{item.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </>
   );

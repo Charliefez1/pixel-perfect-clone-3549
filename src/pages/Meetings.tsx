@@ -1,18 +1,23 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Clock, MapPin, Video } from "lucide-react";
-import { useSessions } from "@/hooks/useSessions";
+import { useSessions, Session } from "@/hooks/useSessions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, parseISO } from "date-fns";
+import { DetailPanel } from "@/components/layout/DetailPanel";
+import { useDialogs } from "@/App";
 
 export default function Meetings() {
   const { data: sessions, isLoading } = useSessions();
+  const [selected, setSelected] = useState<Session | null>(null);
+  const { openCreateSession } = useDialogs();
 
   return (
     <>
-      <PageHeader title="Sessions & Meetings" searchPlaceholder="Search..." actionLabel="New Session" />
+      <PageHeader title="Sessions & Meetings" searchPlaceholder="Search..." actionLabel="New Session" onAction={openCreateSession} />
       <div className="flex-1 overflow-auto p-6">
         {isLoading ? (
           <div className="space-y-4 max-w-4xl">
@@ -28,12 +33,12 @@ export default function Meetings() {
           <div className="space-y-4 max-w-4xl">
             {sessions.map((s) => {
               const sessionDate = s.session_date ? parseISO(s.session_date) : null;
-              const isOnline = s.location?.toLowerCase().includes("zoom") || 
+              const isOnline = s.location?.toLowerCase().includes("zoom") ||
                                s.location?.toLowerCase().includes("teams") ||
                                s.location?.toLowerCase().includes("online");
-              
+
               return (
-                <Card key={s.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                <Card key={s.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelected(s)}>
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-4">
@@ -57,11 +62,7 @@ export default function Meetings() {
                             )}
                             {s.location && (
                               <span className="flex items-center gap-1">
-                                {isOnline ? (
-                                  <Video className="h-3.5 w-3.5" />
-                                ) : (
-                                  <MapPin className="h-3.5 w-3.5" />
-                                )}
+                                {isOnline ? <Video className="h-3.5 w-3.5" /> : <MapPin className="h-3.5 w-3.5" />}
                                 {s.location}
                               </span>
                             )}
@@ -84,6 +85,22 @@ export default function Meetings() {
           </div>
         )}
       </div>
+
+      {selected && (
+        <DetailPanel
+          open={!!selected}
+          onOpenChange={() => setSelected(null)}
+          title={selected.title}
+          fields={[
+            { label: "Project", value: selected.projects?.name },
+            { label: "Organisation", value: selected.projects?.organisations?.name },
+            { label: "Date", value: selected.session_date ? format(parseISO(selected.session_date), "PPP 'at' p") : undefined },
+            { label: "Duration", value: `${selected.duration_minutes || 60} minutes` },
+            { label: "Location", value: selected.location },
+            { label: "Notes", value: selected.notes },
+          ]}
+        />
+      )}
     </>
   );
 }
