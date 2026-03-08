@@ -109,7 +109,7 @@ export function AppSidebar({ onOpenAI }: { onOpenAI?: () => void }) {
         {/* Workspace Section */}
         {!collapsed && (
           <p className="px-3 pt-6 pb-2 text-overline text-sidebar-foreground/40">
-            Workspace
+            People & Docs
           </p>
         )}
         {collapsed && <div className="h-4" />}
