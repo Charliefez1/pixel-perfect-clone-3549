@@ -1,14 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { TrendingUp, Briefcase, FolderKanban, CheckSquare, Receipt, Calendar, AlertTriangle, PieChart } from "lucide-react";
+import { TrendingUp, Briefcase, FolderKanban, CheckSquare, Receipt, Calendar, AlertTriangle, PieChart, ArrowRight, Clock } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart as RPieChart, Pie } from "recharts";
 import { useDashboardStats, usePipelineByStage } from "@/hooks/useDashboardStats";
 import { useUpcomingSessions } from "@/hooks/useSessions";
 import { useTasks } from "@/hooks/useTasks";
 import { useProjects } from "@/hooks/useProjects";
+import { useDeals } from "@/hooks/useDeals";
+import { useInvoices } from "@/hooks/useInvoices";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format, parseISO, isPast } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { format, parseISO, isPast, differenceInDays, isThisWeek } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 const neuroColors = [
   { name: "Needs", color: "hsl(210, 100%, 61%)" },
@@ -18,12 +22,24 @@ const neuroColors = [
   { name: "Ongoing", color: "hsl(0, 0%, 64%)" },
 ];
 
+const sectorColors: Record<string, string> = {
+  law: "hsl(210, 70%, 55%)",
+  energy: "hsl(38, 92%, 50%)",
+  finance: "hsl(142, 71%, 45%)",
+  public_sector: "hsl(190, 60%, 50%)",
+  tech: "hsl(280, 60%, 55%)",
+  other: "hsl(0, 0%, 64%)",
+};
+
 export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: pipelineData, isLoading: pipelineLoading } = usePipelineByStage();
   const { data: sessions, isLoading: sessionsLoading } = useUpcomingSessions();
   const { data: tasks } = useTasks();
   const { data: projects } = useProjects();
+  const { data: deals } = useDeals();
+  const { data: invoices } = useInvoices();
+  const navigate = useNavigate();
 
   // NEURO phase distribution
   const neuroData = neuroColors.map((n) => ({
@@ -32,13 +48,97 @@ export default function Dashboard() {
     fill: n.color,
   }));
 
-  // Task completion rate
+  // Task stats
   const totalTasks = tasks?.length || 0;
   const doneTasks = tasks?.filter((t) => t.status === "done").length || 0;
   const completionRate = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
-
-  // Overdue tasks
   const overdueTasks = tasks?.filter((t) => t.due_date && isPast(new Date(t.due_date)) && t.status !== "done") || [];
+
+  // Stale deals (no stage change in 14+ days, not won/lost)
+  const staleDeals = deals?.filter((d) => {
+    if (["won", "lost"].includes(d.stage)) return false;
+    return differenceInDays(new Date(), new Date(d.stage_entered_at)) > 14;
+  }) || [];
+
+  // Overdue invoices
+  const overdueInvoices = invoices?.filter((inv) => inv.status === "overdue" || (inv.status === "sent" && inv.due_date && isPast(new Date(inv.due_date)))) || [];
+  const overdueAmount = overdueInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
+
+  // Paid this month
+  const paidThisMonth = invoices?.filter((inv) => {
+    if (inv.status !== "paid" || !inv.paid_date) return false;
+    const d = new Date(inv.paid_date);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).reduce((sum, inv) => sum + (inv.total || 0), 0) || 0;
+
+  // Pipeline by sector (from organisations)
+  const sectorMap: Record<string, number> = {};
+  deals?.filter((d) => !["won", "lost"].includes(d.stage)).forEach((d) => {
+    const sector = (d.organisations as any)?.sector || "other";
+    sectorMap[sector] = (sectorMap[sector] || 0) + (d.value || 0);
+  });
+  const sectorData = Object.entries(sectorMap).map(([sector, value]) => ({
+    name: sector,
+    value,
+    fill: sectorColors[sector] || sectorColors.other,
+  }));
+
+  // Upcoming this week (sessions + deal follow-ups)
+  const upcomingItems: Array<{ type: string; title: string; org: string; date: Date; owner: string }> = [];
+  sessions?.forEach((s) => {
+    if (s.session_date && isThisWeek(parseISO(s.session_date), { weekStartsOn: 1 })) {
+      upcomingItems.push({
+        type: "session",
+        title: s.title,
+        org: s.projects?.organisations?.name || s.projects?.name || "",
+        date: parseISO(s.session_date),
+        owner: "team",
+      });
+    }
+  });
+  deals?.forEach((d) => {
+    if (d.expected_close_date && isThisWeek(parseISO(d.expected_close_date), { weekStartsOn: 1 })) {
+      upcomingItems.push({
+        type: "deal",
+        title: d.title,
+        org: d.organisations?.name || "",
+        date: parseISO(d.expected_close_date),
+        owner: (d as any).owner || "—",
+      });
+    }
+  });
+  upcomingItems.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  // Needs attention items
+  const attentionItems: Array<{ id: string; label: string; detail: string; action: string; route: string }> = [];
+  staleDeals.forEach((d) => {
+    attentionItems.push({
+      id: `stale-${d.id}`,
+      label: d.title,
+      detail: `${d.organisations?.name || "Unknown"} · ${differenceInDays(new Date(), new Date(d.stage_entered_at))}d stale`,
+      action: "Follow up",
+      route: "/deals",
+    });
+  });
+  if (overdueInvoices.length > 0) {
+    attentionItems.push({
+      id: "overdue-invoices",
+      label: `${overdueInvoices.length} overdue invoice${overdueInvoices.length > 1 ? "s" : ""}`,
+      detail: `£${overdueAmount.toLocaleString()} outstanding`,
+      action: "View",
+      route: "/invoices",
+    });
+  }
+  overdueTasks.slice(0, 3).forEach((t) => {
+    attentionItems.push({
+      id: `task-${t.id}`,
+      label: t.title,
+      detail: `Overdue · ${t.projects?.name || "No project"}`,
+      action: "View",
+      route: "/tasks",
+    });
+  });
 
   const statCards = [
     {
@@ -49,18 +149,18 @@ export default function Dashboard() {
       color: "text-primary",
     },
     {
-      label: "Active Projects",
-      value: stats?.activeProjects?.toString() || "0",
-      change: "active",
-      icon: FolderKanban,
-      color: "text-[hsl(var(--stage-qualified))]",
+      label: "Revenue This Month",
+      value: `£${paidThisMonth.toLocaleString()}`,
+      change: "paid invoices",
+      icon: TrendingUp,
+      color: "text-[hsl(142,71%,45%)]",
     },
     {
-      label: "Overdue Tasks",
-      value: stats?.overdueTasks?.toString() || "0",
-      change: "need attention",
-      icon: CheckSquare,
-      color: "text-[hsl(var(--priority-high))]",
+      label: "Active Projects",
+      value: stats?.activeProjects?.toString() || "0",
+      change: "in progress",
+      icon: FolderKanban,
+      color: "text-[hsl(var(--stage-qualified))]",
     },
     {
       label: "Outstanding Invoices",
@@ -75,19 +175,19 @@ export default function Dashboard() {
     <>
       <div className="border-b border-border bg-card px-6 py-4 sticky top-0 z-10">
         <h1 className="text-xl font-bold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Welcome back to Neurodiversity Global Hub</p>
+        <p className="text-sm text-muted-foreground mt-1">Welcome back to NDG Hub</p>
       </div>
       <div className="flex-1 overflow-auto p-6 space-y-6">
         {/* Overdue alert banner */}
-        {overdueTasks.length > 0 && (
-          <Card className="border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/5">
+        {(overdueTasks.length > 0 || overdueInvoices.length > 0) && (
+          <Card className="border-destructive/30 bg-destructive/5">
             <CardContent className="p-4 flex items-center gap-3">
-              <AlertTriangle className="h-5 w-5 text-[hsl(var(--warning))] shrink-0" />
-              <div>
-                <p className="text-sm font-medium">{overdueTasks.length} overdue task{overdueTasks.length > 1 ? "s" : ""} need attention</p>
-                <p className="text-xs text-muted-foreground">
-                  {overdueTasks.slice(0, 3).map((t) => t.title).join(", ")}
-                  {overdueTasks.length > 3 ? ` and ${overdueTasks.length - 3} more` : ""}
+              <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">
+                  {overdueTasks.length > 0 && `${overdueTasks.length} overdue task${overdueTasks.length > 1 ? "s" : ""}`}
+                  {overdueTasks.length > 0 && overdueInvoices.length > 0 && " · "}
+                  {overdueInvoices.length > 0 && `£${overdueAmount.toLocaleString()} in overdue invoices`}
                 </p>
               </div>
             </CardContent>
@@ -116,8 +216,77 @@ export default function Dashboard() {
           ))}
         </div>
 
+        {/* Row 2: Needs Attention + Pipeline by Sector */}
+        <div className="grid gap-6 lg:grid-cols-5">
+          <Card className="lg:col-span-3">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                Needs Attention
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {attentionItems.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4">All clear — no items need attention.</p>
+              ) : (
+                <div className="space-y-2">
+                  {attentionItems.slice(0, 8).map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/50 transition-colors">
+                      <div className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{item.label}</p>
+                        <p className="text-xs text-muted-foreground">{item.detail}</p>
+                      </div>
+                      <Button variant="ghost" size="sm" className="shrink-0 text-xs" onClick={() => navigate(item.route)}>
+                        {item.action}
+                        <ArrowRight className="h-3 w-3 ml-1" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <PieChart className="h-4 w-4 text-primary" />
+                Pipeline by Sector
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {sectorData.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4">No pipeline data yet.</p>
+              ) : (
+                <div className="flex items-center gap-4">
+                  <ResponsiveContainer width={130} height={130}>
+                    <RPieChart>
+                      <Pie data={sectorData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={35} outerRadius={60} paddingAngle={2}>
+                        {sectorData.map((entry, i) => (
+                          <Cell key={i} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(v: number) => `£${v.toLocaleString()}`} />
+                    </RPieChart>
+                  </ResponsiveContainer>
+                  <div className="space-y-1.5 flex-1">
+                    {sectorData.map((s) => (
+                      <div key={s.name} className="flex items-center gap-2 text-sm">
+                        <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: s.fill }} />
+                        <span className="flex-1 capitalize">{s.name.replace("_", " ")}</span>
+                        <span className="font-medium text-xs">£{s.value.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Row 3: Pipeline by Stage + NEURO Phase */}
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Pipeline Chart */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
@@ -145,7 +314,6 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* NEURO Phase Distribution */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
@@ -179,8 +347,8 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        {/* Row 4: Task Completion + Upcoming This Week */}
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Task Completion */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
@@ -208,49 +376,31 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Upcoming Sessions */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-primary" />
-                Upcoming Sessions
+                Upcoming This Week
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {sessionsLoading ? (
-                <div className="space-y-3">
-                  {[...Array(4)].map((_, i) => (
-                    <Skeleton key={i} className="h-14 w-full" />
-                  ))}
-                </div>
-              ) : !sessions?.length ? (
-                <p className="text-sm text-muted-foreground py-4">No upcoming sessions scheduled.</p>
+              {upcomingItems.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4">Nothing scheduled this week.</p>
               ) : (
                 <div className="space-y-3">
-                  {sessions.slice(0, 4).map((s) => {
-                    const sessionDate = s.session_date ? parseISO(s.session_date) : null;
-                    return (
-                      <div key={s.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/50 transition-colors">
-                        {sessionDate && (
-                          <div className="text-center shrink-0 w-12">
-                            <p className="text-xs text-muted-foreground">{format(sessionDate, "MMM")}</p>
-                            <p className="text-lg font-bold">{format(sessionDate, "d")}</p>
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{s.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {s.projects?.organisations?.name || s.projects?.name || "No project"} • {s.duration_minutes || 60} min
-                          </p>
-                        </div>
-                        <Avatar className="h-7 w-7">
-                          <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-                            {s.facilitator_id ? "F" : "?"}
-                          </AvatarFallback>
-                        </Avatar>
+                  {upcomingItems.slice(0, 6).map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/50 transition-colors">
+                      <div className="text-center shrink-0 w-12">
+                        <p className="text-xs text-muted-foreground">{format(item.date, "EEE")}</p>
+                        <p className="text-lg font-bold">{format(item.date, "d")}</p>
                       </div>
-                    );
-                  })}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{item.title}</p>
+                        <p className="text-xs text-muted-foreground">{item.org} · {item.owner}</p>
+                      </div>
+                      <Badge variant="secondary" className="text-[10px]">{item.type}</Badge>
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>
