@@ -16,13 +16,34 @@ const stages = [
 ];
 
 const mockDeals = [
-  { id: "1", title: "NHS Yorkshire Leadership Programme", value: 35000, org: "NHS Yorkshire", contact: "Sarah Mitchell", stage: "proposal", owner: "CW", daysInStage: 4 },
-  { id: "2", title: "Barclays Resilience Workshop", value: 45000, org: "Barclays", contact: "James Porter", stage: "negotiation", owner: "RB", daysInStage: 2 },
-  { id: "3", title: "Deloitte Wellbeing Series", value: 28000, org: "Deloitte", contact: "Emma Chen", stage: "qualified", owner: "CW", daysInStage: 7 },
-  { id: "4", title: "AstraZeneca Team Performance", value: 52000, org: "AstraZeneca", contact: "Tom Williams", stage: "verbal", owner: "RB", daysInStage: 1 },
-  { id: "5", title: "Unilever Mental Health First Aid", value: 18500, org: "Unilever", contact: "Lucy Taylor", stage: "lead", owner: "CW", daysInStage: 12 },
-  { id: "6", title: "Google UK Workshop", value: 62000, org: "Google UK", contact: "David Lee", stage: "won", owner: "RB", daysInStage: 0 },
+  // Leads
+  { id: "1", title: "PayPal - Manager Training Programme", value: 28000, org: "PayPal", contact: "Emma Richards", stage: "lead", owner: "CF", daysInStage: 5, service: "Training" },
+  { id: "2", title: "University of Cambridge - Awareness Sessions", value: 12000, org: "University of Cambridge", contact: "Dr James Liu", stage: "lead", owner: "RF", daysInStage: 8, service: "Training" },
+  
+  // Qualified
+  { id: "3", title: "Royal Mail - Champions Programme", value: 45000, org: "Royal Mail", contact: "Sarah Thompson", stage: "qualified", owner: "RF", daysInStage: 4, service: "Training" },
+  { id: "4", title: "Elastic - Neuroinclusion Consultancy", value: 65000, org: "Elastic", contact: "Mike Chen", stage: "qualified", owner: "CF", daysInStage: 6, service: "Consultancy" },
+  
+  // Proposal
+  { id: "5", title: "IBM - Strategic Neuroinclusion Review", value: 85000, org: "IBM", contact: "David Park", stage: "proposal", owner: "RF", daysInStage: 3, service: "Consultancy" },
+  { id: "6", title: "NHS Blood & Transplant - Line Manager Training", value: 32000, org: "NHS Blood & Transplant", contact: "Lisa Morgan", stage: "proposal", owner: "RF", daysInStage: 7, service: "Training" },
+  
+  // Negotiation
+  { id: "7", title: "Lloyds Bank - Executive Briefing Series", value: 48000, org: "Lloyds Bank", contact: "Tom Harrison", stage: "negotiation", owner: "RF", daysInStage: 2, service: "Training" },
+  
+  // Verbal
+  { id: "8", title: "Sky - Gen Z Neurodiversity Programme", value: 38000, org: "Sky", contact: "Rachel Green", stage: "verbal", owner: "CF", daysInStage: 1, service: "Training" },
+  
+  // Won
+  { id: "9", title: "Google UK - ADHD Workshop Series", value: 42000, org: "Google UK", contact: "Anna Williams", stage: "won", owner: "RF", daysInStage: 0, service: "Training" },
+  { id: "10", title: "TfL - Champions & Advocate Programme", value: 55000, org: "Transport for London", contact: "Mark Davies", stage: "won", owner: "RF", daysInStage: 0, service: "Training" },
 ];
+
+const serviceColors: Record<string, string> = {
+  Training: "bg-primary/20 text-primary",
+  Consultancy: "bg-[hsl(var(--stage-negotiation))]/20 text-[hsl(var(--stage-negotiation))]",
+  Coaching: "bg-[hsl(var(--stage-qualified))]/20 text-[hsl(var(--stage-qualified))]",
+};
 
 export default function Deals() {
   return (
@@ -48,7 +69,10 @@ export default function Deals() {
                     <Card key={deal.id} className="cursor-pointer hover:shadow-md transition-shadow">
                       <CardContent className="p-3 space-y-2">
                         <p className="text-sm font-medium leading-tight">{deal.title}</p>
-                        <p className="text-xs text-muted-foreground">{deal.org}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs text-muted-foreground flex-1">{deal.org}</p>
+                          <Badge className={`${serviceColors[deal.service]} text-[9px] px-1.5`}>{deal.service}</Badge>
+                        </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-semibold text-primary">£{deal.value.toLocaleString()}</span>
                           <div className="flex items-center gap-2">
