@@ -393,7 +393,7 @@ function DealDetailPanel({ deal, onClose }: { deal: Deal; onClose: () => void })
         <div className="space-y-3 mb-4">
           <div className="space-y-1">
             <label className="text-xs text-muted-foreground">Stage</label>
-            <Select value={editValues.stage} onValueChange={(v) => setEditValues({ ...editValues, stage: v })}>
+            <Select value={editValues.stage} onValueChange={(v: string) => setEditValues({ ...editValues, stage: v as typeof deal.stage })}>
               <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {stages.map((s) => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
