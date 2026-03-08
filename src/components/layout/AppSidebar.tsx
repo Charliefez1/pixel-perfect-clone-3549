@@ -79,7 +79,7 @@ function NavItem({ item, collapsed }: { item: typeof mainNav[0]; collapsed: bool
   );
 }
 
-export function AppSidebar() {
+export function AppSidebar({ onOpenAI }: { onOpenAI?: () => void }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
