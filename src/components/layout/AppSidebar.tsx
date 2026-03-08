@@ -2,34 +2,55 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  GitBranch,
+  Bell,
   Users,
   Building2,
+  Briefcase,
+  CalendarDays,
+  FileText,
+  FileSignature,
+  ClipboardList,
+  Globe,
   FolderKanban,
   CheckSquare,
-  FileText,
-  Activity,
-  Settings,
+  Clock,
+  UserCog,
+  Timer,
+  Receipt,
+  CalendarClock,
+  ShoppingCart,
+  CreditCard,
+  Layers,
+  Search,
   ChevronLeft,
   ChevronRight,
-  Search,
-  Bell,
 } from "lucide-react";
 import { useState } from "react";
 
 const mainNav = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
-  { to: "/activity", icon: Bell, label: "Notifications" },
+  { to: "/notifications", icon: Bell, label: "Notifications" },
+  { to: "/clients", icon: Building2, label: "Clients" },
   { to: "/contacts", icon: Users, label: "Contacts" },
-  { to: "/organisations", icon: Building2, label: "Organisations" },
 ];
 
 const workspaceNav = [
-  { to: "/pipeline", icon: GitBranch, label: "Deals" },
+  { to: "/deals", icon: Briefcase, label: "Deals" },
+  { to: "/meetings", icon: CalendarDays, label: "Meetings" },
+  { to: "/proposals", icon: FileText, label: "Proposals" },
+  { to: "/contracts", icon: FileSignature, label: "Contracts" },
+  { to: "/forms", icon: ClipboardList, label: "Forms" },
+  { to: "/client-portal", icon: Globe, label: "Client Portal" },
   { to: "/projects", icon: FolderKanban, label: "Projects" },
   { to: "/tasks", icon: CheckSquare, label: "Tasks" },
-  { to: "/invoices", icon: FileText, label: "Invoices" },
-  { to: "/settings", icon: Settings, label: "Settings" },
+  { to: "/time-tracking", icon: Clock, label: "Time Tracking" },
+  { to: "/resourcing", icon: UserCog, label: "Resourcing" },
+  { to: "/timesheets", icon: Timer, label: "Timesheets" },
+  { to: "/invoices", icon: Receipt, label: "Invoices" },
+  { to: "/scheduling", icon: CalendarClock, label: "Scheduling" },
+  { to: "/purchase-orders", icon: ShoppingCart, label: "Purchase Orders" },
+  { to: "/rate-cards", icon: CreditCard, label: "Rate Cards" },
+  { to: "/services", icon: Layers, label: "Services" },
 ];
 
 function NavItem({ item, collapsed }: { item: typeof mainNav[0]; collapsed: boolean }) {
