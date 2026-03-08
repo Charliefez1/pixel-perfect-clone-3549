@@ -1,158 +1,138 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  TrendingUp,
-  FolderKanban,
-  AlertTriangle,
-  FileText,
-  ArrowUpRight,
-} from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { TrendingUp, Briefcase, FolderKanban, CheckSquare, Receipt, Calendar } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
-const summaryCards = [
-  { title: "Open Deals", value: "£284,500", subtitle: "12 active deals", icon: TrendingUp, trend: "+3 this week" },
-  { title: "Active Projects", value: "8", subtitle: "3 in delivery phase", icon: FolderKanban, trend: "2 starting soon" },
-  { title: "Overdue Tasks", value: "5", subtitle: "Across 3 projects", icon: AlertTriangle, trend: "2 critical" },
-  { title: "Outstanding Invoices", value: "£42,300", subtitle: "6 unpaid", icon: FileText, trend: "1 overdue" },
+const stats = [
+  { label: "Pipeline Value", value: "£218,500", change: "+12%", icon: Briefcase, color: "text-primary" },
+  { label: "Active Projects", value: "8", change: "+2", icon: FolderKanban, color: "text-[hsl(var(--stage-qualified))]" },
+  { label: "Overdue Tasks", value: "3", change: "-1", icon: CheckSquare, color: "text-[hsl(var(--priority-high))]" },
+  { label: "Outstanding Invoices", value: "£42,800", change: "4 unpaid", icon: Receipt, color: "text-[hsl(var(--stage-proposal))]" },
 ];
 
 const pipelineData = [
-  { stage: "Lead", value: 45000 },
-  { stage: "Qualified", value: 62000 },
-  { stage: "Proposal", value: 85000 },
-  { stage: "Negotiation", value: 52500 },
-  { stage: "Verbal Yes", value: 40000 },
+  { stage: "Lead", value: 40000, color: "hsl(var(--stage-lead))" },
+  { stage: "Qualified", value: 110000, color: "hsl(var(--stage-qualified))" },
+  { stage: "Proposal", value: 117000, color: "hsl(var(--stage-proposal))" },
+  { stage: "Negotiation", value: 48000, color: "hsl(var(--stage-negotiation))" },
+  { stage: "Verbal", value: 38000, color: "hsl(var(--stage-verbal))" },
 ];
 
-const upcomingTasks = [
-  { title: "Follow up with Barclays HR", due: "Today", priority: "high", project: "Barclays L&D" },
-  { title: "Prepare proposal for NHS Trust", due: "Tomorrow", priority: "critical", project: "NHS Yorkshire" },
-  { title: "Review session feedback", due: "Wed", priority: "medium", project: "Deloitte Wellbeing" },
-  { title: "Send invoice to AstraZeneca", due: "Thu", priority: "low", project: "AZ Programme" },
+const upcomingSessions = [
+  { title: "NHS Blood & Transplant - Manager Training", client: "NHS Blood & Transplant", date: "Mar 10", facilitator: "RF", duration: "3 hours" },
+  { title: "Lloyds Bank - Executive Briefing", client: "Lloyds Bank", date: "Mar 11", facilitator: "RF", duration: "3 hours" },
+  { title: "Sky - Gen Z Workshop", client: "Sky", date: "Mar 12", facilitator: "CF", duration: "90 min" },
+  { title: "TfL - Champions Programme", client: "Transport for London", date: "Mar 14", facilitator: "RF", duration: "3 hours" },
 ];
 
 const recentActivity = [
-  { action: "Deal moved to Proposal Sent", entity: "Barclays Leadership Programme", time: "2h ago", user: "Charlie" },
-  { action: "New contact added", entity: "Sarah Mitchell (NHS Trust)", time: "4h ago", user: "Rich" },
-  { action: "Task completed", entity: "Prepare workshop materials", time: "Yesterday", user: "Charlie" },
-  { action: "Invoice paid", entity: "INV-2024-041 (£8,500)", time: "Yesterday", user: "System" },
-  { action: "Session delivered", entity: "Deloitte Resilience Workshop", time: "2 days ago", user: "Rich" },
+  { action: "Moved deal to Proposal Sent", entity: "IBM Neuroinclusion Strategy", user: "Rich", initials: "RF", time: "2 hours ago" },
+  { action: "Delivered session", entity: "Google UK - ADHD Workshop", user: "Rich", initials: "RF", time: "Yesterday" },
+  { action: "New deal created", entity: "PayPal Manager Training — £28,000", user: "Charlie", initials: "CF", time: "Yesterday" },
+  { action: "Invoice paid", entity: "INV-2026-041 — Aviva — £15,200", user: "System", initials: "SY", time: "2 days ago" },
+  { action: "Proposal accepted", entity: "NHS Yorkshire Champions Programme", user: "Charlie", initials: "CF", time: "3 days ago" },
 ];
-
-const priorityColors: Record<string, string> = {
-  critical: "bg-[hsl(var(--priority-critical))] text-primary-foreground",
-  high: "bg-[hsl(var(--priority-high))] text-primary-foreground",
-  medium: "bg-[hsl(var(--priority-medium))] text-foreground",
-  low: "bg-[hsl(var(--priority-low))] text-primary-foreground",
-};
 
 export default function Dashboard() {
   return (
     <>
-      {/* Simplified top bar for Home — Bonsai style */}
-      <header className="h-12 border-b border-border bg-card flex items-center px-6 sticky top-0 z-10">
-        <h1 className="text-lg font-bold">Home</h1>
-      </header>
+      <div className="border-b border-border bg-card px-6 py-4 sticky top-0 z-10">
+        <h1 className="text-xl font-bold">Dashboard</h1>
+        <p className="text-sm text-muted-foreground mt-1">Welcome back to Neurodiversity Global Hub</p>
+      </div>
       <div className="flex-1 overflow-auto p-6 space-y-6">
-        {/* Welcome */}
-        <div>
-          <h2 className="text-2xl font-bold">Good morning, Charlie</h2>
-          <p className="text-muted-foreground">Here's what's happening across NDG Group today.</p>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {summaryCards.map((card) => (
-            <Card key={card.title}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{card.title}</CardTitle>
-                <card.icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{card.value}</div>
-                <p className="text-xs text-muted-foreground mt-1">{card.subtitle}</p>
-                <p className="text-xs text-primary flex items-center gap-1 mt-1">
-                  <ArrowUpRight className="h-3 w-3" />
-                  {card.trend}
-                </p>
+        {/* Stats */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {stats.map((s) => (
+            <Card key={s.label}>
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center ${s.color}`}>
+                  <s.icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{s.value}</p>
+                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                </div>
+                <Badge variant="secondary" className="ml-auto text-[10px]">{s.change}</Badge>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid gap-6 lg:grid-cols-2">
           {/* Pipeline Chart */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="text-base">Pipeline Value by Stage</CardTitle>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-primary" />
+                Pipeline by Stage
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={pipelineData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="stage" className="text-xs" tick={{ fill: 'hsl(215, 14%, 46%)' }} />
-                  <YAxis className="text-xs" tick={{ fill: 'hsl(215, 14%, 46%)' }} tickFormatter={(v) => `£${v / 1000}k`} />
-                  <Tooltip
-                    formatter={(value: number) => [`£${value.toLocaleString()}`, 'Value']}
-                    contentStyle={{
-                      backgroundColor: 'hsl(0, 0%, 100%)',
-                      border: '1px solid hsl(214, 20%, 90%)',
-                      borderRadius: '0.5rem',
-                    }}
-                  />
-                  <Bar dataKey="value" fill="hsl(129, 44%, 50.6%)" radius={[4, 4, 0, 0]} />
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={pipelineData} layout="vertical" margin={{ left: 0, right: 16 }}>
+                  <XAxis type="number" tickFormatter={(v) => `£${(v / 1000).toFixed(0)}k`} fontSize={11} />
+                  <YAxis type="category" dataKey="stage" width={80} fontSize={11} />
+                  <Tooltip formatter={(v: number) => `£${v.toLocaleString()}`} />
+                  <Bar dataKey="value" radius={4}>
+                    {pipelineData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* Upcoming Tasks */}
+          {/* Upcoming Sessions */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Upcoming Tasks</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                Upcoming Sessions
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {upcomingTasks.map((task, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <Badge className={`${priorityColors[task.priority]} text-[10px] px-1.5 py-0.5 shrink-0 mt-0.5`}>
-                    {task.priority}
-                  </Badge>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{task.title}</p>
-                    <p className="text-xs text-muted-foreground">{task.project} · {task.due}</p>
+            <CardContent>
+              <div className="space-y-3">
+                {upcomingSessions.map((s, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/50 transition-colors">
+                    <div className="text-center shrink-0 w-12">
+                      <p className="text-xs text-muted-foreground">Mar</p>
+                      <p className="text-lg font-bold">{s.date.split(" ")[1]}</p>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{s.title}</p>
+                      <p className="text-xs text-muted-foreground">{s.client} • {s.duration}</p>
+                    </div>
+                    <Avatar className="h-7 w-7">
+                      <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{s.facilitator}</AvatarFallback>
+                    </Avatar>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Recent Activity */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Activity</CardTitle>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Recent Activity</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {recentActivity.map((item, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                <div key={i} className="flex items-start gap-3">
+                  <Avatar className="h-7 w-7 shrink-0">
+                    <AvatarFallback className="text-[10px] bg-primary/10 text-primary">{item.initials}</AvatarFallback>
+                  </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm">
-                      <span className="font-medium">{item.user}</span>
-                      {" "}
+                      <span className="font-semibold">{item.user}</span>{" "}
                       <span className="text-muted-foreground">{item.action}</span>
-                      {" "}
-                      <span className="font-medium">{item.entity}</span>
                     </p>
+                    <p className="text-sm font-medium">{item.entity}</p>
                   </div>
                   <span className="text-xs text-muted-foreground shrink-0">{item.time}</span>
                 </div>
