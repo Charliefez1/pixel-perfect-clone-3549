@@ -31,15 +31,21 @@ import { useState } from "react";
 const mainNav = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
   { to: "/deals", icon: Briefcase, label: "Deals" },
+  { to: "/projects", icon: FolderKanban, label: "Projects" },
   { to: "/deliveries", icon: FolderKanban, label: "Deliveries" },
+  { to: "/tasks", icon: CheckSquare, label: "Tasks" },
   { to: "/invoices", icon: Receipt, label: "Invoices" },
+  { to: "/purchase-orders", icon: ShoppingCart, label: "Purchase Orders" },
 ];
 
 const workspaceNav = [
   { to: "/clients", icon: Building2, label: "Clients" },
   { to: "/contacts", icon: Users, label: "Contacts" },
+  { to: "/meetings", icon: CalendarDays, label: "Sessions" },
   { to: "/proposals", icon: FileText, label: "Proposals" },
   { to: "/contracts", icon: FileSignature, label: "Contracts" },
+  { to: "/forms", icon: ClipboardList, label: "Forms" },
+  { to: "/client-portal", icon: Globe, label: "Client Portal" },
 ];
 
 const settingsNav = [
