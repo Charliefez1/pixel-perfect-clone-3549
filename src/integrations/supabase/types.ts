@@ -234,6 +234,7 @@ export type Database = {
           id: string
           notes: string | null
           organisation_id: string | null
+          proposal_id: string | null
           signed_at: string | null
           start_date: string | null
           status: string
@@ -249,6 +250,7 @@ export type Database = {
           id?: string
           notes?: string | null
           organisation_id?: string | null
+          proposal_id?: string | null
           signed_at?: string | null
           start_date?: string | null
           status?: string
@@ -264,6 +266,7 @@ export type Database = {
           id?: string
           notes?: string | null
           organisation_id?: string | null
+          proposal_id?: string | null
           signed_at?: string | null
           start_date?: string | null
           status?: string
@@ -284,6 +287,13 @@ export type Database = {
             columns: ["organisation_id"]
             isOneToOne: false
             referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
             referencedColumns: ["id"]
           },
         ]
@@ -594,6 +604,7 @@ export type Database = {
       }
       invoices: {
         Row: {
+          contract_id: string | null
           created_at: string
           created_by: string | null
           deal_id: string | null
@@ -617,6 +628,7 @@ export type Database = {
           viewed_at: string | null
         }
         Insert: {
+          contract_id?: string | null
           created_at?: string
           created_by?: string | null
           deal_id?: string | null
@@ -640,6 +652,7 @@ export type Database = {
           viewed_at?: string | null
         }
         Update: {
+          contract_id?: string | null
           created_at?: string
           created_by?: string | null
           deal_id?: string | null
@@ -663,6 +676,13 @@ export type Database = {
           viewed_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "invoices_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invoices_deal_id_fkey"
             columns: ["deal_id"]
