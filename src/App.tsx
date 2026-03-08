@@ -32,6 +32,9 @@ import { CreateDealDialog } from "@/components/dialogs/CreateDealDialog";
 import { CreateTaskDialog } from "@/components/dialogs/CreateTaskDialog";
 import { CreateClientDialog } from "@/components/dialogs/CreateClientDialog";
 import { CreateContactDialog } from "@/components/dialogs/CreateContactDialog";
+import { CreateProjectDialog } from "@/components/dialogs/CreateProjectDialog";
+import { CreateSessionDialog } from "@/components/dialogs/CreateSessionDialog";
+import { CreateInvoiceDialog } from "@/components/dialogs/CreateInvoiceDialog";
 import { useState, createContext, useContext, useCallback } from "react";
 
 const queryClient = new QueryClient();
@@ -41,6 +44,9 @@ interface DialogContextType {
   openCreateTask: () => void;
   openCreateClient: () => void;
   openCreateContact: () => void;
+  openCreateProject: () => void;
+  openCreateSession: () => void;
+  openCreateInvoice: () => void;
 }
 
 export const DialogContext = createContext<DialogContextType>({
@@ -48,6 +54,9 @@ export const DialogContext = createContext<DialogContextType>({
   openCreateTask: () => {},
   openCreateClient: () => {},
   openCreateContact: () => {},
+  openCreateProject: () => {},
+  openCreateSession: () => {},
+  openCreateInvoice: () => {},
 });
 
 export const useDialogs = () => useContext(DialogContext);
@@ -77,12 +86,18 @@ function AppShell() {
   const [taskOpen, setTaskOpen] = useState(false);
   const [clientOpen, setClientOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+  const [projectOpen, setProjectOpen] = useState(false);
+  const [sessionOpen, setSessionOpen] = useState(false);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
 
   const dialogs: DialogContextType = {
     openCreateDeal: useCallback(() => setDealOpen(true), []),
     openCreateTask: useCallback(() => setTaskOpen(true), []),
     openCreateClient: useCallback(() => setClientOpen(true), []),
     openCreateContact: useCallback(() => setContactOpen(true), []),
+    openCreateProject: useCallback(() => setProjectOpen(true), []),
+    openCreateSession: useCallback(() => setSessionOpen(true), []),
+    openCreateInvoice: useCallback(() => setInvoiceOpen(true), []),
   };
 
   return (
@@ -97,6 +112,9 @@ function AppShell() {
       <CreateTaskDialog open={taskOpen} onOpenChange={setTaskOpen} />
       <CreateClientDialog open={clientOpen} onOpenChange={setClientOpen} />
       <CreateContactDialog open={contactOpen} onOpenChange={setContactOpen} />
+      <CreateProjectDialog open={projectOpen} onOpenChange={setProjectOpen} />
+      <CreateSessionDialog open={sessionOpen} onOpenChange={setSessionOpen} />
+      <CreateInvoiceDialog open={invoiceOpen} onOpenChange={setInvoiceOpen} />
       <Routes>
         <Route path="/auth" element={<AuthRoute />} />
         <Route element={<ProtectedRoutes />}>
