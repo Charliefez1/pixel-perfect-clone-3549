@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useOrganisations } from "@/hooks/useOrganisations";
+import { useOrganisations, Organisation } from "@/hooks/useOrganisations";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DetailPanel } from "@/components/layout/DetailPanel";
+import { useDialogs } from "@/App";
 
 const sectorColors: Record<string, string> = {
   Healthcare: "bg-[hsl(var(--stage-lead))]/20 text-[hsl(var(--stage-lead))]",
@@ -16,10 +19,12 @@ const sectorColors: Record<string, string> = {
 
 export default function Clients() {
   const { data: clients, isLoading } = useOrganisations();
+  const [selected, setSelected] = useState<Organisation | null>(null);
+  const { openCreateClient } = useDialogs();
 
   return (
     <>
-      <PageHeader title="Clients" searchPlaceholder="Search organisations..." actionLabel="New Client" />
+      <PageHeader title="Clients" searchPlaceholder="Search organisations..." actionLabel="New Client" onAction={openCreateClient} />
       <div className="flex-1 overflow-auto">
         <Card className="border-0 rounded-none shadow-none">
           <CardContent className="p-0">
@@ -46,7 +51,7 @@ export default function Clients() {
                 </TableHeader>
                 <TableBody>
                   {clients.map((c) => (
-                    <TableRow key={c.id} className="cursor-pointer">
+                    <TableRow key={c.id} className="cursor-pointer" onClick={() => setSelected(c)}>
                       <TableCell className="pl-6">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
@@ -80,6 +85,23 @@ export default function Clients() {
           </CardContent>
         </Card>
       </div>
+
+      {selected && (
+        <DetailPanel
+          open={!!selected}
+          onOpenChange={() => setSelected(null)}
+          title={selected.name}
+          badge={selected.sector ? { label: selected.sector } : undefined}
+          fields={[
+            { label: "Email", value: selected.email },
+            { label: "Phone", value: selected.phone },
+            { label: "Website", value: selected.website },
+            { label: "Address", value: selected.address },
+            { label: "Sector", value: selected.sector },
+            { label: "Notes", value: selected.notes },
+          ]}
+        />
+      )}
     </>
   );
 }
