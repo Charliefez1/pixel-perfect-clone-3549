@@ -24,6 +24,7 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -78,7 +79,7 @@ function NavItem({ item, collapsed }: { item: typeof mainNav[0]; collapsed: bool
   );
 }
 
-export function AppSidebar() {
+export function AppSidebar({ onOpenAI }: { onOpenAI?: () => void }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -139,6 +140,17 @@ export function AppSidebar() {
           <NavItem key={item.to} item={item} collapsed={collapsed} />
         ))}
       </nav>
+
+      {/* AI Assistant toggle */}
+      {onOpenAI && (
+        <button
+          onClick={onOpenAI}
+          className="flex items-center justify-center gap-2 mx-3 mb-2 h-9 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-normal text-sm font-medium"
+        >
+          <Sparkles className="h-4 w-4" />
+          {!collapsed && <span>AI Assistant</span>}
+        </button>
+      )}
 
       {/* Collapse toggle */}
       <button

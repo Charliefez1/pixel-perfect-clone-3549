@@ -40,6 +40,7 @@ export interface Template {
   id: string;
   name: string;
   service_type: string | null;
+  package_size: string | null;
   tasks_json: Array<{ title: string; assignee: string; relative_due_days: number }>;
   created_at: string;
 }

@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -174,6 +175,7 @@ function ClientDetailPanel({ client, onClose }: { client: Organisation; onClose:
           <TabsTrigger value="contacts" className="flex-1">Contacts ({linkedContacts.length})</TabsTrigger>
           <TabsTrigger value="deals" className="flex-1">Deals ({linkedDeals.length})</TabsTrigger>
           <TabsTrigger value="invoices" className="flex-1">Invoices ({linkedInvoices.length})</TabsTrigger>
+          <TabsTrigger value="activity" className="flex-1">Activity</TabsTrigger>
         </TabsList>
         <TabsContent value="contacts" className="pt-4">
           {!linkedContacts.length ? (
@@ -228,6 +230,9 @@ function ClientDetailPanel({ client, onClose }: { client: Organisation; onClose:
               ))}
             </div>
           )}
+        </TabsContent>
+        <TabsContent value="activity" className="pt-4">
+          <ActivityTimeline entityType="organisation" entityId={client.id} organisationId={client.id} />
         </TabsContent>
       </Tabs>
     </DetailPanel>
