@@ -1,4 +1,4 @@
-import { TopBar } from "@/components/layout/TopBar";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -41,9 +41,13 @@ const priorityStyles: Record<string, string> = {
 export default function Tasks() {
   return (
     <>
-      <TopBar title="Tasks" />
+      <PageHeader
+        title="Tasks"
+        searchPlaceholder="Search tasks..."
+        actionLabel="New Task"
+      />
       <div className="flex-1 overflow-auto p-6">
-        <div className="flex gap-4 overflow-x-auto pb-4 min-h-[calc(100vh-8rem)]">
+        <div className="flex gap-4 overflow-x-auto pb-4 min-h-[calc(100vh-12rem)]">
           {columns.map((col) => {
             const colTasks = mockTasks.filter((t) => t.status === col.id);
             return (
