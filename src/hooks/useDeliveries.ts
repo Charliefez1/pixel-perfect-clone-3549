@@ -16,6 +16,7 @@ export interface Delivery {
   id: string;
   deal_id: string | null;
   organisation_id: string | null;
+  project_id: string | null;
   title: string;
   service_type: string | null;
   status: string;
