@@ -1,21 +1,22 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Mail } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useContacts } from "@/hooks/useContacts";
+import { useContacts, Contact } from "@/hooks/useContacts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DetailPanel } from "@/components/layout/DetailPanel";
+import { useDialogs } from "@/App";
 
 export default function Contacts() {
   const { data: contacts, isLoading } = useContacts();
+  const [selected, setSelected] = useState<Contact | null>(null);
+  const { openCreateContact } = useDialogs();
 
   return (
     <>
-      <PageHeader
-        title="Contacts"
-        searchPlaceholder="Search contacts..."
-        actionLabel="New Contact"
-      />
+      <PageHeader title="Contacts" searchPlaceholder="Search contacts..." actionLabel="New Contact" onAction={openCreateContact} />
       <div className="flex-1 overflow-auto">
         <Card className="border-0 rounded-none shadow-none">
           <CardContent className="p-0">
@@ -43,7 +44,7 @@ export default function Contacts() {
                 </TableHeader>
                 <TableBody>
                   {contacts.map((c) => (
-                    <TableRow key={c.id} className="cursor-pointer">
+                    <TableRow key={c.id} className="cursor-pointer" onClick={() => setSelected(c)}>
                       <TableCell className="pl-6">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-7 w-7">
@@ -78,6 +79,21 @@ export default function Contacts() {
           </CardContent>
         </Card>
       </div>
+
+      {selected && (
+        <DetailPanel
+          open={!!selected}
+          onOpenChange={() => setSelected(null)}
+          title={`${selected.first_name} ${selected.last_name}`}
+          fields={[
+            { label: "Email", value: selected.email },
+            { label: "Phone", value: selected.phone },
+            { label: "Job Title", value: selected.job_title },
+            { label: "Organisation", value: selected.organisations?.name },
+            { label: "Notes", value: selected.notes },
+          ]}
+        />
+      )}
     </>
   );
 }

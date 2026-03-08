@@ -27,8 +27,30 @@ import RateCards from "@/pages/RateCards";
 import Services from "@/pages/Services";
 import Auth from "@/pages/Auth";
 import NotFound from "@/pages/NotFound";
+import { CommandPalette } from "@/components/layout/CommandPalette";
+import { CreateDealDialog } from "@/components/dialogs/CreateDealDialog";
+import { CreateTaskDialog } from "@/components/dialogs/CreateTaskDialog";
+import { CreateClientDialog } from "@/components/dialogs/CreateClientDialog";
+import { CreateContactDialog } from "@/components/dialogs/CreateContactDialog";
+import { useState, createContext, useContext, useCallback } from "react";
 
 const queryClient = new QueryClient();
+
+interface DialogContextType {
+  openCreateDeal: () => void;
+  openCreateTask: () => void;
+  openCreateClient: () => void;
+  openCreateContact: () => void;
+}
+
+export const DialogContext = createContext<DialogContextType>({
+  openCreateDeal: () => {},
+  openCreateTask: () => {},
+  openCreateClient: () => {},
+  openCreateContact: () => {},
+});
+
+export const useDialogs = () => useContext(DialogContext);
 
 function ProtectedRoutes() {
   const { session, loading } = useAuth();
@@ -50,6 +72,61 @@ function ProtectedRoutes() {
   return <AppLayout />;
 }
 
+function AppShell() {
+  const [dealOpen, setDealOpen] = useState(false);
+  const [taskOpen, setTaskOpen] = useState(false);
+  const [clientOpen, setClientOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+
+  const dialogs: DialogContextType = {
+    openCreateDeal: useCallback(() => setDealOpen(true), []),
+    openCreateTask: useCallback(() => setTaskOpen(true), []),
+    openCreateClient: useCallback(() => setClientOpen(true), []),
+    openCreateContact: useCallback(() => setContactOpen(true), []),
+  };
+
+  return (
+    <DialogContext.Provider value={dialogs}>
+      <CommandPalette
+        onCreateDeal={dialogs.openCreateDeal}
+        onCreateTask={dialogs.openCreateTask}
+        onCreateClient={dialogs.openCreateClient}
+        onCreateContact={dialogs.openCreateContact}
+      />
+      <CreateDealDialog open={dealOpen} onOpenChange={setDealOpen} />
+      <CreateTaskDialog open={taskOpen} onOpenChange={setTaskOpen} />
+      <CreateClientDialog open={clientOpen} onOpenChange={setClientOpen} />
+      <CreateContactDialog open={contactOpen} onOpenChange={setContactOpen} />
+      <Routes>
+        <Route path="/auth" element={<AuthRoute />} />
+        <Route element={<ProtectedRoutes />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/clients" element={<Clients />} />
+          <Route path="/contacts" element={<Contacts />} />
+          <Route path="/deals" element={<Deals />} />
+          <Route path="/meetings" element={<Meetings />} />
+          <Route path="/proposals" element={<Proposals />} />
+          <Route path="/contracts" element={<Contracts />} />
+          <Route path="/forms" element={<Forms />} />
+          <Route path="/client-portal" element={<ClientPortal />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/time-tracking" element={<TimeTracking />} />
+          <Route path="/resourcing" element={<Resourcing />} />
+          <Route path="/timesheets" element={<Timesheets />} />
+          <Route path="/invoices" element={<Invoices />} />
+          <Route path="/scheduling" element={<Scheduling />} />
+          <Route path="/purchase-orders" element={<PurchaseOrders />} />
+          <Route path="/rate-cards" element={<RateCards />} />
+          <Route path="/services" element={<Services />} />
+        </Route>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </DialogContext.Provider>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -57,32 +134,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/auth" element={<AuthRoute />} />
-            <Route element={<ProtectedRoutes />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/notifications" element={<Notifications />} />
-              <Route path="/clients" element={<Clients />} />
-              <Route path="/contacts" element={<Contacts />} />
-              <Route path="/deals" element={<Deals />} />
-              <Route path="/meetings" element={<Meetings />} />
-              <Route path="/proposals" element={<Proposals />} />
-              <Route path="/contracts" element={<Contracts />} />
-              <Route path="/forms" element={<Forms />} />
-              <Route path="/client-portal" element={<ClientPortal />} />
-              <Route path="/projects" element={<Projects />} />
-              <Route path="/tasks" element={<Tasks />} />
-              <Route path="/time-tracking" element={<TimeTracking />} />
-              <Route path="/resourcing" element={<Resourcing />} />
-              <Route path="/timesheets" element={<Timesheets />} />
-              <Route path="/invoices" element={<Invoices />} />
-              <Route path="/scheduling" element={<Scheduling />} />
-              <Route path="/purchase-orders" element={<PurchaseOrders />} />
-              <Route path="/rate-cards" element={<RateCards />} />
-              <Route path="/services" element={<Services />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AppShell />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
