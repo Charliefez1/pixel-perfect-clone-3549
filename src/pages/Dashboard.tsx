@@ -1,4 +1,3 @@
-import { TopBar } from "@/components/layout/TopBar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -19,34 +18,10 @@ import {
 } from "recharts";
 
 const summaryCards = [
-  {
-    title: "Open Deals",
-    value: "£284,500",
-    subtitle: "12 active deals",
-    icon: TrendingUp,
-    trend: "+3 this week",
-  },
-  {
-    title: "Active Projects",
-    value: "8",
-    subtitle: "3 in delivery phase",
-    icon: FolderKanban,
-    trend: "2 starting soon",
-  },
-  {
-    title: "Overdue Tasks",
-    value: "5",
-    subtitle: "Across 3 projects",
-    icon: AlertTriangle,
-    trend: "2 critical",
-  },
-  {
-    title: "Outstanding Invoices",
-    value: "£42,300",
-    subtitle: "6 unpaid",
-    icon: FileText,
-    trend: "1 overdue",
-  },
+  { title: "Open Deals", value: "£284,500", subtitle: "12 active deals", icon: TrendingUp, trend: "+3 this week" },
+  { title: "Active Projects", value: "8", subtitle: "3 in delivery phase", icon: FolderKanban, trend: "2 starting soon" },
+  { title: "Overdue Tasks", value: "5", subtitle: "Across 3 projects", icon: AlertTriangle, trend: "2 critical" },
+  { title: "Outstanding Invoices", value: "£42,300", subtitle: "6 unpaid", icon: FileText, trend: "1 overdue" },
 ];
 
 const pipelineData = [
@@ -82,7 +57,10 @@ const priorityColors: Record<string, string> = {
 export default function Dashboard() {
   return (
     <>
-      <TopBar title="Dashboard" />
+      {/* Simplified top bar for Home — Bonsai style */}
+      <header className="h-12 border-b border-border bg-card flex items-center px-6 sticky top-0 z-10">
+        <h1 className="text-lg font-bold">Home</h1>
+      </header>
       <div className="flex-1 overflow-auto p-6 space-y-6">
         {/* Welcome */}
         <div>
@@ -160,7 +138,7 @@ export default function Dashboard() {
         {/* Recent Activity */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Recent Activity</CardTitle>
+            <CardTitle className="text-base">Activity</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -169,14 +147,14 @@ export default function Dashboard() {
                   <div className="w-2 h-2 rounded-full bg-primary shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm">
-                      <span className="font-medium">{item.action}</span>
-                      {" — "}
-                      <span className="text-muted-foreground">{item.entity}</span>
+                      <span className="font-medium">{item.user}</span>
+                      {" "}
+                      <span className="text-muted-foreground">{item.action}</span>
+                      {" "}
+                      <span className="font-medium">{item.entity}</span>
                     </p>
                   </div>
-                  <div className="text-xs text-muted-foreground shrink-0">
-                    {item.user} · {item.time}
-                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0">{item.time}</span>
                 </div>
               ))}
             </div>

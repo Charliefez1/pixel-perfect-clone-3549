@@ -1,4 +1,4 @@
-import { TopBar } from "@/components/layout/TopBar";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,7 +23,11 @@ const statusColors: Record<string, string> = {
 export default function Invoices() {
   return (
     <>
-      <TopBar title="Invoices" />
+      <PageHeader
+        title="Invoices"
+        searchPlaceholder="Search..."
+        actionLabel="New Invoice"
+      />
       <div className="flex-1 overflow-auto p-6 space-y-6">
         {/* Summary */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

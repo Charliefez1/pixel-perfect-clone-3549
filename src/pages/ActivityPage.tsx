@@ -1,4 +1,4 @@
-import { TopBar } from "@/components/layout/TopBar";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,12 @@ const typeColors: Record<string, string> = {
 export default function ActivityPage() {
   return (
     <>
-      <TopBar title="Activity" />
+      <PageHeader
+        title="Notifications"
+        searchPlaceholder="Search activity..."
+        showFilter={false}
+        actionLabel={undefined}
+      />
       <div className="flex-1 overflow-auto p-6">
         <Card>
           <CardContent className="p-6">
