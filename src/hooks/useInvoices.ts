@@ -1,0 +1,57 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+
+export type Invoice = Tables<"invoices"> & {
+  organisations?: { name: string } | null;
+  projects?: { name: string } | null;
+};
+
+export function useInvoices() {
+  return useQuery({
+    queryKey: ["invoices"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("*, organisations(name), projects(name)")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as Invoice[];
+    },
+  });
+}
+
+export function useInvoice(id: string | undefined) {
+  return useQuery({
+    queryKey: ["invoices", id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("*, organisations(name), projects(name), invoice_items(*)")
+        .eq("id", id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useCreateInvoice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (invoice: TablesInsert<"invoices">) => {
+      const { data, error } = await supabase
+        .from("invoices")
+        .insert(invoice)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+    },
+  });
+}
