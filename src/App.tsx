@@ -13,6 +13,7 @@ import Deals from "@/pages/Deals";
 import Meetings from "@/pages/Meetings";
 import Proposals from "@/pages/Proposals";
 import Contracts from "@/pages/Contracts";
+import Deliveries from "@/pages/Deliveries";
 import Forms from "@/pages/Forms";
 import ClientPortal from "@/pages/ClientPortal";
 import Projects from "@/pages/Projects";
