@@ -127,6 +127,17 @@ export function AppSidebar() {
         {workspaceNav.map((item) => (
           <NavItem key={item.to} item={item} collapsed={collapsed} />
         ))}
+
+        {/* Settings Section */}
+        {!collapsed && (
+          <p className="px-3 pt-6 pb-2 text-overline text-sidebar-foreground/40">
+            Settings
+          </p>
+        )}
+        {collapsed && <div className="h-4" />}
+        {settingsNav.map((item) => (
+          <NavItem key={item.to} item={item} collapsed={collapsed} />
+        ))}
       </nav>
 
       {/* Collapse toggle */}
