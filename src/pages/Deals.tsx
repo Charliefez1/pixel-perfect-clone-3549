@@ -455,9 +455,9 @@ function DealDetailPanel({ deal, onClose }: { deal: Deal; onClose: () => void })
                   <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
                   <div>
                     <p className="font-medium capitalize">{a.action.replace("_", " ")}</p>
-                    {a.metadata && (a.metadata as any).from && (
+                    {a.metadata && typeof a.metadata === "object" && "from" in a.metadata && (
                       <p className="text-xs text-muted-foreground">
-                        {stages.find(s => s.id === (a.metadata as any).from)?.label} → {stages.find(s => s.id === (a.metadata as any).to)?.label}
+                        {stages.find(s => s.id === (a.metadata as { from: string }).from)?.label} → {stages.find(s => s.id === (a.metadata as { to: string }).to)?.label}
                       </p>
                     )}
                     <p className="text-xs text-muted-foreground">{format(new Date(a.created_at), "dd/MM/yyyy HH:mm")}</p>
