@@ -67,7 +67,9 @@ export default function Projects() {
   const [view, setView] = useState<ViewMode>("board");
   const [filter, setFilter] = useState<FilterMode>("all");
   const [selected, setSelected] = useState<Project | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const { openCreateProject } = useDialogs();
+  const queryClient = useQueryClient();
 
   const now = new Date();
 
