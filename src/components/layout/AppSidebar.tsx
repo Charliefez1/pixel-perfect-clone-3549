@@ -30,8 +30,10 @@ import { useProjects } from "@/hooks/useProjects";
 
 const mainNav = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
+  { to: "/deals", icon: TrendingUp, label: "Deals" },
+  { to: "/proposals", icon: FileText, label: "Proposals" },
   { to: "/projects", icon: FolderKanban, label: "Projects" },
-  { to: "/deliveries", icon: FolderKanban, label: "Deliveries" },
+  { to: "/deliveries", icon: Package, label: "Deliveries" },
   { to: "/tasks", icon: CheckSquare, label: "Tasks" },
   { to: "/invoices", icon: Receipt, label: "Invoices" },
   { to: "/purchase-orders", icon: ShoppingCart, label: "Purchase Orders" },
@@ -41,10 +43,12 @@ const mainNav = [
 const workspaceNav = [
   { to: "/clients", icon: Building2, label: "Clients" },
   { to: "/contacts", icon: Users, label: "Contacts" },
-  { to: "/meetings", icon: CalendarDays, label: "Sessions" },
+  { to: "/meetings", icon: CalendarDays, label: "Meetings" },
   { to: "/contracts", icon: FileSignature, label: "Contracts" },
+  { to: "/time-tracking", icon: Clock, label: "Time Tracking" },
   { to: "/forms", icon: ClipboardList, label: "Forms" },
   { to: "/client-portal", icon: Globe, label: "Client Portal" },
+  { to: "/notifications", icon: Bell, label: "Notifications" },
 ];
 
 const settingsNav = [

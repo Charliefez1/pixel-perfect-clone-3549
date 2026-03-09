@@ -209,11 +209,13 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppShell />
-        </BrowserRouter>
+        <ErrorBoundary>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppShell />
+          </BrowserRouter>
+        </ErrorBoundary>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
