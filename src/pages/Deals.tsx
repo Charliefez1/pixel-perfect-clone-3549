@@ -22,6 +22,7 @@ import { useDialogs } from "@/App";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { EntityDocuments } from "@/components/documents/EntityDocuments";
 
 const stages = [
   { id: "lead", label: "Lead", color: "bg-slate-400" },
