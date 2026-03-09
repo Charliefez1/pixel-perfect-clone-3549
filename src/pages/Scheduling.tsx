@@ -89,10 +89,14 @@ export default function Scheduling() {
                       daySessions.map(s => {
                         const isOnline = s.location?.toLowerCase().includes("zoom") || s.location?.toLowerCase().includes("teams");
                         return (
-                          <div key={s.id} className="bg-primary/5 rounded-md p-2 space-y-1">
-                            <p className="text-xs font-medium truncate">{s.title}</p>
+                          <div key={s.id} className={cn("rounded-md p-2 space-y-1", (s as any).session_type === "workshop" ? "bg-primary/10" : "bg-primary/5")}>
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-medium truncate">{s.title}</p>
+                              <Badge variant={(s as any).session_type === "workshop" ? "default" : "secondary"} className="text-[8px] h-4 px-1">
+                                {(s as any).session_type === "workshop" ? "W" : "M"}
+                              </Badge>
+                            </div>
                             {s.session_date && <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{format(parseISO(s.session_date), "h:mm a")}</p>}
-                            {s.location && <p className="text-[10px] text-muted-foreground flex items-center gap-1">{isOnline ? <Video className="h-3 w-3" /> : <MapPin className="h-3 w-3" />}{s.location}</p>}
                           </div>
                         );
                       })
