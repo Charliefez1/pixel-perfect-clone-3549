@@ -225,10 +225,16 @@ export default function Dashboard() {
           <h1 className="text-xl font-bold">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">Welcome back to NDG Hub</p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleSyncGmail} disabled={syncing}>
-          {syncing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
-          Sync Gmail
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleSyncCRM} disabled={syncingCRM}>
+            {syncingCRM ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+            Sync CRM
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleSyncGmail} disabled={syncing}>
+            {syncing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
+            Sync Gmail
+          </Button>
+        </div>
       </div>
       <div className="flex-1 overflow-auto p-6 space-y-6">
         {/* Quick Actions */}
