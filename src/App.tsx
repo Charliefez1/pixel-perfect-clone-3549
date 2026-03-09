@@ -183,6 +183,7 @@ function AppShell() {
           <Route path="/rate-cards" element={<RateCards />} />
           <Route path="/services" element={<Services />} />
           <Route path="/templates" element={<Templates />} />
+          <Route path="/reporting" element={<Reporting />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
