@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import Notifications from "@/pages/Notifications";
 import Clients from "@/pages/Clients";
+import ClientDetail from "@/pages/ClientDetail";
 import Contacts from "@/pages/Contacts";
 import Meetings from "@/pages/Meetings";
 import Contracts from "@/pages/Contracts";
@@ -163,6 +164,7 @@ function AppShell() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/clients" element={<Clients />} />
+          <Route path="/clients/:id" element={<ClientDetail />} />
           <Route path="/contacts" element={<Contacts />} />
           <Route path="/meetings" element={<Meetings />} />
           <Route path="/contracts" element={<Contracts />} />

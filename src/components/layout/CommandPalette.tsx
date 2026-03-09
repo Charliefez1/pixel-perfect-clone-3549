@@ -117,7 +117,7 @@ export function CommandPalette({ onCreateTask, onCreateClient, onCreateContact, 
             <CommandSeparator />
             <CommandGroup heading="Clients">
               {orgs.slice(0, 8).map((o) => (
-                <CommandItem key={o.id} onSelect={() => go("/clients")}>
+                <CommandItem key={o.id} onSelect={() => go(`/clients/${o.id}`)}>
                   <Building2 className="mr-2 h-4 w-4" />
                   {o.name}
                 </CommandItem>

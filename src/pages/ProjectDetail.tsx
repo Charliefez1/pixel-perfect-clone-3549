@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useProject, useUpdateProject, useDeleteProject } from "@/hooks/useProjects";
+import { useProject, useProjects, useUpdateProject, useDeleteProject } from "@/hooks/useProjects";
 import { useTasks, useUpdateTask } from "@/hooks/useTasks";
 import { useDeliveries } from "@/hooks/useDeliveries";
 import { useSessions } from "@/hooks/useSessions";
@@ -24,6 +24,7 @@ import { ActivityTab } from "@/components/projects/ActivityTab";
 import { toast } from "sonner";
 import {
   ArrowLeft,
+  Building2,
   CalendarDays,
   CheckSquare,
   Package,
@@ -84,6 +85,7 @@ export default function ProjectDetail() {
   const { data: allTasks } = useTasks();
   const { data: allDeliveries } = useDeliveries();
   const { data: allSessions } = useSessions();
+  const { data: allProjects } = useProjects();
   const { data: milestones } = useProjectMilestones(id);
   const { data: updates } = useProjectUpdates(id);
   const createUpdate = useCreateProjectUpdate();
@@ -126,6 +128,9 @@ export default function ProjectDetail() {
   const projectTasks = allTasks?.filter((t) => t.project_id === id) || [];
   const projectDeliveries = allDeliveries?.filter((d) => d.project_id === id) || [];
   const projectSessions = allSessions?.filter((s) => s.project_id === id) || [];
+  const siblingProjects = project.organisation_id
+    ? allProjects?.filter((p) => p.organisation_id === project.organisation_id && p.id !== id) || []
+    : [];
   const phaseIndex = phaseToIndex[project.neuro_phase || "needs"] || 0;
   const completedTasks = projectTasks.filter((t) => t.status === "done").length;
   const totalTasks = projectTasks.length;
@@ -305,12 +310,41 @@ Project context: ${JSON.stringify(context)}`,
               <h1 className="text-xl font-bold">{project.name}</h1>
               <Badge className={statusStyles[project.status]}>{project.status}</Badge>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {project.organisations?.name || "No organisation"}
-              {project.budget ? ` · £${project.budget.toLocaleString()}` : ""}
-            </p>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              {project.organisation_id ? (
+                <button
+                  onClick={() => navigate(`/clients/${project.organisation_id}`)}
+                  className="flex items-center gap-1 hover:text-primary transition-colors"
+                >
+                  <Building2 className="h-3.5 w-3.5" />
+                  {project.organisations?.name || "View Client"}
+                </button>
+              ) : (
+                <span>No organisation</span>
+              )}
+              {project.budget ? <span> · £{project.budget.toLocaleString()}</span> : null}
+            </div>
+            {/* Sibling projects */}
+            {siblingProjects.length > 0 && (
+              <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                <span className="text-[10px] text-muted-foreground">Also:</span>
+                {siblingProjects.map((sp) => (
+                  <button
+                    key={sp.id}
+                    onClick={() => navigate(`/projects/${sp.id}`)}
+                    className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                  >
+                    {sp.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate(`/deliveries`)}>
+              <Plus className="h-4 w-4 mr-1" />
+              Add Delivery
+            </Button>
             <Button variant="outline" size="sm" onClick={startEditing}>
               <Pencil className="h-4 w-4 mr-1" />
               Edit
