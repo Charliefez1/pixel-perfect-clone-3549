@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -122,9 +123,11 @@ export function AIChatPanel({ open, onOpenChange, context }: Props) {
 
   const currentAgent = agents.find((a) => a.id === agent) || agents[3];
 
+  const isMobile = useIsMobile();
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[420px] sm:w-[480px] flex flex-col p-0">
+      <SheetContent side={isMobile ? "bottom" : "right"} className={`flex flex-col p-0 ${isMobile ? "h-[85vh] w-full max-w-full" : "w-[420px] sm:w-[480px]"}`}>
         <SheetHeader className="p-4 border-b border-border">
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2">

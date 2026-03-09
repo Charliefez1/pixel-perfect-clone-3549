@@ -28,6 +28,7 @@ import RateCards from "@/pages/RateCards";
 import Services from "@/pages/Services";
 import Templates from "@/pages/Templates";
 import Auth from "@/pages/Auth";
+import Reporting from "@/pages/Reporting";
 import NotFound from "@/pages/NotFound";
 import { CommandPalette } from "@/components/layout/CommandPalette";
 import { CreateDealDialog } from "@/components/dialogs/CreateDealDialog";
@@ -182,6 +183,7 @@ function AppShell() {
           <Route path="/rate-cards" element={<RateCards />} />
           <Route path="/services" element={<Services />} />
           <Route path="/templates" element={<Templates />} />
+          <Route path="/reporting" element={<Reporting />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

@@ -22,11 +22,11 @@ export function PageHeader({
   children,
 }: PageHeaderProps) {
   return (
-    <div className="border-b border-border bg-background-elevated px-6 py-5 space-y-4 sticky top-0 z-10">
+    <div className="border-b border-border bg-background-elevated px-4 sm:px-6 py-4 sm:py-5 space-y-3 sm:space-y-4 sticky top-0 z-10">
       <h1 className="text-page-title">{title}</h1>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         {/* Search */}
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative flex-1 min-w-[160px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-subtle" strokeWidth={2} />
           <Input
             placeholder={searchPlaceholder}
@@ -39,7 +39,7 @@ export function PageHeader({
         {showFilter && (
           <Button variant="outline" size="sm" className="gap-2 rounded-lg">
             <SlidersHorizontal className="h-4 w-4" strokeWidth={2} />
-            Filter
+            <span className="hidden sm:inline">Filter</span>
           </Button>
         )}
 
