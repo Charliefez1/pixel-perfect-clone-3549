@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useTasks, Task, useUpdateTask } from "@/hooks/useTasks";
+import { useTasks, Task, useUpdateTask, useDeleteTask } from "@/hooks/useTasks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ViewToggle, ViewMode } from "@/components/layout/ViewToggle";
