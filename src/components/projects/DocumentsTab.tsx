@@ -4,6 +4,7 @@ import { useInvoices } from "@/hooks/useInvoices";
 import { usePurchaseOrders } from "@/hooks/usePurchaseOrders";
 import { Badge } from "@/components/ui/badge";
 import { FileText, FileSignature, Receipt, ClipboardList } from "lucide-react";
+import { EntityDocuments } from "@/components/documents/EntityDocuments";
 
 export function DocumentsTab({ projectId, dealId }: { projectId: string; dealId?: string | null }) {
   const { data: proposals } = useProposals();
@@ -23,22 +24,32 @@ export function DocumentsTab({ projectId, dealId }: { projectId: string; dealId?
     ...linkedInvoices.map((i) => ({ type: "Invoice", icon: Receipt, title: i.invoice_number, status: i.status, date: i.created_at })),
   ];
 
-  if (!docs.length) {
-    return <p className="text-sm text-muted-foreground">No documents linked to this project.</p>;
-  }
-
   return (
-    <div className="space-y-2">
-      {docs.map((d, i) => (
-        <div key={i} className="flex items-center gap-3 p-2.5 rounded-md border">
-          <d.icon className="h-4 w-4 text-muted-foreground shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{d.title}</p>
-            <p className="text-xs text-muted-foreground">{d.type}</p>
+    <div className="space-y-6">
+      {/* File Attachments */}
+      <div>
+        <p className="text-xs font-medium text-muted-foreground mb-2">File Attachments</p>
+        <EntityDocuments entityType="project" entityId={projectId} />
+      </div>
+
+      {/* Linked Documents */}
+      {docs.length > 0 && (
+        <div>
+          <p className="text-xs font-medium text-muted-foreground mb-2">Linked Documents</p>
+          <div className="space-y-2">
+            {docs.map((d, i) => (
+              <div key={i} className="flex items-center gap-3 p-2.5 rounded-md border">
+                <d.icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{d.title}</p>
+                  <p className="text-xs text-muted-foreground">{d.type}</p>
+                </div>
+                <Badge variant="secondary" className="text-[9px] capitalize">{d.status}</Badge>
+              </div>
+            ))}
           </div>
-          <Badge variant="secondary" className="text-[9px] capitalize">{d.status}</Badge>
         </div>
-      ))}
+      )}
     </div>
   );
 }

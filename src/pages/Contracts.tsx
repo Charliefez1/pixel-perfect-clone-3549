@@ -17,6 +17,7 @@ import { DetailPanel } from "@/components/layout/DetailPanel";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { FileSignature } from "lucide-react";
+import { EntityDocuments } from "@/components/documents/EntityDocuments";
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",

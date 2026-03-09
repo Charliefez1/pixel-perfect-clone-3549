@@ -141,7 +141,7 @@ export default function Invoices() {
             { label: "Notes", value: selected.notes },
           ]}
         >
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mb-4">
             <Button variant="outline" size="sm" onClick={() => { setPreviewInvoice(selected); }}>
               <Eye className="h-3.5 w-3.5 mr-1" /> Preview
             </Button>
@@ -155,6 +155,10 @@ export default function Invoices() {
                 <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Mark as Paid
               </Button>
             )}
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2">File Attachments</p>
+            <EntityDocuments entityType="invoice" entityId={selected.id} />
           </div>
         </DetailPanel>
       )}
