@@ -462,7 +462,10 @@ function DealDetailPanel({ deal, onClose }: { deal: Deal; onClose: () => void })
           </div>
         </div>
       ) : (
-        <Button variant="outline" size="sm" className="mb-4" onClick={() => setEditing(true)}>Edit Deal</Button>
+        <div className="flex gap-2 mb-4">
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>Edit Deal</Button>
+          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>Delete</Button>
+        </div>
       )}
 
       <Tabs defaultValue="activity" className="w-full">
