@@ -120,7 +120,7 @@ export default function Deliveries() {
 
   return (
     <>
-      <PageHeader title="Deliveries" searchPlaceholder="Search deliveries..." actionLabel="New Delivery">
+      <PageHeader title="Deliveries" searchPlaceholder="Search deliveries..." actionLabel="New Delivery" onAction={() => navigate("/projects")}>
         <ViewToggle value={view} onChange={setView} />
       </PageHeader>
 

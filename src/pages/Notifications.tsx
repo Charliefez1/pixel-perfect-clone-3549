@@ -83,7 +83,10 @@ export default function Notifications() {
                     className={`flex items-start gap-4 p-3 rounded-lg transition-colors cursor-pointer ${
                       item.read ? "" : "bg-primary/5"
                     }`}
-                    onClick={() => !item.read && markRead.mutate(item.id)}
+                    onClick={() => {
+                      if (!item.read) markRead.mutate(item.id);
+                      if (item.link) navigate(item.link);
+                    }}
                   >
                     <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${item.read ? "bg-transparent" : "bg-primary"}`} />
                     <div className="flex-1 min-w-0">
