@@ -24,6 +24,16 @@ interface PortalProject {
   description: string | null;
 }
 
+interface PortalInvoice {
+  id: string;
+  invoice_number: string;
+  status: string;
+  total: number | null;
+  issue_date: string | null;
+  due_date: string | null;
+  paid_date: string | null;
+}
+
 export default function PortalView() {
   const { orgId } = useParams<{ orgId: string }>();
   const [org, setOrg] = useState<PortalOrg | null>(null);
