@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Plus, AlertCircle } from "lucide-react";
-import { useDeals, Deal, useUpdateDeal } from "@/hooks/useDeals";
+import { useDeals, Deal, useUpdateDeal, useDeleteDeal } from "@/hooks/useDeals";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useActivityLog } from "@/hooks/useActivityLog";
 import { useLogActivity } from "@/hooks/useActivityLog";
