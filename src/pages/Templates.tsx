@@ -182,6 +182,7 @@ export default function Templates() {
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState("project");
   const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
 
   const projectTemplates = templates?.filter(t => !(t as any).template_type || (t as any).template_type === "project") || [];
   const proposalTemplates = templates?.filter(t => (t as any).template_type === "proposal") || [];
