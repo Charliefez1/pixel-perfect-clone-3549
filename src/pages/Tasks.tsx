@@ -259,16 +259,9 @@ export default function Tasks() {
             </Table>
           </Card>
         ) : view === "timeline" ? (
-          /* ── Timeline / Gantt View ── */
-          <TimelineView tasks={parentTasks} subtasksByParent={subtasksByParent} onSelectTask={setSelectedTask} />
+          <TaskTimelineView tasks={parentTasks} subtasksByParent={subtasksByParent} onSelectTask={setSelectedTask} />
         ) : (
-          /* ── Calendar View ── */
-          <CalendarView
-            tasks={tasks || []}
-            date={calendarDate}
-            onDateChange={setCalendarDate}
-            onSelectTask={setSelectedTask}
-          />
+          <TaskCalendarView tasks={tasks || []} date={calendarDate} onDateChange={setCalendarDate} onSelectTask={setSelectedTask} />
         )}
       </div>
 
