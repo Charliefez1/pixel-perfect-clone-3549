@@ -165,6 +165,11 @@ export function AIChatPanel({ open, onOpenChange, context }: Props) {
                   {agent === "clients" && "Ask about clients, contacts, sessions, or relationships."}
                   {agent === "business" && "Ask for strategic advice or business overview."}
                 </p>
+                {context?.page && (
+                  <p className="text-[10px] text-muted-foreground/60 mt-2">
+                    Context: {context.entityName ? `${context.entityName} (${context.entityType})` : context.page}
+                  </p>
+                )}
               </div>
             )}
             {messages.map((m, i) => (

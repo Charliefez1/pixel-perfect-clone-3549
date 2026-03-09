@@ -44,6 +44,7 @@ import { CreateSessionDialog } from "@/components/dialogs/CreateSessionDialog";
 import { CreateInvoiceDialog } from "@/components/dialogs/CreateInvoiceDialog";
 import { CreateProjectFromPlanDialog } from "@/components/dialogs/CreateProjectFromPlanDialog";
 import { useState, useEffect, createContext, useContext, useCallback } from "react";
+import { AIContext, useAIContextProvider } from "@/hooks/useAIContext";
 
 const queryClient = new QueryClient();
 
@@ -135,6 +136,7 @@ function AppShell() {
   const [sessionOpen, setSessionOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
+  const aiContextProvider = useAIContextProvider();
 
   const dialogs: DialogContextType = {
     openCreateTask: useCallback(() => setTaskOpen(true), []),
@@ -147,6 +149,7 @@ function AppShell() {
   };
 
   return (
+    <AIContext.Provider value={aiContextProvider}>
     <DialogContext.Provider value={dialogs}>
       <KeyboardShortcuts dialogs={dialogs} />
       <CommandPalette
@@ -198,6 +201,7 @@ function AppShell() {
         <Route path="*" element={<NotFound />} />
       </Routes>
     </DialogContext.Provider>
+    </AIContext.Provider>
   );
 }
 

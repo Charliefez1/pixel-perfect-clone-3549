@@ -1,4 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useAIContext } from "@/hooks/useAIContext";
 import { useOrganisation } from "@/hooks/useOrganisations";
 import { useProjects } from "@/hooks/useProjects";
 import { useContacts } from "@/hooks/useContacts";
@@ -41,6 +43,20 @@ export default function ClientDetail() {
   const { data: allContacts } = useContacts();
   const { data: allInvoices } = useInvoices();
   const { openCreateProject } = useDialogs();
+  const { setContext } = useAIContext();
+
+  useEffect(() => {
+    if (client) {
+      setContext({
+        page: "client_detail",
+        entityType: "organisation",
+        entityId: client.id,
+        entityName: client.name,
+        data: { industry: (client as any).industry, website: (client as any).website },
+      });
+    }
+    return () => setContext(null);
+  }, [client, setContext]);
 
   if (isLoading) {
     return (

@@ -17,6 +17,8 @@ export interface Delivery {
   deal_id: string | null;
   organisation_id: string | null;
   project_id: string | null;
+  form_id: string | null;
+  facilitator_id: string | null;
   title: string;
   service_type: string | null;
   status: string;
@@ -34,6 +36,7 @@ export interface Delivery {
   updated_at: string;
   organisations?: { name: string } | null;
   deals?: { title: string } | null;
+  forms?: { title: string } | null;
   delivery_tasks?: DeliveryTask[];
 }
 
@@ -52,7 +55,7 @@ export function useDeliveries() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("deliveries")
-        .select("*, organisations(name), deals(title)")
+        .select("*, organisations(name), deals(title), forms(title)")
         .order("delivery_date", { ascending: true });
       if (error) throw error;
       return data as Delivery[];
@@ -67,7 +70,7 @@ export function useDelivery(id: string | undefined) {
       if (!id) return null;
       const { data, error } = await supabase
         .from("deliveries")
-        .select("*, organisations(name), deals(title)")
+        .select("*, organisations(name), deals(title), forms(title)")
         .eq("id", id)
         .maybeSingle();
       if (error) throw error;

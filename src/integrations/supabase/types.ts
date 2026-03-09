@@ -441,8 +441,10 @@ export type Database = {
           deal_id: string | null
           delegate_count: number | null
           delivery_date: string | null
+          facilitator_id: string | null
           feedback_received: boolean | null
           feedback_sent: boolean | null
+          form_id: string | null
           id: string
           kirkpatrick_level: number | null
           neuro_stage: string | null
@@ -462,8 +464,10 @@ export type Database = {
           deal_id?: string | null
           delegate_count?: number | null
           delivery_date?: string | null
+          facilitator_id?: string | null
           feedback_received?: boolean | null
           feedback_sent?: boolean | null
+          form_id?: string | null
           id?: string
           kirkpatrick_level?: number | null
           neuro_stage?: string | null
@@ -483,8 +487,10 @@ export type Database = {
           deal_id?: string | null
           delegate_count?: number | null
           delivery_date?: string | null
+          facilitator_id?: string | null
           feedback_received?: boolean | null
           feedback_sent?: boolean | null
+          form_id?: string | null
           id?: string
           kirkpatrick_level?: number | null
           neuro_stage?: string | null
@@ -600,6 +606,39 @@ export type Database = {
         }
         Relationships: []
       }
+      entity_links: {
+        Row: {
+          id: string
+          source_type: string
+          source_id: string
+          target_type: string
+          target_id: string
+          relationship: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          source_type: string
+          source_id: string
+          target_type: string
+          target_id: string
+          relationship?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          source_type?: string
+          source_id?: string
+          target_type?: string
+          target_id?: string
+          relationship?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       form_responses: {
         Row: {
           answers: Json
@@ -663,6 +702,8 @@ export type Database = {
           description: string | null
           fields_json: Json | null
           id: string
+          is_template: boolean | null
+          template_category: string | null
           responses_count: number | null
           title: string
           type: string | null
@@ -675,6 +716,8 @@ export type Database = {
           description?: string | null
           fields_json?: Json | null
           id?: string
+          is_template?: boolean | null
+          template_category?: string | null
           responses_count?: number | null
           title: string
           type?: string | null
@@ -687,6 +730,8 @@ export type Database = {
           description?: string | null
           fields_json?: Json | null
           id?: string
+          is_template?: boolean | null
+          template_category?: string | null
           responses_count?: number | null
           title?: string
           type?: string | null
@@ -911,6 +956,47 @@ export type Database = {
         }
         Relationships: []
       }
+      portal_messages: {
+        Row: {
+          id: string
+          organisation_id: string
+          project_id: string | null
+          sender_type: string
+          sender_name: string | null
+          body: string
+          read_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organisation_id: string
+          project_id?: string | null
+          sender_type?: string
+          sender_name?: string | null
+          body: string
+          read_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organisation_id?: string
+          project_id?: string | null
+          sender_type?: string
+          sender_name?: string | null
+          body?: string
+          read_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_messages_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -975,6 +1061,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "project_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_notes: {
+        Row: {
+          id: string
+          project_id: string
+          title: string | null
+          body: string
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          title?: string | null
+          body: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          title?: string | null
+          body?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_notes_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
