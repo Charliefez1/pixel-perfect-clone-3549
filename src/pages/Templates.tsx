@@ -278,6 +278,18 @@ export default function Templates() {
     toast.success(`Inserted ${field}`);
   };
 
+  const handleDeleteTemplate = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error } = await supabase.from("templates").delete().eq("id", deleteTarget);
+    setDeleting(false);
+    if (error) { toast.error("Failed to delete template"); return; }
+    toast.success("Template deleted");
+    queryClient.invalidateQueries({ queryKey: ["document_templates"] });
+    queryClient.invalidateQueries({ queryKey: ["templates"] });
+    setDeleteTarget(null);
+  };
+
   return (
     <>
       <PageHeader title="Templates" searchPlaceholder="Search templates..." actionLabel="New Template" onAction={() => setCreateOpen(true)} onSearch={setSearch} />
