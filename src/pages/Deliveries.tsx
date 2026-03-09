@@ -59,6 +59,13 @@ export default function Deliveries() {
   const [view, setView] = useState<ViewMode>("board");
   const [selected, setSelected] = useState<Delivery | null>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const filtered = deliveries?.filter(d =>
+    d.title.toLowerCase().includes(search.toLowerCase()) ||
+    d.organisations?.name?.toLowerCase().includes(search.toLowerCase())
+  );
 
   const activeDeliveries = deliveries?.filter((d) => d.status !== "complete").length || 0;
   const avgSatisfaction = deliveries?.filter((d) => d.satisfaction_score).reduce((sum, d) => sum + (d.satisfaction_score || 0), 0) / (deliveries?.filter((d) => d.satisfaction_score).length || 1) || 0;
