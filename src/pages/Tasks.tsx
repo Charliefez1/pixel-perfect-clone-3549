@@ -7,7 +7,7 @@ import { Calendar, ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTasks, Task, useUpdateTask, useDeleteTask, useCreateTask } from "@/hooks/useTasks";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, addMonths, subMonths, startOfWeek, endOfWeek, differenceInDays, min as dateMin, max as dateMax } from "date-fns";
+import { format } from "date-fns";
 import { ViewToggle, ViewMode } from "@/components/layout/ViewToggle";
 import { DetailPanel } from "@/components/layout/DetailPanel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,6 +18,9 @@ import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TaskTimelineView } from "@/components/tasks/TaskTimelineView";
+import { TaskCalendarView } from "@/components/tasks/TaskCalendarView";
+import { TaskListView } from "@/components/tasks/TaskListView";
 
 const columns = [
   { id: "todo", label: "To Do" },
