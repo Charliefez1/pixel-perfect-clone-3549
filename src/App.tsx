@@ -14,6 +14,10 @@ import Meetings from "@/pages/Meetings";
 import Contracts from "@/pages/Contracts";
 import Deliveries from "@/pages/Deliveries";
 import Forms from "@/pages/Forms";
+import FormDetail from "@/pages/FormDetail";
+import FormBuilder from "@/pages/FormBuilder";
+import PublicForm from "@/pages/PublicForm";
+import PortalView from "@/pages/PortalView";
 import ClientPortal from "@/pages/ClientPortal";
 import Projects from "@/pages/Projects";
 import ProjectDetail from "@/pages/ProjectDetail";
@@ -160,6 +164,9 @@ function AppShell() {
       <CreateProjectFromPlanDialog open={planOpen} onOpenChange={setPlanOpen} />
       <Routes>
         <Route path="/auth" element={<AuthRoute />} />
+        {/* Public routes — no auth required */}
+        <Route path="/form/:formId" element={<PublicForm />} />
+        <Route path="/portal/:orgId" element={<PortalView />} />
         <Route element={<ProtectedRoutes />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/notifications" element={<Notifications />} />
@@ -170,6 +177,8 @@ function AppShell() {
           <Route path="/contracts" element={<Contracts />} />
           <Route path="/deliveries" element={<Deliveries />} />
           <Route path="/forms" element={<Forms />} />
+          <Route path="/forms/:id" element={<FormDetail />} />
+          <Route path="/forms/:id/edit" element={<FormBuilder />} />
           <Route path="/client-portal" element={<ClientPortal />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
