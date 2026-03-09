@@ -151,7 +151,7 @@ export default function Deliveries() {
         ) : view === "board" ? (
           <div className="flex gap-4 overflow-x-auto pb-4 min-h-[calc(100vh-16rem)]">
             {deliveryStatuses.map((status) => {
-              const statusDeliveries = deliveries?.filter((d) => d.status === status.id) || [];
+              const statusDeliveries = filtered?.filter((d) => d.status === status.id) || [];
               return (
                 <div
                   key={status.id}
