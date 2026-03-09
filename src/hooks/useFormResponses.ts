@@ -17,13 +17,13 @@ export function useFormResponses(formId: string | undefined) {
     queryKey: ["form_responses", formId],
     queryFn: async () => {
       if (!formId) return [];
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("form_responses")
         .select("*")
         .eq("form_id", formId)
         .order("submitted_at", { ascending: false });
       if (error) throw error;
-      return data as FormResponse[];
+      return (data || []) as FormResponse[];
     },
     enabled: !!formId,
   });
