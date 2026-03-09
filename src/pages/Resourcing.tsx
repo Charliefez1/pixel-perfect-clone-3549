@@ -8,8 +8,10 @@ import { useTimeEntries } from "@/hooks/useTimeEntries";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Users, Clock, AlertTriangle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-// Team members are loaded dynamically from profiles
+interface TeamMember { id: string; name: string; role: string; avatar: string; }
 
 export default function Resourcing() {
   const { data: projects, isLoading: loadingProjects } = useProjects();
