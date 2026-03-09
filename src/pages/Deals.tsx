@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { EntityDocuments } from "@/components/documents/EntityDocuments";
+import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 
 const stages = [
   { id: "lead", label: "Lead", color: "bg-slate-400" },
