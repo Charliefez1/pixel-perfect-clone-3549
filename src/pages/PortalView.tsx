@@ -40,15 +40,18 @@ export default function PortalView() {
   const [projects, setProjects] = useState<PortalProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<PortalProject | null>(null);
+  const [invoices, setInvoices] = useState<PortalInvoice[]>([]);
 
   useEffect(() => {
     if (!orgId) return;
     Promise.all([
       supabase.from("organisations").select("id, name").eq("id", orgId).single(),
       supabase.from("projects").select("id, name, status, neuro_phase, budget, description").eq("organisation_id", orgId).order("created_at", { ascending: false }),
-    ]).then(([orgRes, projRes]) => {
+      supabase.from("invoices").select("id, invoice_number, status, total, issue_date, due_date, paid_date").eq("organisation_id", orgId).order("created_at", { ascending: false }),
+    ]).then(([orgRes, projRes, invRes]) => {
       if (orgRes.data) setOrg(orgRes.data);
       if (projRes.data) setProjects(projRes.data as PortalProject[]);
+      if (invRes.data) setInvoices(invRes.data as PortalInvoice[]);
       setLoading(false);
     });
   }, [orgId]);
