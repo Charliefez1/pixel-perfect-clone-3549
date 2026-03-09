@@ -69,7 +69,11 @@ export default function Deals() {
   const [view, setView] = useState<ViewMode>("board");
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [calendarDate, setCalendarDate] = useState(new Date());
+  const [importOpen, setImportOpen] = useState(false);
   const { openCreateDeal } = useDialogs();
+  const updateDeal = useUpdateDeal();
+  const logActivity = useLogActivity();
+  const queryClient = useQueryClient();
   const updateDeal = useUpdateDeal();
   const logActivity = useLogActivity();
   const [draggedDealId, setDraggedDealId] = useState<string | null>(null);
