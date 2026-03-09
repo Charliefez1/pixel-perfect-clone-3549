@@ -72,7 +72,7 @@ export default function PublicForm() {
   const handleSubmit = async () => {
     if (!validate() || !formId) return;
     setSubmitting(true);
-    const { error } = await supabase.from("form_responses").insert({
+    const { error } = await (supabase as any).from("form_responses").insert({
       form_id: formId,
       respondent_name: respondentName || null,
       respondent_email: respondentEmail || null,
@@ -84,9 +84,11 @@ export default function PublicForm() {
       return;
     }
     // Increment responses_count
-    await supabase.rpc("increment_form_responses", { form_id_param: formId }).catch(() => {
+    try {
+      await (supabase as any).rpc("increment_form_responses", { form_id_param: formId });
+    } catch {
       // Fallback: just succeed even if the count doesn't update
-    });
+    }
     setSubmitted(true);
   };
 

@@ -600,47 +600,6 @@ export type Database = {
         }
         Relationships: []
       }
-      form_responses: {
-        Row: {
-          id: string
-          form_id: string
-          project_id: string | null
-          delivery_id: string | null
-          respondent_name: string | null
-          respondent_email: string | null
-          answers: Json
-          submitted_at: string
-        }
-        Insert: {
-          id?: string
-          form_id: string
-          project_id?: string | null
-          delivery_id?: string | null
-          respondent_name?: string | null
-          respondent_email?: string | null
-          answers: Json
-          submitted_at?: string
-        }
-        Update: {
-          id?: string
-          form_id?: string
-          project_id?: string | null
-          delivery_id?: string | null
-          respondent_name?: string | null
-          respondent_email?: string | null
-          answers?: Json
-          submitted_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "form_responses_form_id_fkey"
-            columns: ["form_id"]
-            isOneToOne: false
-            referencedRelation: "forms"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       forms: {
         Row: {
           active: boolean | null
@@ -1257,6 +1216,7 @@ export type Database = {
           notes: string | null
           project_id: string | null
           session_date: string | null
+          session_type: string
           title: string
           updated_at: string
         }
@@ -1269,6 +1229,7 @@ export type Database = {
           notes?: string | null
           project_id?: string | null
           session_date?: string | null
+          session_type?: string
           title: string
           updated_at?: string
         }
@@ -1281,6 +1242,7 @@ export type Database = {
           notes?: string | null
           project_id?: string | null
           session_date?: string | null
+          session_type?: string
           title?: string
           updated_at?: string
         }
@@ -1302,7 +1264,6 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
-          parent_task_id: string | null
           priority: Database["public"]["Enums"]["task_priority"]
           project_id: string | null
           status: Database["public"]["Enums"]["task_status"]
@@ -1316,7 +1277,6 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
-          parent_task_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           project_id?: string | null
           status?: Database["public"]["Enums"]["task_status"]
@@ -1330,7 +1290,6 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
-          parent_task_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"]
           project_id?: string | null
           status?: Database["public"]["Enums"]["task_status"]
@@ -1338,13 +1297,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "tasks_parent_task_id_fkey"
-            columns: ["parent_task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "tasks_project_id_fkey"
             columns: ["project_id"]
@@ -1354,87 +1306,30 @@ export type Database = {
           },
         ]
       }
-      portal_messages: {
-        Row: {
-          id: string
-          project_id: string
-          organisation_id: string
-          sender_type: string
-          sender_name: string | null
-          sender_email: string | null
-          body: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          project_id: string
-          organisation_id: string
-          sender_type: string
-          sender_name?: string | null
-          sender_email?: string | null
-          body: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          project_id?: string
-          organisation_id?: string
-          sender_type?: string
-          sender_name?: string | null
-          sender_email?: string | null
-          body?: string
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "portal_messages_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "portal_messages_organisation_id_fkey"
-            columns: ["organisation_id"]
-            isOneToOne: false
-            referencedRelation: "organisations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       templates: {
         Row: {
-          content: string | null
           created_at: string
           id: string
           name: string
           package_size: string | null
           service_type: string | null
           tasks_json: Json | null
-          template_type: string | null
-          variables: Json | null
         }
         Insert: {
-          content?: string | null
           created_at?: string
           id?: string
           name: string
           package_size?: string | null
           service_type?: string | null
           tasks_json?: Json | null
-          template_type?: string | null
-          variables?: Json | null
         }
         Update: {
-          content?: string | null
           created_at?: string
           id?: string
           name?: string
           package_size?: string | null
           service_type?: string | null
           tasks_json?: Json | null
-          template_type?: string | null
-          variables?: Json | null
         }
         Relationships: []
       }
@@ -1525,10 +1420,6 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
-      }
-      increment_form_responses: {
-        Args: { form_id_param: string }
-        Returns: undefined
       }
     }
     Enums: {

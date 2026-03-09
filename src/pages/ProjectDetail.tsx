@@ -497,7 +497,8 @@ Project context: ${JSON.stringify(context)}`,
             <TabsTrigger value="tasks">Tasks ({totalTasks})</TabsTrigger>
             <TabsTrigger value="deliveries">Deliveries</TabsTrigger>
             <TabsTrigger value="billing">Billing</TabsTrigger>
-            <TabsTrigger value="sessions">Sessions</TabsTrigger>
+            <TabsTrigger value="workshops">Workshops</TabsTrigger>
+            <TabsTrigger value="meetings">Meetings</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="updates">Updates</TabsTrigger>
           </TabsList>
@@ -871,9 +872,14 @@ Project context: ${JSON.stringify(context)}`,
             </Card>
           </TabsContent>
 
-          {/* Sessions Tab */}
-          <TabsContent value="sessions">
-            <SessionsTab projectId={project.id} />
+          {/* Workshops Tab */}
+          <TabsContent value="workshops">
+            <SessionsTab projectId={project.id} type="workshop" />
+          </TabsContent>
+
+          {/* Meetings Tab */}
+          <TabsContent value="meetings">
+            <SessionsTab projectId={project.id} type="meeting" />
           </TabsContent>
 
           {/* Documents Tab */}

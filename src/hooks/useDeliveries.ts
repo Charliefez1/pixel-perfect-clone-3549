@@ -173,7 +173,7 @@ export function useTemplates() {
         .select("*")
         .order("name");
       if (error) throw error;
-      return data as Template[];
+      return data as unknown as Template[];
     },
   });
 }
