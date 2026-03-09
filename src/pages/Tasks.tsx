@@ -69,8 +69,6 @@ export default function Tasks() {
       return next;
     });
   };
-    );
-  };
 
   const handleDragStart = useCallback((e: React.DragEvent, id: string) => {
     setDraggedId(id);
