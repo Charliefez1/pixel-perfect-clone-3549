@@ -335,9 +335,9 @@ Project context: ${JSON.stringify(context)}`,
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold">{project.name}</h1>
               <Badge className={statusStyles[project.status]}>{project.status}</Badge>
-              {project.stage && (
+              {(project as any).stage && (
                 <Badge variant="outline" className="text-[10px]">
-                  {stageLabels[project.stage] || project.stage}
+                  {stageLabels[(project as any).stage] || (project as any).stage}
                 </Badge>
               )}
             </div>
