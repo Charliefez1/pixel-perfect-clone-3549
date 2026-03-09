@@ -24,7 +24,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { EntityDocuments } from "@/components/documents/EntityDocuments";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
+import { CSVImportDialog, CSVColumn } from "@/components/dialogs/CSVImportDialog";
+import { Upload } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
+const dealCSVColumns: CSVColumn[] = [
+  { key: "title", label: "Title", required: true },
+  { key: "value", label: "Value" },
+  { key: "stage", label: "Stage" },
+  { key: "service_type", label: "Service Type" },
+  { key: "probability", label: "Probability" },
+  { key: "expected_close_date", label: "Expected Close Date" },
+  { key: "notes", label: "Notes" },
+];
 const stages = [
   { id: "lead", label: "Lead", color: "bg-slate-400" },
   { id: "qualified", label: "Qualified", color: "bg-blue-400" },
