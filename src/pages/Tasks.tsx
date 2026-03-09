@@ -39,6 +39,7 @@ export default function Tasks() {
   const createTask = useCreateTask();
   const [view, setView] = useState<ViewMode>("board");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [search, setSearch] = useState("");
   const { openCreateTask } = useDialogs();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
