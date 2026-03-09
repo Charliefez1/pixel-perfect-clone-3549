@@ -195,13 +195,12 @@ export default function ProjectDetail() {
         id: project.id,
         name: editValues.name,
         status: editValues.status as any,
-        stage: editValues.stage as any,
         neuro_phase: editValues.neuro_phase as any,
         budget: parseFloat(editValues.budget) || 0,
         start_date: editValues.start_date || null,
         end_date: editValues.end_date || null,
         description: editValues.description || null,
-      },
+      } as any,
       {
         onSuccess: () => {
           toast.success("Project updated");

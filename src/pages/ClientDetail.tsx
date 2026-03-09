@@ -420,7 +420,7 @@ export default function ClientDetail() {
 
                         {/* Budget */}
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground capi(p as any)alize">{p.service_type || "—"}</span>
+                          <span className="text-muted-foreground capitalize">{(p as any).service_type || "—"}</span>
                           <span className="font-semibold text-primary">£{(p.budget || 0).toLocaleString()}</span>
                         </div>
 
