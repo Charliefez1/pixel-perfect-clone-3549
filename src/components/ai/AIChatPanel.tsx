@@ -164,6 +164,7 @@ export function AIChatPanel({ open, onOpenChange, context }: Props) {
                   {agent === "sales" && "Ask about deals, follow-ups, or pipeline strategy."}
                   {agent === "pm" && "Ask about tasks, deadlines, resources, or NEURO phases."}
                   {agent === "insights" && "Ask about analytics, trends, or forecasting."}
+                  {agent === "crm" && "Ask about contacts, companies, meetings, or CRM data."}
                   {agent === "business" && "Ask for strategic advice or business overview."}
                 </p>
               </div>
