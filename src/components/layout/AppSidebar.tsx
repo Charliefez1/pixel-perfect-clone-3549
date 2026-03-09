@@ -37,6 +37,7 @@ const mainNav = [
   { to: "/tasks", icon: CheckSquare, label: "Tasks" },
   { to: "/invoices", icon: Receipt, label: "Invoices" },
   { to: "/purchase-orders", icon: ShoppingCart, label: "Purchase Orders" },
+  { to: "/reporting", icon: BarChart3, label: "Reporting" },
 ];
 
 const workspaceNav = [

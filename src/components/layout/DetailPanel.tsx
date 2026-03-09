@@ -18,9 +18,10 @@ interface DetailPanelProps {
 }
 
 export function DetailPanel({ open, onOpenChange, title, badge, fields, children }: DetailPanelProps) {
+  const isMobile = useIsMobile();
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+      <SheetContent className={`overflow-y-auto ${isMobile ? "w-full max-w-full" : "w-full sm:max-w-lg"}`} side={isMobile ? "bottom" : "right"}>
         <SheetHeader className="pb-4">
           <div className="flex items-start gap-3">
             <SheetTitle className="text-lg flex-1">{title}</SheetTitle>
