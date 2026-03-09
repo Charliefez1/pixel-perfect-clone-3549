@@ -188,6 +188,18 @@ function ContactDetailPanel({ contact, onClose }: { contact: Contact; onClose: (
           <ActivityTimeline entityType="contact" entityId={contact.id} contactId={contact.id} organisationId={contact.organisation_id || undefined} />
         </TabsContent>
       </Tabs>
+      <DeleteConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title={`${contact.first_name} ${contact.last_name}`}
+        onConfirm={() => {
+          deleteContact.mutate(contact.id, {
+            onSuccess: () => { toast.success("Contact deleted"); onClose(); },
+            onError: (e) => toast.error(e.message),
+          });
+        }}
+        loading={deleteContact.isPending}
+      />
     </DetailPanel>
   );
 }
