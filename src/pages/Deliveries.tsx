@@ -209,7 +209,7 @@ export default function Deliveries() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {deliveries?.map((delivery) => (
+                {filtered?.map((delivery) => (
                   <TableRow key={delivery.id} className="cursor-pointer" onClick={() => setSelected(delivery)}>
                     <TableCell className="pl-6 font-medium">{delivery.title}</TableCell>
                     <TableCell className="text-muted-foreground">{delivery.organisations?.name || "—"}</TableCell>

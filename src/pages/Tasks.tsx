@@ -118,7 +118,7 @@ export default function Tasks() {
 
   return (
     <>
-      <PageHeader title="Tasks" searchPlaceholder="Search tasks..." actionLabel="New Task" onAction={openCreateTask}>
+      <PageHeader title="Tasks" searchPlaceholder="Search tasks..." actionLabel="New Task" onAction={openCreateTask} onSearch={setSearch}>
         <ViewToggle value={view} onChange={setView} showCalendar />
       </PageHeader>
 

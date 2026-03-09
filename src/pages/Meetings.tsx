@@ -85,7 +85,7 @@ export default function Meetings() {
 
   return (
     <>
-      <PageHeader title="Sessions & Meetings" searchPlaceholder="Search..." actionLabel="New Session" onAction={openCreateSession} />
+      <PageHeader title="Sessions & Meetings" searchPlaceholder="Search sessions..." actionLabel="New Session" onAction={openCreateSession} onSearch={setSearch} />
       <div className="flex-1 overflow-auto p-6">
         <Tabs value={typeFilter} onValueChange={(v) => setTypeFilter(v as any)} className="mb-4">
           <TabsList>
