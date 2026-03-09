@@ -14,6 +14,7 @@ import { Check } from "lucide-react";
 export default function Notifications() {
   const { session } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: notifications, isLoading } = useQuery({
     queryKey: ["notifications"],
