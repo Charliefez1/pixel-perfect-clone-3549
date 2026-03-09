@@ -52,6 +52,24 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const handleSyncCRM = async () => {
+    setSyncingCRM(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-clarify", {
+        body: { companies: [], contacts: [], meetings: [] },
+      });
+      if (error) throw error;
+      toast.success(`CRM sync: ${data.companies || 0} orgs, ${data.contacts || 0} contacts, ${data.meetings || 0} meetings`);
+      queryClient.invalidateQueries({ queryKey: ["organisations"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+    } catch (e: any) {
+      toast.error(e.message || "CRM sync failed");
+    } finally {
+      setSyncingCRM(false);
+    }
+  };
+
   const handleSyncGmail = async () => {
     setSyncing(true);
     try {
