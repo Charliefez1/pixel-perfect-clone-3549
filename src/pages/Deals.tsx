@@ -465,7 +465,7 @@ function DealDetailPanel({ deal, onClose }: { deal: Deal; onClose: () => void })
       <Tabs defaultValue="activity" className="w-full">
         <TabsList className="w-full">
           <TabsTrigger value="activity" className="flex-1">Activity</TabsTrigger>
-          <TabsTrigger value="documents" className="flex-1">Documents</TabsTrigger>
+          <TabsTrigger value="files" className="flex-1">Files</TabsTrigger>
           <TabsTrigger value="financials" className="flex-1">Financials</TabsTrigger>
         </TabsList>
         <TabsContent value="activity" className="pt-4">
@@ -490,8 +490,8 @@ function DealDetailPanel({ deal, onClose }: { deal: Deal; onClose: () => void })
             </div>
           )}
         </TabsContent>
-        <TabsContent value="documents" className="pt-4">
-          <p className="text-sm text-muted-foreground">Document uploads coming soon.</p>
+        <TabsContent value="files" className="pt-4">
+          <EntityDocuments entityType="deal" entityId={deal.id} />
         </TabsContent>
         <TabsContent value="financials" className="pt-4">
           {dealInvoices.length === 0 ? (
