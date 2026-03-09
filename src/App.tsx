@@ -33,6 +33,9 @@ import Services from "@/pages/Services";
 import Templates from "@/pages/Templates";
 import Auth from "@/pages/Auth";
 import Reporting from "@/pages/Reporting";
+import Deals from "@/pages/Deals";
+import Proposals from "@/pages/Proposals";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import NotFound from "@/pages/NotFound";
 import { CommandPalette } from "@/components/layout/CommandPalette";
 import { CreateTaskDialog } from "@/components/dialogs/CreateTaskDialog";
@@ -193,6 +196,8 @@ function AppShell() {
           <Route path="/services" element={<Services />} />
           <Route path="/templates" element={<Templates />} />
           <Route path="/reporting" element={<Reporting />} />
+          <Route path="/deals" element={<Deals />} />
+          <Route path="/proposals" element={<Proposals />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -204,11 +209,13 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppShell />
-        </BrowserRouter>
+        <ErrorBoundary>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppShell />
+          </BrowserRouter>
+        </ErrorBoundary>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

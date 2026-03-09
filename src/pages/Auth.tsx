@@ -66,7 +66,7 @@ export default function Auth() {
                   id="displayName"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Charlie Watson"
+                  placeholder="Your name"
                   required={!isLogin}
                 />
               </div>
@@ -78,7 +78,7 @@ export default function Auth() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="charlie@ndggroup.co.uk"
+                placeholder="you@company.com"
                 required
               />
             </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -45,14 +45,13 @@ export default function TimeTracking() {
   const [formBillable, setFormBillable] = useState(true);
 
   // Timer interval
-  useState(() => {
+  useEffect(() => {
+    if (!timerStart) return;
     const interval = setInterval(() => {
-      if (timerStart) {
-        setTimerElapsed(Math.floor((Date.now() - timerStart) / 1000));
-      }
+      setTimerElapsed(Math.floor((Date.now() - timerStart) / 1000));
     }, 1000);
     return () => clearInterval(interval);
-  });
+  }, [timerStart]);
 
   const startTimer = () => {
     setTimerStart(Date.now());
