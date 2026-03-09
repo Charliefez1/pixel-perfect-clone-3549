@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 
 const neuroPhases = ["N", "E", "U", "R", "O"] as const;
-const phaseToIndex: Record<string, number> = { needs: 0, engage: 1, understand: 2, realise: 3, ongoing: 4 };
+const phaseToIndex: Record<string, number> = { needs: 0, engage: 1, understand: 2, redesign: 3, optimise: 4 };
 const statusStyles: Record<string, string> = {
   setup: "bg-muted text-muted-foreground",
   active: "bg-[hsl(var(--stage-won))]/20 text-[hsl(var(--stage-won))]",

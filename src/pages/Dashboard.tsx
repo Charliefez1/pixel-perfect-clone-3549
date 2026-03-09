@@ -21,8 +21,8 @@ const neuroColors = [
   { name: "Needs", color: "hsl(210, 100%, 61%)" },
   { name: "Engage", color: "hsl(190, 60%, 50%)" },
   { name: "Understand", color: "hsl(142, 71%, 45%)" },
-  { name: "Realise", color: "hsl(38, 92%, 50%)" },
-  { name: "Ongoing", color: "hsl(0, 0%, 64%)" },
+  { name: "Redesign", color: "hsl(38, 92%, 50%)" },
+  { name: "Optimise", color: "hsl(0, 0%, 64%)" },
 ];
 
 export default function Dashboard() {

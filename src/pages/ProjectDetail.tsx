@@ -39,9 +39,9 @@ import { isPast } from "date-fns";
 import ReactMarkdown from "react-markdown";
 
 const neuroPhases = ["N", "E", "U", "R", "O"] as const;
-const phaseNames = ["needs", "engage", "understand", "realise", "ongoing"];
-const phaseLabels: Record<string, string> = { N: "Needs", E: "Engage", U: "Understand", R: "Realise", O: "Ongoing" };
-const phaseToIndex: Record<string, number> = { needs: 0, engage: 1, understand: 2, realise: 3, ongoing: 4 };
+const phaseNames = ["needs", "engage", "understand", "redesign", "optimise"];
+const phaseLabels: Record<string, string> = { N: "Needs", E: "Engage", U: "Understand", R: "Redesign", O: "Optimise" };
+const phaseToIndex: Record<string, number> = { needs: 0, engage: 1, understand: 2, redesign: 3, optimise: 4 };
 const statusStyles: Record<string, string> = {
   setup: "bg-muted text-muted-foreground",
   active: "bg-[hsl(var(--stage-won))]/20 text-[hsl(var(--stage-won))]",
@@ -70,10 +70,10 @@ function suggestPhaseTransition(
     if (prepTasks?.length && prepTasks.every((t) => t.status === "done")) return "understand";
   }
   if (neuroPhase === "understand") {
-    if (deliveries?.some((d) => d.status === "in_progress")) return "realise";
+    if (deliveries?.some((d) => d.status === "in_progress")) return "redesign";
   }
-  if (neuroPhase === "realise") {
-    if (deliveries?.length && deliveries.every((d) => d.status === "delivered")) return "ongoing";
+  if (neuroPhase === "redesign") {
+    if (deliveries?.length && deliveries.every((d) => d.status === "delivered")) return "optimise";
   }
   return null;
 }
@@ -155,6 +155,7 @@ export default function ProjectDetail() {
     setEditValues({
       name: project.name,
       status: project.status,
+      stage: project.stage || "contract_signing",
       neuro_phase: project.neuro_phase || "needs",
       budget: project.budget?.toString() || "0",
       start_date: project.start_date || "",
@@ -170,6 +171,7 @@ export default function ProjectDetail() {
         id: project.id,
         name: editValues.name,
         status: editValues.status as any,
+        stage: editValues.stage as any,
         neuro_phase: editValues.neuro_phase as any,
         budget: parseFloat(editValues.budget) || 0,
         start_date: editValues.start_date || null,
@@ -309,6 +311,11 @@ Project context: ${JSON.stringify(context)}`,
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold">{project.name}</h1>
               <Badge className={statusStyles[project.status]}>{project.status}</Badge>
+              {project.stage && (
+                <Badge variant="outline" className="text-[10px] capitalize">
+                  {project.stage.replace("_", " ")}
+                </Badge>
+              )}
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               {project.organisation_id ? (
@@ -412,6 +419,24 @@ Project context: ${JSON.stringify(context)}`,
                   <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {["setup", "active", "paused", "completed"].map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Stage</label>
+                <Select value={editValues.stage || "contract_signing"} onValueChange={(v) => setEditValues({ ...editValues, stage: v })}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[
+                      { key: "contract_signing", label: "Contract Signing" },
+                      { key: "onboarding", label: "Onboarding" },
+                      { key: "planning", label: "Planning" },
+                      { key: "data_gathering", label: "Data Gathering" },
+                      { key: "content_build", label: "Content Build" },
+                      { key: "delivery", label: "Delivery" },
+                      { key: "analysis_feedback", label: "Analysis & Feedback" },
+                      { key: "closing", label: "Closing" },
+                    ].map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
