@@ -84,9 +84,11 @@ export default function PublicForm() {
       return;
     }
     // Increment responses_count
-    await supabase.rpc("increment_form_responses", { form_id_param: formId }).catch(() => {
+    try {
+      await supabase.rpc("increment_form_responses", { form_id_param: formId } as any);
+    } catch {
       // Fallback: just succeed even if the count doesn't update
-    });
+    }
     setSubmitted(true);
   };
 

@@ -1216,6 +1216,7 @@ export type Database = {
           notes: string | null
           project_id: string | null
           session_date: string | null
+          session_type: string
           title: string
           updated_at: string
         }
@@ -1228,6 +1229,7 @@ export type Database = {
           notes?: string | null
           project_id?: string | null
           session_date?: string | null
+          session_type?: string
           title: string
           updated_at?: string
         }
@@ -1240,6 +1242,7 @@ export type Database = {
           notes?: string | null
           project_id?: string | null
           session_date?: string | null
+          session_type?: string
           title?: string
           updated_at?: string
         }

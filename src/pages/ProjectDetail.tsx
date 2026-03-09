@@ -872,9 +872,14 @@ Project context: ${JSON.stringify(context)}`,
             </Card>
           </TabsContent>
 
-          {/* Sessions Tab */}
-          <TabsContent value="sessions">
-            <SessionsTab projectId={project.id} />
+          {/* Workshops Tab */}
+          <TabsContent value="workshops">
+            <SessionsTab projectId={project.id} type="workshop" />
+          </TabsContent>
+
+          {/* Meetings Tab */}
+          <TabsContent value="meetings">
+            <SessionsTab projectId={project.id} type="meeting" />
           </TabsContent>
 
           {/* Documents Tab */}

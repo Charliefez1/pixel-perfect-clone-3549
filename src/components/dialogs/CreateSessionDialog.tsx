@@ -15,6 +15,7 @@ interface Props {
 
 export function CreateSessionDialog({ open, onOpenChange }: Props) {
   const [title, setTitle] = useState("");
+  const [sessionType, setSessionType] = useState<"meeting" | "workshop">("meeting");
   const [projectId, setProjectId] = useState("");
   const [sessionDate, setSessionDate] = useState("");
   const [duration, setDuration] = useState("60");
@@ -32,9 +33,10 @@ export function CreateSessionDialog({ open, onOpenChange }: Props) {
         session_date: sessionDate ? new Date(sessionDate).toISOString() : null,
         duration_minutes: parseInt(duration) || 60,
         location: location || null,
-      });
-      toast.success("Session created");
-      setTitle(""); setProjectId(""); setSessionDate(""); setDuration("60"); setLocation("");
+        session_type: sessionType,
+      } as any);
+      toast.success(`${sessionType === "workshop" ? "Workshop" : "Meeting"} created`);
+      setTitle(""); setProjectId(""); setSessionDate(""); setDuration("60"); setLocation(""); setSessionType("meeting");
       onOpenChange(false);
     } catch {
       toast.error("Failed to create session");
@@ -45,12 +47,41 @@ export function CreateSessionDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>New Session</DialogTitle>
+          <DialogTitle>New {sessionType === "workshop" ? "Workshop" : "Meeting"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
+            <Label>Type</Label>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={sessionType === "meeting" ? "default" : "outline"}
+                size="sm"
+                className="flex-1"
+                onClick={() => setSessionType("meeting")}
+              >
+                Meeting
+              </Button>
+              <Button
+                type="button"
+                variant={sessionType === "workshop" ? "default" : "outline"}
+                size="sm"
+                className="flex-1"
+                onClick={() => setSessionType("workshop")}
+              >
+                Workshop
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="session-title">Title</Label>
-            <Input id="session-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. ADHD Awareness Workshop" autoFocus />
+            <Input
+              id="session-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder={sessionType === "workshop" ? "e.g. ADHD Awareness Workshop" : "e.g. Prep call with L&D team"}
+              autoFocus
+            />
           </div>
           <div className="space-y-2">
             <Label>Project</Label>
@@ -75,12 +106,12 @@ export function CreateSessionDialog({ open, onOpenChange }: Props) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="session-location">Location</Label>
-            <Input id="session-location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Zoom / Client Office" />
+            <Input id="session-location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder={sessionType === "workshop" ? "e.g. Client Office / Conference Room" : "e.g. Zoom / Teams"} />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={createSession.isPending || !title.trim()}>
-              {createSession.isPending ? "Creating…" : "Create Session"}
+              {createSession.isPending ? "Creating…" : `Create ${sessionType === "workshop" ? "Workshop" : "Meeting"}`}
             </Button>
           </DialogFooter>
         </form>

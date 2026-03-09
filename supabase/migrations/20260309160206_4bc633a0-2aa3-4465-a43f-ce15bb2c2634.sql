@@ -1,0 +1,1 @@
+ALTER TABLE public.sessions ADD COLUMN session_type text NOT NULL DEFAULT 'meeting';
