@@ -181,7 +181,7 @@ export default function Deliveries() {
           </div>
         ) : view === "list" ? (
           <div className="space-y-2">
-            {deliveries?.map((delivery) => (
+            {filtered?.map((delivery) => (
               <Card key={delivery.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelected(delivery)}>
                 <CardContent className="p-4 flex items-center gap-4">
                   <div className="flex-1 min-w-0">
