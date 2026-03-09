@@ -75,7 +75,7 @@ export default function ClientDetail() {
   const totalInvoiced = clientInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
   const paidInvoices = clientInvoices.filter((i) => i.status === "paid");
   const totalPaid = paidInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
-  const outstandingInvoices = clientInvoices.filter((i) => i.status !== "paid" && i.status !== "cancelled");
+  const outstandingInvoices = clientInvoices.filter((i) => i.status !== "paid");
   const outstandingTotal = outstandingInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
   const overdueInvoices = clientInvoices.filter((i) => i.status === "overdue" || (i.status === "sent" && i.due_date && isPast(new Date(i.due_date))));
   const overdueTotal = overdueInvoices.reduce((sum, i) => sum + (i.total || 0), 0);

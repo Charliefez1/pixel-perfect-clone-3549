@@ -164,7 +164,7 @@ export default function ProjectDetail() {
   const totalPaid = paidInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
   const overdueInvoices = projectInvoices.filter((i) => i.status === "overdue" || (i.status === "sent" && i.due_date && isPast(new Date(i.due_date))));
   const overdueAmount = overdueInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
-  const outstandingInvoices = projectInvoices.filter((i) => i.status !== "paid" && i.status !== "cancelled");
+  const outstandingInvoices = projectInvoices.filter((i) => i.status !== "paid");
   const outstandingAmount = outstandingInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
   const budgetUsedPct = project.budget ? Math.round((totalBilled / project.budget) * 100) : 0;
 

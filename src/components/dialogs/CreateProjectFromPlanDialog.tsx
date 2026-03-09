@@ -194,7 +194,7 @@ export function CreateProjectFromPlanDialog({
         const deliveries = plan.deliveries.map((d) => ({
           title: d.title,
           delivery_date: d.delivery_date,
-          status: d.status,
+          status: d.status as "planning" | "materials_prep" | "scheduled" | "in_progress" | "delivered" | "follow_up" | "complete",
           notes: d.notes,
           project_id: project.id,
           organisation_id: orgId,
