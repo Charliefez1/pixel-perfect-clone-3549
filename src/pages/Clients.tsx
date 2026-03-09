@@ -92,7 +92,9 @@ function ClientDetailPanel({ client, onClose }: { client: Organisation; onClose:
   const { data: deals } = useDeals();
   const { data: invoices } = useInvoices();
   const updateOrg = useUpdateOrganisation();
+  const deleteOrg = useDeleteOrganisation();
   const [editing, setEditing] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [editValues, setEditValues] = useState({
     name: client.name,
     email: client.email || "",
