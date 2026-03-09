@@ -600,6 +600,61 @@ export type Database = {
         }
         Relationships: []
       }
+      form_responses: {
+        Row: {
+          answers: Json
+          delivery_id: string | null
+          form_id: string
+          id: string
+          project_id: string | null
+          respondent_email: string | null
+          respondent_name: string | null
+          submitted_at: string
+        }
+        Insert: {
+          answers?: Json
+          delivery_id?: string | null
+          form_id: string
+          id?: string
+          project_id?: string | null
+          respondent_email?: string | null
+          respondent_name?: string | null
+          submitted_at?: string
+        }
+        Update: {
+          answers?: Json
+          delivery_id?: string | null
+          form_id?: string
+          id?: string
+          project_id?: string | null
+          respondent_email?: string | null
+          respondent_name?: string | null
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_responses_delivery_id_fkey"
+            columns: ["delivery_id"]
+            isOneToOne: false
+            referencedRelation: "deliveries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_responses_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_responses_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       forms: {
         Row: {
           active: boolean | null
@@ -1318,28 +1373,37 @@ export type Database = {
       }
       templates: {
         Row: {
+          content: string | null
           created_at: string
           id: string
           name: string
           package_size: string | null
           service_type: string | null
           tasks_json: Json | null
+          template_type: string | null
+          variables: Json | null
         }
         Insert: {
+          content?: string | null
           created_at?: string
           id?: string
           name: string
           package_size?: string | null
           service_type?: string | null
           tasks_json?: Json | null
+          template_type?: string | null
+          variables?: Json | null
         }
         Update: {
+          content?: string | null
           created_at?: string
           id?: string
           name?: string
           package_size?: string | null
           service_type?: string | null
           tasks_json?: Json | null
+          template_type?: string | null
+          variables?: Json | null
         }
         Relationships: []
       }
@@ -1430,6 +1494,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_form_responses: {
+        Args: { form_id_param: string }
+        Returns: undefined
       }
     }
     Enums: {
