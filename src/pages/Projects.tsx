@@ -108,6 +108,10 @@ export default function Projects() {
     <>
       <PageHeader title="Projects" searchPlaceholder="Search projects..." actionLabel="New Project" onAction={openCreateProject}>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-2 rounded-lg" onClick={() => setImportOpen(true)}>
+            <Upload className="h-4 w-4" />
+            <span className="hidden sm:inline">Import CSV</span>
+          </Button>
           <div className="flex rounded-md border border-border overflow-hidden text-xs">
             <button
               onClick={() => setFilter("all")}
@@ -126,6 +130,21 @@ export default function Projects() {
           <ViewToggle value={view} onChange={setView} options={["board", "list", "table"]} />
         </div>
       </PageHeader>
+      <CSVImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Projects"
+        tableName="projects"
+        columns={projectCSVColumns}
+        transformRow={(row) => ({
+          ...row,
+          budget: row.budget ? parseFloat(row.budget) || 0 : 0,
+          status: row.status || "setup",
+          start_date: row.start_date || null,
+          end_date: row.end_date || null,
+        })}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["projects"] })}
+      />
       <div className="flex-1 overflow-auto p-6">
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-48 w-full" />)}</div>
