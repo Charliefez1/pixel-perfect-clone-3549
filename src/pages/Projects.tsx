@@ -306,7 +306,7 @@ function PipelineBoard({
   updateProject: ReturnType<typeof useUpdateProject>;
 }) {
   const moveToStage = (projectId: string, stage: string) => {
-    updateProject.mutate({ id: projectId, stage: stage as any });
+    updateProject.mutate({ id: projectId, stage: stage } as any);
   };
 
   return (
