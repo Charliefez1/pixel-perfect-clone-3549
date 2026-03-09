@@ -184,6 +184,8 @@ export default function Templates() {
   const [newType, setNewType] = useState("project");
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const allTemplates = templates?.filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase())) || [];
   const projectTemplates = allTemplates.filter(t => !(t as any).template_type || (t as any).template_type === "project");
