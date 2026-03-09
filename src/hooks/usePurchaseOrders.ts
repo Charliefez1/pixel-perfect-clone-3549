@@ -57,3 +57,14 @@ export function useUpdatePurchaseOrder() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["purchase_orders"] }),
   });
 }
+
+export function useDeletePurchaseOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("purchase_orders").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["purchase_orders"] }),
+  });
+}

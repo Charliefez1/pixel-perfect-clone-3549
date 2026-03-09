@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Mail } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useContacts, Contact } from "@/hooks/useContacts";
+import { useContacts, Contact, useDeleteContact } from "@/hooks/useContacts";
 import { useUpdateContact } from "@/hooks/useUpdateContact";
 import { useDeals } from "@/hooks/useDeals";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
 import { toast } from "sonner";
+import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 
 export default function Contacts() {
   const { data: contacts, isLoading } = useContacts();
@@ -85,7 +86,9 @@ export default function Contacts() {
 function ContactDetailPanel({ contact, onClose }: { contact: Contact; onClose: () => void }) {
   const { data: deals } = useDeals();
   const updateContact = useUpdateContact();
+  const deleteContact = useDeleteContact();
   const [editing, setEditing] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [editValues, setEditValues] = useState({
     first_name: contact.first_name,
     last_name: contact.last_name,
@@ -153,7 +156,10 @@ function ContactDetailPanel({ contact, onClose }: { contact: Contact; onClose: (
           </div>
         </div>
       ) : (
-        <Button variant="outline" size="sm" className="mb-4" onClick={() => setEditing(true)}>Edit Contact</Button>
+        <div className="flex gap-2 mb-4">
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>Edit Contact</Button>
+          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>Delete</Button>
+        </div>
       )}
 
       <Tabs defaultValue="deals" className="w-full">
@@ -182,6 +188,18 @@ function ContactDetailPanel({ contact, onClose }: { contact: Contact; onClose: (
           <ActivityTimeline entityType="contact" entityId={contact.id} contactId={contact.id} organisationId={contact.organisation_id || undefined} />
         </TabsContent>
       </Tabs>
+      <DeleteConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title={`${contact.first_name} ${contact.last_name}`}
+        onConfirm={() => {
+          deleteContact.mutate(contact.id, {
+            onSuccess: () => { toast.success("Contact deleted"); onClose(); },
+            onError: (e) => toast.error(e.message),
+          });
+        }}
+        loading={deleteContact.isPending}
+      />
     </DetailPanel>
   );
 }

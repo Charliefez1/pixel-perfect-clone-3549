@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Plus, AlertCircle } from "lucide-react";
-import { useDeals, Deal, useUpdateDeal } from "@/hooks/useDeals";
+import { useDeals, Deal, useUpdateDeal, useDeleteDeal } from "@/hooks/useDeals";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useActivityLog } from "@/hooks/useActivityLog";
 import { useLogActivity } from "@/hooks/useActivityLog";
@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { EntityDocuments } from "@/components/documents/EntityDocuments";
+import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 
 const stages = [
   { id: "lead", label: "Lead", color: "bg-slate-400" },
@@ -345,10 +346,12 @@ function DealCard({ deal, onClick, onDragStart }: { deal: Deal; onClick: () => v
 
 function DealDetailPanel({ deal, onClose }: { deal: Deal; onClose: () => void }) {
   const updateDeal = useUpdateDeal();
+  const deleteDeal = useDeleteDeal();
   const logActivity = useLogActivity();
   const { data: invoices } = useInvoices();
   const { data: activities } = useActivityLog("deal", deal.id);
   const [editing, setEditing] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [editValues, setEditValues] = useState({
     stage: deal.stage,
     value: deal.value?.toString() || "0",
@@ -459,7 +462,10 @@ function DealDetailPanel({ deal, onClose }: { deal: Deal; onClose: () => void })
           </div>
         </div>
       ) : (
-        <Button variant="outline" size="sm" className="mb-4" onClick={() => setEditing(true)}>Edit Deal</Button>
+        <div className="flex gap-2 mb-4">
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>Edit Deal</Button>
+          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>Delete</Button>
+        </div>
       )}
 
       <Tabs defaultValue="activity" className="w-full">
@@ -512,6 +518,9 @@ function DealDetailPanel({ deal, onClose }: { deal: Deal; onClose: () => void })
           )}
         </TabsContent>
       </Tabs>
+      <DeleteConfirmDialog open={deleteOpen} onOpenChange={setDeleteOpen} title={deal.title}
+        onConfirm={() => deleteDeal.mutate(deal.id, { onSuccess: () => { toast.success("Deal deleted"); onClose(); }, onError: (e) => toast.error(e.message) })}
+        loading={deleteDeal.isPending} />
     </DetailPanel>
   );
 }

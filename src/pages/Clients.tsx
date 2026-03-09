@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useOrganisations, Organisation } from "@/hooks/useOrganisations";
+import { useOrganisations, Organisation, useDeleteOrganisation } from "@/hooks/useOrganisations";
 import { useUpdateOrganisation } from "@/hooks/useUpdateOrganisation";
 import { useContacts } from "@/hooks/useContacts";
 import { useDeals } from "@/hooks/useDeals";
@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 
 const sectorColors: Record<string, string> = {
   Healthcare: "bg-[hsl(var(--stage-lead))]/20 text-[hsl(var(--stage-lead))]",
@@ -91,7 +92,9 @@ function ClientDetailPanel({ client, onClose }: { client: Organisation; onClose:
   const { data: deals } = useDeals();
   const { data: invoices } = useInvoices();
   const updateOrg = useUpdateOrganisation();
+  const deleteOrg = useDeleteOrganisation();
   const [editing, setEditing] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [editValues, setEditValues] = useState({
     name: client.name,
     email: client.email || "",
@@ -167,7 +170,10 @@ function ClientDetailPanel({ client, onClose }: { client: Organisation; onClose:
           </div>
         </div>
       ) : (
-        <Button variant="outline" size="sm" className="mb-4" onClick={() => setEditing(true)}>Edit Client</Button>
+        <div className="flex gap-2 mb-4">
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>Edit Client</Button>
+          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>Delete</Button>
+        </div>
       )}
 
       <Tabs defaultValue="contacts" className="w-full">
@@ -235,6 +241,18 @@ function ClientDetailPanel({ client, onClose }: { client: Organisation; onClose:
           <ActivityTimeline entityType="organisation" entityId={client.id} organisationId={client.id} />
         </TabsContent>
       </Tabs>
+      <DeleteConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title={client.name}
+        onConfirm={() => {
+          deleteOrg.mutate(client.id, {
+            onSuccess: () => { toast.success("Client deleted"); onClose(); },
+            onError: (e) => toast.error(e.message),
+          });
+        }}
+        loading={deleteOrg.isPending}
+      />
     </DetailPanel>
   );
 }

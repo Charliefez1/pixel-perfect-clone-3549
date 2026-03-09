@@ -47,3 +47,14 @@ export function useUpdateService() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["services"] }),
   });
 }
+
+export function useDeleteService() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("services").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["services"] }),
+  });
+}

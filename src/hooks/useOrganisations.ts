@@ -52,3 +52,16 @@ export function useCreateOrganisation() {
     },
   });
 }
+
+export function useDeleteOrganisation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("organisations").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["organisations"] });
+    },
+  });
+}

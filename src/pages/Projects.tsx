@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useProjects, Project } from "@/hooks/useProjects";
+import { useProjects, Project, useUpdateProject, useDeleteProject } from "@/hooks/useProjects";
 import { useTasks } from "@/hooks/useTasks";
 import { useDeals } from "@/hooks/useDeals";
 import { useSessions } from "@/hooks/useSessions";
@@ -16,7 +16,12 @@ import { DetailPanel } from "@/components/layout/DetailPanel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDialogs } from "@/App";
+import { toast } from "sonner";
+import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { MilestonesTab } from "@/components/projects/MilestonesTab";
 import { SessionsTab } from "@/components/projects/SessionsTab";
 import { DeliveriesTab } from "@/components/projects/DeliveriesTab";
@@ -245,6 +250,26 @@ export default function Projects() {
 function ProjectDetailPanel({ project, onClose }: { project: Project; onClose: () => void }) {
   const { data: tasks } = useTasks();
   const { data: deals } = useDeals();
+  const updateProject = useUpdateProject();
+  const deleteProject = useDeleteProject();
+  const [editing, setEditing] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editValues, setEditValues] = useState({
+    name: project.name,
+    status: project.status,
+    neuro_phase: project.neuro_phase || "needs",
+    budget: project.budget?.toString() || "0",
+    start_date: project.start_date || "",
+    end_date: project.end_date || "",
+    description: project.description || "",
+  });
+
+  const handleSave = () => {
+    updateProject.mutate(
+      { id: project.id, ...editValues, budget: parseFloat(editValues.budget) || 0, start_date: editValues.start_date || null, end_date: editValues.end_date || null, neuro_phase: editValues.neuro_phase as any },
+      { onSuccess: () => { toast.success("Project updated"); setEditing(false); } }
+    );
+  };
 
   const projectTasks = tasks?.filter((t) => t.project_id === project.id) || [];
   const linkedDeal = deals?.find((d) => d.id === project.deal_id);
@@ -258,7 +283,7 @@ function ProjectDetailPanel({ project, onClose }: { project: Project; onClose: (
       onOpenChange={onClose}
       title={project.name}
       badge={{ label: project.status, className: statusStyles[project.status] }}
-      fields={[
+      fields={editing ? [] : [
         { label: "Organisation", value: project.organisations?.name },
         { label: "NEURO Phase", value: project.neuro_phase ? phaseLabels[neuroPhases[phaseToIndex[project.neuro_phase]]] : undefined },
         { label: "Budget", value: `£${(project.budget || 0).toLocaleString()}` },
@@ -267,6 +292,62 @@ function ProjectDetailPanel({ project, onClose }: { project: Project; onClose: (
         { label: "End Date", value: project.end_date ? new Date(project.end_date).toLocaleDateString("en-GB") : undefined },
       ]}
     >
+      {editing ? (
+        <div className="space-y-3 mb-4">
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Name</label>
+            <Input value={editValues.name} onChange={(e) => setEditValues({ ...editValues, name: e.target.value })} className="h-9" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Status</label>
+              <Select value={editValues.status} onValueChange={(v) => setEditValues({ ...editValues, status: v as any })}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {["setup", "active", "paused", "completed"].map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">NEURO Phase</label>
+              <Select value={editValues.neuro_phase} onValueChange={(v: string) => setEditValues({ ...editValues, neuro_phase: v as any })}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {["needs", "engage", "understand", "realise", "ongoing"].map((p) => <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Budget (£)</label>
+              <Input value={editValues.budget} onChange={(e) => setEditValues({ ...editValues, budget: e.target.value })} className="h-9" type="number" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Start Date</label>
+              <Input type="date" value={editValues.start_date} onChange={(e) => setEditValues({ ...editValues, start_date: e.target.value })} className="h-9" />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">End Date</label>
+            <Input type="date" value={editValues.end_date} onChange={(e) => setEditValues({ ...editValues, end_date: e.target.value })} className="h-9" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs text-muted-foreground">Description</label>
+            <Textarea value={editValues.description} onChange={(e) => setEditValues({ ...editValues, description: e.target.value })} rows={2} />
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleSave} disabled={updateProject.isPending}>Save</Button>
+            <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex gap-2 mb-4">
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>Edit Project</Button>
+          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>Delete</Button>
+        </div>
+      )}
+
       {/* NEURO Phase indicator */}
       <div className="mb-4">
         <p className="text-xs text-muted-foreground mb-1.5">NEURO Progress</p>
@@ -277,7 +358,6 @@ function ProjectDetailPanel({ project, onClose }: { project: Project; onClose: (
         </div>
       </div>
 
-      {/* Linked Deal summary */}
       {linkedDeal && (
         <div className="mb-4 p-3 rounded-lg border border-border bg-muted/30">
           <p className="text-xs text-muted-foreground mb-1">Linked Deal</p>
@@ -342,6 +422,10 @@ function ProjectDetailPanel({ project, onClose }: { project: Project; onClose: (
           <ActivityTab organisationId={project.organisation_id} />
         </TabsContent>
       </Tabs>
+
+      <DeleteConfirmDialog open={deleteOpen} onOpenChange={setDeleteOpen} title={project.name}
+        onConfirm={() => deleteProject.mutate(project.id, { onSuccess: () => { toast.success("Project deleted"); onClose(); }, onError: (e) => toast.error(e.message) })}
+        loading={deleteProject.isPending} />
     </DetailPanel>
   );
 }
