@@ -2,14 +2,14 @@ import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Mail } from "lucide-react";
+import { Mail, Users, Eye, Pencil, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useContacts, Contact, useDeleteContact } from "@/hooks/useContacts";
 import { useUpdateContact } from "@/hooks/useUpdateContact";
-import { useDeals } from "@/hooks/useDeals";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DetailPanel } from "@/components/layout/DetailPanel";
+import { EmptyState } from "@/components/layout/EmptyState";
 import { useDialogs } from "@/App";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +21,12 @@ import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { CSVImportDialog, CSVColumn } from "@/components/dialogs/CSVImportDialog";
 import { Upload } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const contactCSVColumns: CSVColumn[] = [
   { key: "first_name", label: "First Name", required: true },
@@ -36,12 +42,21 @@ export default function Contacts() {
   const { data: contacts, isLoading } = useContacts();
   const [selected, setSelected] = useState<Contact | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<Contact | null>(null);
+  const deleteContact = useDeleteContact();
   const { openCreateContact } = useDialogs();
   const queryClient = useQueryClient();
 
+  const filtered = contacts?.filter(c =>
+    `${c.first_name} ${c.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
+    c.email?.toLowerCase().includes(search.toLowerCase()) ||
+    c.organisations?.name?.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <>
-      <PageHeader title="Contacts" searchPlaceholder="Search contacts..." actionLabel="New Contact" onAction={openCreateContact}>
+      <PageHeader title="Contacts" searchPlaceholder="Search contacts..." actionLabel="New Contact" onAction={openCreateContact} onSearch={setSearch}>
         <Button variant="outline" size="sm" className="gap-2 rounded-lg" onClick={() => setImportOpen(true)}>
           <Upload className="h-4 w-4" />
           <span className="hidden sm:inline">Import CSV</span>
@@ -60,8 +75,8 @@ export default function Contacts() {
           <CardContent className="p-0">
             {isLoading ? (
               <div className="p-6 space-y-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
-            ) : !contacts?.length ? (
-              <div className="p-12 text-center text-muted-foreground"><p>No contacts yet. Add your first contact to get started.</p></div>
+            ) : !filtered?.length ? (
+              <EmptyState icon={Users} title="No contacts found" description={search ? "No contacts match your search." : "Add your first contact to get started."} action={!search ? { label: "New Contact", onClick: openCreateContact } : undefined} />
             ) : (
               <Table>
                 <TableHeader>
@@ -75,7 +90,7 @@ export default function Contacts() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {contacts.map((c) => (
+                  {filtered.map((c) => (
                     <TableRow key={c.id} className="cursor-pointer" onClick={() => setSelected(c)}>
                       <TableCell className="pl-6">
                         <div className="flex items-center gap-3">
@@ -96,7 +111,24 @@ export default function Contacts() {
                       <TableCell className="text-sm text-muted-foreground">{c.job_title || "—"}</TableCell>
                       <TableCell className="text-sm">{c.organisations?.name || "—"}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{c.phone || "—"}</TableCell>
-                      <TableCell><button className="text-muted-foreground hover:text-foreground">⋯</button></TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <button className="text-muted-foreground hover:text-foreground">⋯</button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={() => setSelected(c)}>
+                              <Eye className="h-4 w-4 mr-2" /> View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setSelected(c)}>
+                              <Pencil className="h-4 w-4 mr-2" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget(c)}>
+                              <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -107,12 +139,24 @@ export default function Contacts() {
       </div>
 
       {selected && <ContactDetailPanel contact={selected} onClose={() => setSelected(null)} />}
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={() => setDeleteTarget(null)}
+        title={deleteTarget ? `${deleteTarget.first_name} ${deleteTarget.last_name}` : ""}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          deleteContact.mutate(deleteTarget.id, {
+            onSuccess: () => { toast.success("Contact deleted"); setDeleteTarget(null); },
+            onError: (e) => toast.error(e.message),
+          });
+        }}
+        loading={deleteContact.isPending}
+      />
     </>
   );
 }
 
 function ContactDetailPanel({ contact, onClose }: { contact: Contact; onClose: () => void }) {
-  const { data: deals } = useDeals();
   const updateContact = useUpdateContact();
   const deleteContact = useDeleteContact();
   const [editing, setEditing] = useState(false);
@@ -125,8 +169,6 @@ function ContactDetailPanel({ contact, onClose }: { contact: Contact; onClose: (
     job_title: contact.job_title || "",
     notes: contact.notes || "",
   });
-
-  const linkedDeals = deals?.filter((d) => d.contact_id === contact.id) || [];
 
   const handleSave = () => {
     updateContact.mutate(
@@ -179,7 +221,7 @@ function ContactDetailPanel({ contact, onClose }: { contact: Contact; onClose: (
             <Textarea value={editValues.notes} onChange={(e) => setEditValues({ ...editValues, notes: e.target.value })} rows={2} />
           </div>
           <div className="flex gap-2">
-            <Button size="sm" onClick={handleSave}>Save</Button>
+            <Button size="sm" onClick={handleSave} disabled={updateContact.isPending}>{updateContact.isPending ? "Saving..." : "Save"}</Button>
             <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
           </div>
         </div>
@@ -190,28 +232,10 @@ function ContactDetailPanel({ contact, onClose }: { contact: Contact; onClose: (
         </div>
       )}
 
-      <Tabs defaultValue="deals" className="w-full">
+      <Tabs defaultValue="activity" className="w-full">
         <TabsList className="w-full">
-          <TabsTrigger value="deals" className="flex-1">Deals ({linkedDeals.length})</TabsTrigger>
           <TabsTrigger value="activity" className="flex-1">Activity</TabsTrigger>
         </TabsList>
-        <TabsContent value="deals" className="pt-4">
-          {!linkedDeals.length ? (
-            <p className="text-sm text-muted-foreground">No deals linked to this contact.</p>
-          ) : (
-            <div className="space-y-2">
-              {linkedDeals.map((d) => (
-                <div key={d.id} className="flex items-center gap-3 p-2 rounded-md border">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{d.title}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{d.stage} · {d.organisations?.name || "—"}</p>
-                  </div>
-                  <span className="text-sm font-semibold text-primary">£{(d.value || 0).toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </TabsContent>
         <TabsContent value="activity" className="pt-4">
           <ActivityTimeline entityType="contact" entityId={contact.id} contactId={contact.id} organisationId={contact.organisation_id || undefined} />
         </TabsContent>

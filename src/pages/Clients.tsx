@@ -10,6 +10,7 @@ import { useProjects } from "@/hooks/useProjects";
 import { useInvoices } from "@/hooks/useInvoices";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DetailPanel } from "@/components/layout/DetailPanel";
+import { EmptyState } from "@/components/layout/EmptyState";
 import { useDialogs } from "@/App";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,9 +21,15 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { CSVImportDialog, CSVColumn } from "@/components/dialogs/CSVImportDialog";
-import { Upload } from "lucide-react";
+import { Upload, Building2, Eye, Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const sectorColors: Record<string, string> = {
   Healthcare: "bg-[hsl(var(--stage-lead))]/20 text-[hsl(var(--stage-lead))]",
@@ -48,13 +55,22 @@ export default function Clients() {
   const { data: clients, isLoading } = useOrganisations();
   const [selected, setSelected] = useState<Organisation | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<Organisation | null>(null);
+  const deleteOrg = useDeleteOrganisation();
   const { openCreateClient } = useDialogs();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const filtered = clients?.filter(c =>
+    c.name.toLowerCase().includes(search.toLowerCase()) ||
+    c.email?.toLowerCase().includes(search.toLowerCase()) ||
+    c.sector?.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <>
-      <PageHeader title="Clients" searchPlaceholder="Search organisations..." actionLabel="New Client" onAction={openCreateClient}>
+      <PageHeader title="Clients" searchPlaceholder="Search organisations..." actionLabel="New Client" onAction={openCreateClient} onSearch={setSearch}>
         <Button variant="outline" size="sm" className="gap-2 rounded-lg" onClick={() => setImportOpen(true)}>
           <Upload className="h-4 w-4" />
           <span className="hidden sm:inline">Import CSV</span>
@@ -73,8 +89,8 @@ export default function Clients() {
           <CardContent className="p-0">
             {isLoading ? (
               <div className="p-6 space-y-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
-            ) : !clients?.length ? (
-              <div className="p-12 text-center text-muted-foreground"><p>No clients yet. Add your first client to get started.</p></div>
+            ) : !filtered?.length ? (
+              <EmptyState icon={Building2} title="No clients found" description={search ? "No clients match your search." : "Add your first client to get started."} action={!search ? { label: "New Client", onClick: openCreateClient } : undefined} />
             ) : (
               <Table>
                 <TableHeader>
@@ -87,7 +103,7 @@ export default function Clients() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {clients.map((c) => (
+                  {filtered.map((c) => (
                     <TableRow key={c.id} className="cursor-pointer" onClick={() => navigate(`/clients/${c.id}`)}>
                       <TableCell className="pl-6">
                         <div className="flex items-center gap-3">
@@ -103,7 +119,24 @@ export default function Clients() {
                       <TableCell>{c.sector && <Badge className={sectorColors[c.sector] || "bg-muted text-muted-foreground"}>{c.sector}</Badge>}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{c.email || "—"}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{c.phone || "—"}</TableCell>
-                      <TableCell><button className="text-muted-foreground hover:text-foreground">⋯</button></TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <button className="text-muted-foreground hover:text-foreground">⋯</button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={() => navigate(`/clients/${c.id}`)}>
+                              <Eye className="h-4 w-4 mr-2" /> View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setSelected(c)}>
+                              <Pencil className="h-4 w-4 mr-2" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => setDeleteTarget(c)}>
+                              <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -114,6 +147,19 @@ export default function Clients() {
       </div>
 
       {selected && <ClientDetailPanel client={selected} onClose={() => setSelected(null)} />}
+      <DeleteConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={() => setDeleteTarget(null)}
+        title={deleteTarget?.name || ""}
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          deleteOrg.mutate(deleteTarget.id, {
+            onSuccess: () => { toast.success("Client deleted"); setDeleteTarget(null); },
+            onError: (e) => toast.error(e.message),
+          });
+        }}
+        loading={deleteOrg.isPending}
+      />
     </>
   );
 }
@@ -124,7 +170,7 @@ function ClientDetailPanel({ client, onClose }: { client: Organisation; onClose:
   const { data: invoices } = useInvoices();
   const updateOrg = useUpdateOrganisation();
   const deleteOrg = useDeleteOrganisation();
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(true);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editValues, setEditValues] = useState({
     name: client.name,
@@ -196,7 +242,7 @@ function ClientDetailPanel({ client, onClose }: { client: Organisation; onClose:
             <Textarea value={editValues.notes} onChange={(e) => setEditValues({ ...editValues, notes: e.target.value })} rows={2} />
           </div>
           <div className="flex gap-2">
-            <Button size="sm" onClick={handleSave}>Save</Button>
+            <Button size="sm" onClick={handleSave} disabled={updateOrg.isPending}>{updateOrg.isPending ? "Saving..." : "Save"}</Button>
             <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
           </div>
         </div>
