@@ -53,3 +53,30 @@ export function useCreateSession() {
     },
   });
 }
+
+export function useUpdateSession() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: TablesUpdate<"sessions"> & { id: string }) => {
+      const { data, error } = await supabase.from("sessions").update(updates).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+    },
+  });
+}
+
+export function useDeleteSession() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("sessions").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+    },
+  });
+}

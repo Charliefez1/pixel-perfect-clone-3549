@@ -48,3 +48,14 @@ export function useUpdateForm() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["forms"] }),
   });
 }
+
+export function useDeleteForm() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("forms").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["forms"] }),
+  });
+}

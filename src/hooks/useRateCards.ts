@@ -50,3 +50,14 @@ export function useUpdateRateCard() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["rate_cards"] }),
   });
 }
+
+export function useDeleteRateCard() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("rate_cards").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["rate_cards"] }),
+  });
+}

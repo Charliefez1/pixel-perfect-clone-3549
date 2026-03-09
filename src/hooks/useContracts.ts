@@ -56,3 +56,14 @@ export function useUpdateContract() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["contracts"] }),
   });
 }
+
+export function useDeleteContract() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("contracts").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["contracts"] }),
+  });
+}
