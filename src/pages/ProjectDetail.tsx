@@ -145,6 +145,18 @@ export default function ProjectDetail() {
   }
 
   const projectTasks = allTasks?.filter((t) => t.project_id === id) || [];
+  const parentProjectTasks = projectTasks.filter(t => !(t as any).parent_task_id);
+  const subtasksByParent = useMemo(() => {
+    const map: Record<string, Task[]> = {};
+    projectTasks.forEach(t => {
+      const parentId = (t as any).parent_task_id;
+      if (parentId) {
+        if (!map[parentId]) map[parentId] = [];
+        map[parentId].push(t);
+      }
+    });
+    return map;
+  }, [allTasks, id]);
   const projectDeliveries = allDeliveries?.filter((d) => d.project_id === id) || [];
   const projectSessions = allSessions?.filter((s) => s.project_id === id) || [];
   const projectInvoices = allInvoices?.filter((i) => i.project_id === id || (project.deal_id && i.deal_id === project.deal_id)) || [];
