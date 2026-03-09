@@ -237,7 +237,7 @@ export default function ClientDetail() {
                           >
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">{p.name}</p>
-                              <p className="text-xs text-muted-foreground capitalize">{p.service_type || "—"}</p>
+                              <p className="text-xs text-muted-foreground capitalize">{(p as any).service_type || "—"}</p>
                             </div>
                             <Badge className={statusStyles[p.status]}>{p.status}</Badge>
                             <span className="text-sm font-semibold text-primary">£{(p.budget || 0).toLocaleString()}</span>
