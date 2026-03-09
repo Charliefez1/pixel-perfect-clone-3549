@@ -113,7 +113,8 @@ export default function ProjectDetail() {
   const [editing, setEditing] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
-  const [taskView, setTaskView] = useState<"list" | "board">("list");
+  const [taskView, setTaskView] = useState<ViewMode>("list");
+  const [calendarDate, setCalendarDate] = useState(new Date());
   const [newUpdateOpen, setNewUpdateOpen] = useState(false);
   const [updateTitle, setUpdateTitle] = useState("");
   const [updateBody, setUpdateBody] = useState("");
