@@ -74,8 +74,6 @@ export default function Deals() {
   const updateDeal = useUpdateDeal();
   const logActivity = useLogActivity();
   const queryClient = useQueryClient();
-  const updateDeal = useUpdateDeal();
-  const logActivity = useLogActivity();
   const [draggedDealId, setDraggedDealId] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
