@@ -15,6 +15,7 @@ import { DetailPanel } from "@/components/layout/DetailPanel";
 import { useDialogs } from "@/App";
 import { toast } from "sonner";
 import { Eye, Send, CheckCircle2 } from "lucide-react";
+import { EntityDocuments } from "@/components/documents/EntityDocuments";
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
