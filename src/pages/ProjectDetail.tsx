@@ -764,7 +764,7 @@ Project context: ${JSON.stringify(context)}`,
                 <TaskListView parentTasks={parentProjectTasks} subtasksByParent={subtasksByParent} onSelectTask={() => {}} />
               )
             ) : taskView === "board" ? (
-              <TaskBoard tasks={projectTasks} subtasksByParent={subtasksByParent} />
+              <TaskBoard tasks={projectTasks} />
             ) : taskView === "timeline" ? (
               <TaskTimelineView tasks={parentProjectTasks} onSelectTask={() => {}} />
             ) : (
