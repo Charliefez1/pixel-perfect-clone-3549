@@ -15,6 +15,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useDialogs } from "@/App";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const columns = [
   { id: "todo", label: "To Do" },
