@@ -19,6 +19,11 @@ import {
   Sparkles,
   BarChart3,
   Circle,
+  TrendingUp,
+  FileText,
+  Clock,
+  Package,
+  Bell,
 } from "lucide-react";
 import { useState } from "react";
 import { useProjects } from "@/hooks/useProjects";
