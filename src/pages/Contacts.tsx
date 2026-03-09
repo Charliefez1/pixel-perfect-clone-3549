@@ -86,7 +86,9 @@ export default function Contacts() {
 function ContactDetailPanel({ contact, onClose }: { contact: Contact; onClose: () => void }) {
   const { data: deals } = useDeals();
   const updateContact = useUpdateContact();
+  const deleteContact = useDeleteContact();
   const [editing, setEditing] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [editValues, setEditValues] = useState({
     first_name: contact.first_name,
     last_name: contact.last_name,
