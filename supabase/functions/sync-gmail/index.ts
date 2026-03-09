@@ -89,8 +89,9 @@ serve(async (req) => {
       if (c.email) contactMap.set(c.email.toLowerCase(), { id: c.id, organisation_id: c.organisation_id });
     }
 
-    // Our email address(es) to identify sent vs received
-    const ourEmails = new Set(["charlie@neurodiversityglobal.com", "rich@neurodiversityglobal.com"].map(e => e.toLowerCase()));
+    // Our email address(es) to identify sent vs received — loaded from OUR_EMAILS secret (comma-separated)
+    const ourEmailsRaw = Deno.env.get("OUR_EMAILS") || "";
+    const ourEmails = new Set(ourEmailsRaw.split(",").map(e => e.trim().toLowerCase()).filter(Boolean));
 
     const accessToken = await getAccessToken();
     const emails = await fetchRecentEmails(accessToken, 24);

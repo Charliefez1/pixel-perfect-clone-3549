@@ -9,11 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Users, Clock, AlertTriangle } from "lucide-react";
 
-const team = [
-  { id: "charlie", name: "Charlie", role: "Director", avatar: "C" },
-  { id: "rich", name: "Rich", role: "Director", avatar: "R" },
-  { id: "unassigned", name: "Unassigned", role: "", avatar: "?" },
-];
+// Team members are loaded dynamically from profiles
 
 export default function Resourcing() {
   const { data: projects, isLoading: loadingProjects } = useProjects();
