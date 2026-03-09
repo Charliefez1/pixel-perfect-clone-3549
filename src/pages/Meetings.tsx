@@ -15,11 +15,17 @@ export default function Meetings() {
   const { data: sessions, isLoading } = useSessions();
   const [selected, setSelected] = useState<Session | null>(null);
   const [typeFilter, setTypeFilter] = useState<"all" | "meeting" | "workshop">("all");
+  const [search, setSearch] = useState("");
   const { openCreateSession } = useDialogs();
 
   const filtered = sessions?.filter((s) => {
-    if (typeFilter === "all") return true;
-    return (s as any).session_type === typeFilter;
+    if (typeFilter !== "all" && (s as any).session_type !== typeFilter) return false;
+    if (search) {
+      return s.title.toLowerCase().includes(search.toLowerCase()) ||
+        s.projects?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        s.location?.toLowerCase().includes(search.toLowerCase());
+    }
+    return true;
   });
 
   const renderSessionCard = (s: Session) => {
