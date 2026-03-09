@@ -6,9 +6,10 @@ interface EmptyStateProps {
   title: string;
   description: string;
   action?: { label: string; onClick: () => void };
+  children?: React.ReactNode;
 }
 
-export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
+export function EmptyState({ icon: Icon, title, description, action, children }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
       <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mb-4">
@@ -21,6 +22,7 @@ export function EmptyState({ icon: Icon, title, description, action }: EmptyStat
           {action.label}
         </Button>
       )}
+      {children}
     </div>
   );
 }

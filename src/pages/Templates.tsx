@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTemplates, Template } from "@/hooks/useDeliveries";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Trash2, GripVertical, FileText, FileSignature, ShoppingCart, Layers, Copy, Variable } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -182,11 +183,15 @@ export default function Templates() {
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState("project");
   const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  const projectTemplates = templates?.filter(t => !(t as any).template_type || (t as any).template_type === "project") || [];
-  const proposalTemplates = templates?.filter(t => (t as any).template_type === "proposal") || [];
-  const contractTemplates = templates?.filter(t => (t as any).template_type === "contract") || [];
-  const poTemplates = templates?.filter(t => (t as any).template_type === "purchase_order") || [];
+  const allTemplates = templates?.filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase())) || [];
+  const projectTemplates = allTemplates.filter(t => !(t as any).template_type || (t as any).template_type === "project");
+  const proposalTemplates = allTemplates.filter(t => (t as any).template_type === "proposal");
+  const contractTemplates = allTemplates.filter(t => (t as any).template_type === "contract");
+  const poTemplates = allTemplates.filter(t => (t as any).template_type === "purchase_order");
 
   const startEditProject = (template: any) => {
     setEditingId(template.id);
@@ -273,9 +278,21 @@ export default function Templates() {
     toast.success(`Inserted ${field}`);
   };
 
+  const handleDeleteTemplate = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { error } = await supabase.from("templates").delete().eq("id", deleteTarget);
+    setDeleting(false);
+    if (error) { toast.error("Failed to delete template"); return; }
+    toast.success("Template deleted");
+    queryClient.invalidateQueries({ queryKey: ["document_templates"] });
+    queryClient.invalidateQueries({ queryKey: ["templates"] });
+    setDeleteTarget(null);
+  };
+
   return (
     <>
-      <PageHeader title="Templates" searchPlaceholder="Search templates..." actionLabel="New Template" onAction={() => setCreateOpen(true)} />
+      <PageHeader title="Templates" searchPlaceholder="Search templates..." actionLabel="New Template" onAction={() => setCreateOpen(true)} onSearch={setSearch} />
       <div className="flex-1 overflow-auto p-6 space-y-6">
         <Tabs defaultValue="project">
           <TabsList>
@@ -345,7 +362,10 @@ export default function Templates() {
                               </div>
                             ))}
                           </div>
-                          <Button variant="outline" size="sm" onClick={() => startEditProject(template)}>Edit Tasks</Button>
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => startEditProject(template)}>Edit Tasks</Button>
+                            <Button variant="destructive" size="sm" onClick={() => setDeleteTarget(template.id)}><Trash2 className="h-3.5 w-3.5 mr-1" />Delete</Button>
+                          </div>
                         </>
                       )}
                     </CardContent>
@@ -439,9 +459,8 @@ export default function Templates() {
                             <p className="text-xs text-muted-foreground">No content yet</p>
                           )}
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => startEditDocument(template as any)}>
-                              Edit Template
-                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => startEditDocument(template as any)}>Edit Template</Button>
+                            <Button variant="destructive" size="sm" onClick={() => setDeleteTarget(template.id)}><Trash2 className="h-3.5 w-3.5 mr-1" />Delete</Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -481,6 +500,8 @@ export default function Templates() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }} title="template" onConfirm={handleDeleteTemplate} loading={deleting} />
     </>
   );
 }
