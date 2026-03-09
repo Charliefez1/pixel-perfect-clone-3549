@@ -63,12 +63,12 @@ export default function Proposals() {
   };
 
   const handleStatusChange = (proposal: Proposal, newStatus: string) => {
-    const updates: Record<string, any> = { id: proposal.id, status: newStatus };
+    const updates: Record<string, any> = { status: newStatus };
     if (newStatus === "sent") updates.sent_at = new Date().toISOString();
     if (newStatus === "accepted") updates.accepted_at = new Date().toISOString();
     if (newStatus === "declined") updates.declined_at = new Date().toISOString();
 
-    updateProposal.mutate(updates, {
+    updateProposal.mutate({ id: proposal.id, ...updates }, {
       onSuccess: () => toast.success(`Proposal marked as ${newStatus}`),
     });
   };
