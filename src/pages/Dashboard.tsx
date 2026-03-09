@@ -39,6 +39,7 @@ const sectorColors: Record<string, string> = {
 
 export default function Dashboard() {
   const [syncing, setSyncing] = useState(false);
+  const [syncingCRM, setSyncingCRM] = useState(false);
   const { openCreateDeal, openCreateContact, openCreateInvoice } = useDialogs();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: pipelineData, isLoading: pipelineLoading } = usePipelineByStage();
