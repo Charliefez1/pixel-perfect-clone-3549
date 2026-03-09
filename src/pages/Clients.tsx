@@ -241,6 +241,18 @@ function ClientDetailPanel({ client, onClose }: { client: Organisation; onClose:
           <ActivityTimeline entityType="organisation" entityId={client.id} organisationId={client.id} />
         </TabsContent>
       </Tabs>
+      <DeleteConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title={client.name}
+        onConfirm={() => {
+          deleteOrg.mutate(client.id, {
+            onSuccess: () => { toast.success("Client deleted"); onClose(); },
+            onError: (e) => toast.error(e.message),
+          });
+        }}
+        loading={deleteOrg.isPending}
+      />
     </DetailPanel>
   );
 }
