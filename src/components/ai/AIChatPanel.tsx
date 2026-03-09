@@ -14,6 +14,7 @@ const agents = [
   { id: "sales", label: "Sales", icon: TrendingUp, color: "text-blue-500" },
   { id: "pm", label: "Project Mgmt", icon: FolderKanban, color: "text-green-500" },
   { id: "insights", label: "Insights", icon: BarChart3, color: "text-amber-500" },
+  { id: "crm", label: "CRM", icon: Bot, color: "text-cyan-500" },
   { id: "business", label: "Business Mgr", icon: Briefcase, color: "text-purple-500" },
 ];
 
