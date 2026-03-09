@@ -128,9 +128,10 @@ export default function Deliveries() {
 
   return (
     <>
-      <PageHeader title="Deliveries" searchPlaceholder="Search deliveries..." actionLabel="New Delivery" onAction={() => navigate("/projects")}>
+      <PageHeader title="Deliveries" searchPlaceholder="Search deliveries..." actionLabel="New Delivery" onAction={() => setCreateOpen(true)} onSearch={setSearch}>
         <ViewToggle value={view} onChange={setView} />
       </PageHeader>
+      <CreateDeliveryDialog open={createOpen} onOpenChange={setCreateOpen} />
 
       <div className="border-b bg-card/50 px-6 py-3 flex items-center gap-6 text-sm">
         <span><strong>{activeDeliveries}</strong> active deliveries</span>
