@@ -31,8 +31,6 @@ const sectorColors: Record<string, string> = {
   Media: "bg-[hsl(var(--stage-verbal))]/20 text-[hsl(var(--stage-verbal))]",
   Education: "bg-primary/20 text-primary",
 };
-import { Upload } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
 
 const orgCSVColumns: CSVColumn[] = [
   { key: "name", label: "Name", required: true },
