@@ -310,7 +310,7 @@ function ProjectDetailPanel({ project, onClose }: { project: Project; onClose: (
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">NEURO Phase</label>
-              <Select value={editValues.neuro_phase} onValueChange={(v) => setEditValues({ ...editValues, neuro_phase: v })}>
+              <Select value={editValues.neuro_phase} onValueChange={(v: string) => setEditValues({ ...editValues, neuro_phase: v as any })}>
                 <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {["needs", "engage", "understand", "realise", "ongoing"].map((p) => <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>)}
