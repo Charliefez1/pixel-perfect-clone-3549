@@ -275,7 +275,7 @@ export default function Templates() {
 
   return (
     <>
-      <PageHeader title="Templates" searchPlaceholder="Search templates..." actionLabel="New Template" onAction={() => setCreateOpen(true)} />
+      <PageHeader title="Templates" searchPlaceholder="Search templates..." actionLabel="New Template" onAction={() => setCreateOpen(true)} onSearch={setSearch} />
       <div className="flex-1 overflow-auto p-6 space-y-6">
         <Tabs defaultValue="project">
           <TabsList>
