@@ -4,6 +4,7 @@ import { useProject, useProjects, useUpdateProject, useDeleteProject } from "@/h
 import { useTasks, useUpdateTask } from "@/hooks/useTasks";
 import { useDeliveries } from "@/hooks/useDeliveries";
 import { useSessions } from "@/hooks/useSessions";
+import { useInvoices } from "@/hooks/useInvoices";
 import { useProjectMilestones } from "@/hooks/useProjectMilestones";
 import { useProjectUpdates, useCreateProjectUpdate } from "@/hooks/useProjectUpdates";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,19 +35,31 @@ import {
   Plus,
   Sparkles,
   AlertTriangle,
+  Receipt,
 } from "lucide-react";
 import { isPast } from "date-fns";
 import ReactMarkdown from "react-markdown";
 
 const neuroPhases = ["N", "E", "U", "R", "O"] as const;
-const phaseNames = ["needs", "engage", "understand", "realise", "ongoing"];
-const phaseLabels: Record<string, string> = { N: "Needs", E: "Engage", U: "Understand", R: "Realise", O: "Ongoing" };
-const phaseToIndex: Record<string, number> = { needs: 0, engage: 1, understand: 2, realise: 3, ongoing: 4 };
+const phaseNames = ["needs", "engage", "understand", "redesign", "optimise"];
+const phaseLabels: Record<string, string> = { N: "Needs", E: "Engage", U: "Understand", R: "Redesign", O: "Optimise" };
+const phaseToIndex: Record<string, number> = { needs: 0, engage: 1, understand: 2, redesign: 3, optimise: 4 };
 const statusStyles: Record<string, string> = {
   setup: "bg-muted text-muted-foreground",
   active: "bg-[hsl(var(--stage-won))]/20 text-[hsl(var(--stage-won))]",
   paused: "bg-[hsl(var(--stage-proposal))]/20 text-[hsl(var(--stage-proposal))]",
   completed: "bg-primary/20 text-primary",
+};
+
+const stageLabels: Record<string, string> = {
+  contract_signing: "Contract Signing",
+  onboarding: "Onboarding",
+  planning: "Planning",
+  data_gathering: "Data Gathering",
+  content_build: "Content Build",
+  delivery: "Delivery",
+  analysis_feedback: "Analysis & Feedback",
+  closing: "Closing",
 };
 
 const taskStatusColors: Record<string, string> = {
@@ -70,10 +83,10 @@ function suggestPhaseTransition(
     if (prepTasks?.length && prepTasks.every((t) => t.status === "done")) return "understand";
   }
   if (neuroPhase === "understand") {
-    if (deliveries?.some((d) => d.status === "in_progress")) return "realise";
+    if (deliveries?.some((d) => d.status === "in_progress")) return "redesign";
   }
-  if (neuroPhase === "realise") {
-    if (deliveries?.length && deliveries.every((d) => d.status === "delivered")) return "ongoing";
+  if (neuroPhase === "redesign") {
+    if (deliveries?.length && deliveries.every((d) => d.status === "delivered")) return "optimise";
   }
   return null;
 }
@@ -86,6 +99,7 @@ export default function ProjectDetail() {
   const { data: allDeliveries } = useDeliveries();
   const { data: allSessions } = useSessions();
   const { data: allProjects } = useProjects();
+  const { data: allInvoices } = useInvoices();
   const { data: milestones } = useProjectMilestones(id);
   const { data: updates } = useProjectUpdates(id);
   const createUpdate = useCreateProjectUpdate();
@@ -128,6 +142,7 @@ export default function ProjectDetail() {
   const projectTasks = allTasks?.filter((t) => t.project_id === id) || [];
   const projectDeliveries = allDeliveries?.filter((d) => d.project_id === id) || [];
   const projectSessions = allSessions?.filter((s) => s.project_id === id) || [];
+  const projectInvoices = allInvoices?.filter((i) => i.project_id === id || (project.deal_id && i.deal_id === project.deal_id)) || [];
   const siblingProjects = project.organisation_id
     ? allProjects?.filter((p) => p.organisation_id === project.organisation_id && p.id !== id) || []
     : [];
@@ -139,10 +154,19 @@ export default function ProjectDetail() {
   const inProgressTasks = projectTasks.filter((t) => t.status === "in_progress");
   const blockedTasks = projectTasks.filter((t) => t.status === "blocked");
   const todoTasks = projectTasks.filter((t) => t.status === "todo");
-  const doneTasks = projectTasks.filter((t) => t.status === "done");
   const upcomingDeliveries = projectDeliveries.filter((d) => d.delivery_date && new Date(d.delivery_date) >= new Date());
   const completedMilestones = milestones?.filter((m) => m.completed_at).length || 0;
   const totalMilestones = milestones?.length || 0;
+
+  // Billing calculations
+  const totalBilled = projectInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
+  const paidInvoices = projectInvoices.filter((i) => i.status === "paid");
+  const totalPaid = paidInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
+  const overdueInvoices = projectInvoices.filter((i) => i.status === "overdue" || (i.status === "sent" && i.due_date && isPast(new Date(i.due_date))));
+  const overdueAmount = overdueInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
+  const outstandingInvoices = projectInvoices.filter((i) => i.status !== "paid" && i.status !== "cancelled");
+  const outstandingAmount = outstandingInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
+  const budgetUsedPct = project.budget ? Math.round((totalBilled / project.budget) * 100) : 0;
 
   const suggestedPhase = suggestPhaseTransition(
     project.neuro_phase || "needs",
@@ -155,6 +179,7 @@ export default function ProjectDetail() {
     setEditValues({
       name: project.name,
       status: project.status,
+      stage: project.stage || "contract_signing",
       neuro_phase: project.neuro_phase || "needs",
       budget: project.budget?.toString() || "0",
       start_date: project.start_date || "",
@@ -170,6 +195,7 @@ export default function ProjectDetail() {
         id: project.id,
         name: editValues.name,
         status: editValues.status as any,
+        stage: editValues.stage as any,
         neuro_phase: editValues.neuro_phase as any,
         budget: parseFloat(editValues.budget) || 0,
         start_date: editValues.start_date || null,
@@ -309,6 +335,11 @@ Project context: ${JSON.stringify(context)}`,
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold">{project.name}</h1>
               <Badge className={statusStyles[project.status]}>{project.status}</Badge>
+              {project.stage && (
+                <Badge variant="outline" className="text-[10px]">
+                  {stageLabels[project.stage] || project.stage}
+                </Badge>
+              )}
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               {project.organisation_id ? (
@@ -323,7 +354,15 @@ Project context: ${JSON.stringify(context)}`,
                 <span>No organisation</span>
               )}
               {project.budget ? <span> · £{project.budget.toLocaleString()}</span> : null}
+              {project.service_type && <span> · <span className="capitalize">{project.service_type}</span></span>}
             </div>
+            {/* Budget progress bar */}
+            {project.budget ? (
+              <div className="flex items-center gap-2 mt-1 max-w-xs">
+                <Progress value={budgetUsedPct} className="h-1.5 flex-1" />
+                <span className="text-[10px] text-muted-foreground">{budgetUsedPct}% billed</span>
+              </div>
+            ) : null}
             {/* Sibling projects */}
             {siblingProjects.length > 0 && (
               <div className="flex items-center gap-1.5 flex-wrap mt-1">
@@ -416,6 +455,17 @@ Project context: ${JSON.stringify(context)}`,
                 </Select>
               </div>
               <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Stage</label>
+                <Select value={editValues.stage || "contract_signing"} onValueChange={(v) => setEditValues({ ...editValues, stage: v })}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(stageLabels).map(([key, label]) => (
+                      <SelectItem key={key} value={key}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Budget (£)</label>
                 <Input value={editValues.budget || ""} onChange={(e) => setEditValues({ ...editValues, budget: e.target.value })} className="h-9" type="number" />
               </div>
@@ -447,146 +497,234 @@ Project context: ${JSON.stringify(context)}`,
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="tasks">Tasks ({totalTasks})</TabsTrigger>
             <TabsTrigger value="deliveries">Deliveries</TabsTrigger>
+            <TabsTrigger value="billing">Billing</TabsTrigger>
             <TabsTrigger value="sessions">Sessions</TabsTrigger>
-            <TabsTrigger value="milestones">Milestones</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="updates">Updates</TabsTrigger>
           </TabsList>
 
-          {/* Overview Tab */}
+          {/* Overview Tab — Two-column layout */}
           <TabsContent value="overview" className="space-y-6">
-            {/* Quick stats */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    <CheckSquare className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{completedTasks}/{totalTasks}</p>
-                    <p className="text-xs text-muted-foreground">Tasks completed</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    <Package className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{upcomingDeliveries.length}</p>
-                    <p className="text-xs text-muted-foreground">Upcoming deliveries</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${overdueTasks.length > 0 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>
-                    <AlertTriangle className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{overdueTasks.length}</p>
-                    <p className="text-xs text-muted-foreground">Overdue tasks</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    <Target className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{completedMilestones}/{totalMilestones}</p>
-                    <p className="text-xs text-muted-foreground">Milestones hit</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <div className="grid gap-6 lg:grid-cols-3">
+              {/* Left column — 2/3 width */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Quick stats row */}
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <Card>
+                    <CardContent className="p-4 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                        <CheckSquare className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold">{completedTasks}/{totalTasks}</p>
+                        <p className="text-xs text-muted-foreground">Tasks done</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                        <Package className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold">{upcomingDeliveries.length}</p>
+                        <p className="text-xs text-muted-foreground">Upcoming</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${overdueTasks.length > 0 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>
+                        <AlertTriangle className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold">{overdueTasks.length}</p>
+                        <p className="text-xs text-muted-foreground">Overdue</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                        <Target className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold">{completedMilestones}/{totalMilestones}</p>
+                        <p className="text-xs text-muted-foreground">Milestones</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
 
-            {/* Progress + summary */}
-            <div className="grid gap-6 lg:grid-cols-2">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Progress</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-6">
-                    <div className="relative w-24 h-24">
-                      <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
-                        <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--primary))" strokeWidth="8" strokeDasharray={`${completionRate * 2.51} 251`} strokeLinecap="round" />
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg font-bold">{completionRate}%</span>
+                {/* Progress ring */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Progress</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-6">
+                      <div className="relative w-24 h-24">
+                        <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
+                          <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
+                          <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--primary))" strokeWidth="8" strokeDasharray={`${completionRate * 2.51} 251`} strokeLinecap="round" />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-lg font-bold">{completionRate}%</span>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5 text-sm">
+                        <p><span className="font-semibold">{completedTasks}</span> completed</p>
+                        <p className="text-muted-foreground">{inProgressTasks.length} in progress</p>
+                        <p className="text-muted-foreground">{blockedTasks.length} blocked</p>
+                        <p className="text-muted-foreground">{todoTasks.length} to do</p>
                       </div>
                     </div>
-                    <div className="space-y-1.5 text-sm">
-                      <p><span className="font-semibold">{completedTasks}</span> completed</p>
-                      <p className="text-muted-foreground">{inProgressTasks.length} in progress</p>
-                      <p className="text-muted-foreground">{blockedTasks.length} blocked</p>
-                      <p className="text-muted-foreground">{todoTasks.length} to do</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Project Summary</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {project.description && <p className="text-sm text-muted-foreground">{project.description}</p>}
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                {/* NEURO Phase Timeline */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">NEURO Phase Timeline</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-2">
+                      {neuroPhases.map((letter, i) => (
+                        <div key={letter} className="flex-1 space-y-1">
+                          <div
+                            className={`h-10 rounded-lg flex items-center justify-center text-sm font-bold transition-colors ${
+                              i <= phaseIndex
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground"
+                            } ${i === phaseIndex ? "ring-2 ring-primary ring-offset-2" : ""}`}
+                          >
+                            {phaseLabels[letter]}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Activity feed */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Activity</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ActivityTab organisationId={project.organisation_id} />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right column — properties sidebar */}
+              <div className="space-y-4">
+                {/* Properties card */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Properties</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Status</span>
+                      <Badge className={statusStyles[project.status]}>{project.status}</Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Stage</span>
+                      <span className="font-medium">{stageLabels[project.stage || "contract_signing"] || "—"}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">NEURO Phase</span>
+                      <span className="font-medium capitalize">{project.neuro_phase || "needs"}</span>
+                    </div>
                     {project.service_type && (
-                      <div>
-                        <p className="text-xs text-muted-foreground">Service Type</p>
-                        <p className="font-medium capitalize">{project.service_type}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Service Type</span>
+                        <span className="font-medium capitalize">{project.service_type}</span>
                       </div>
                     )}
-                    <div>
-                      <p className="text-xs text-muted-foreground">Budget</p>
-                      <p className="font-medium">£{(project.budget || 0).toLocaleString()}</p>
-                    </div>
                     {project.start_date && (
-                      <div>
-                        <p className="text-xs text-muted-foreground">Start Date</p>
-                        <p className="font-medium">{new Date(project.start_date).toLocaleDateString("en-GB")}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Start Date</span>
+                        <span className="font-medium">{new Date(project.start_date).toLocaleDateString("en-GB")}</span>
                       </div>
                     )}
                     {project.end_date && (
-                      <div>
-                        <p className="text-xs text-muted-foreground">End Date</p>
-                        <p className="font-medium">{new Date(project.end_date).toLocaleDateString("en-GB")}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">End Date</span>
+                        <span className="font-medium">{new Date(project.end_date).toLocaleDateString("en-GB")}</span>
                       </div>
                     )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  </CardContent>
+                </Card>
 
-            {/* NEURO Phase Timeline */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">NEURO Phase Timeline</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2">
-                  {neuroPhases.map((letter, i) => (
-                    <div key={letter} className="flex-1 space-y-1">
-                      <div
-                        className={`h-10 rounded-lg flex items-center justify-center text-sm font-bold transition-colors ${
-                          i <= phaseIndex
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground"
-                        } ${i === phaseIndex ? "ring-2 ring-primary ring-offset-2" : ""}`}
-                      >
-                        {phaseLabels[letter]}
-                      </div>
+                {/* Financials card */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Receipt className="h-4 w-4" />
+                      Financials
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Budget</span>
+                      <span className="font-semibold">£{(project.budget || 0).toLocaleString()}</span>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Billed</span>
+                      <span className="font-medium">£{totalBilled.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Paid</span>
+                      <span className="font-medium text-[hsl(142,71%,45%)]">£{totalPaid.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Outstanding</span>
+                      <span className={`font-medium ${outstandingAmount > 0 ? "text-amber-500" : ""}`}>
+                        £{outstandingAmount.toLocaleString()}
+                      </span>
+                    </div>
+                    {overdueAmount > 0 && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Overdue</span>
+                        <span className="font-medium text-destructive">£{overdueAmount.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {project.budget ? (
+                      <div className="pt-1">
+                        <Progress value={budgetUsedPct} className="h-1.5" />
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          £{(project.budget - totalBilled).toLocaleString()} remaining
+                        </p>
+                      </div>
+                    ) : null}
+                  </CardContent>
+                </Card>
+
+                {/* Description */}
+                {project.description && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm">Description</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">{project.description}</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Milestones snapshot */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Milestones</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <MilestonesTab projectId={project.id} />
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </TabsContent>
 
           {/* Tasks Tab */}
@@ -648,14 +786,95 @@ Project context: ${JSON.stringify(context)}`,
             <DeliveriesTab projectId={project.id} dealId={project.deal_id} />
           </TabsContent>
 
+          {/* Billing Tab */}
+          <TabsContent value="billing" className="space-y-6">
+            {/* Billing stats */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground">Outstanding</p>
+                  <p className={`text-2xl font-bold ${outstandingAmount > 0 ? "text-amber-500" : ""}`}>
+                    £{outstandingAmount.toLocaleString()}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground">Overdue</p>
+                  <p className={`text-2xl font-bold ${overdueAmount > 0 ? "text-destructive" : ""}`}>
+                    £{overdueAmount.toLocaleString()}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground">Paid</p>
+                  <p className="text-2xl font-bold text-[hsl(142,71%,45%)]">£{totalPaid.toLocaleString()}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground">Total Billed</p>
+                  <p className="text-2xl font-bold">£{totalBilled.toLocaleString()}</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Budget bar */}
+            {project.budget ? (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Budget</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">£{totalBilled.toLocaleString()} billed of £{(project.budget || 0).toLocaleString()}</span>
+                    <span className="font-medium">{budgetUsedPct}%</span>
+                  </div>
+                  <Progress value={budgetUsedPct} className="h-2" />
+                  <p className="text-xs text-muted-foreground">
+                    £{(project.budget - totalBilled).toLocaleString()} remaining
+                  </p>
+                </CardContent>
+              </Card>
+            ) : null}
+
+            {/* Invoices list */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Receipt className="h-4 w-4" />
+                  Invoices ({projectInvoices.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {projectInvoices.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4">No invoices linked to this project.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {projectInvoices.map((inv) => (
+                      <div key={inv.id} className="flex items-center gap-3 p-2.5 rounded-md border">
+                        <Receipt className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">{inv.invoice_number}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {inv.issue_date ? new Date(inv.issue_date).toLocaleDateString("en-GB") : "—"}
+                            {inv.due_date && ` · Due ${new Date(inv.due_date).toLocaleDateString("en-GB")}`}
+                          </p>
+                        </div>
+                        <span className="text-sm font-semibold">£{(inv.total || 0).toLocaleString()}</span>
+                        <Badge variant="secondary" className="capitalize text-[9px]">{inv.status}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Sessions Tab */}
           <TabsContent value="sessions">
             <SessionsTab projectId={project.id} />
-          </TabsContent>
-
-          {/* Milestones Tab */}
-          <TabsContent value="milestones">
-            <MilestonesTab projectId={project.id} />
           </TabsContent>
 
           {/* Documents Tab */}

@@ -314,7 +314,7 @@ function DeliveryDetailPanel({ delivery, onClose }: { delivery: Delivery; onClos
               <Select value={editValues.neuro_stage} onValueChange={(v) => setEditValues({ ...editValues, neuro_stage: v })}>
                 <SelectTrigger className="h-9"><SelectValue placeholder="Select..." /></SelectTrigger>
                 <SelectContent>
-                  {["needs", "engage", "understand", "realise", "ongoing"].map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+                  {["needs", "engage", "understand", "redesign", "optimise"].map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

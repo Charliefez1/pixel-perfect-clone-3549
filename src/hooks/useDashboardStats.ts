@@ -46,13 +46,13 @@ export function useProjectsByPhase() {
         .select("neuro_phase, status")
         .eq("status", "active");
 
-      const phases = ["needs", "engage", "understand", "realise", "ongoing"];
+      const phases = ["needs", "engage", "understand", "redesign", "optimise"];
       const phaseColors: Record<string, string> = {
         needs: "hsl(210, 100%, 61%)",
         engage: "hsl(190, 60%, 50%)",
         understand: "hsl(142, 71%, 45%)",
-        realise: "hsl(38, 92%, 50%)",
-        ongoing: "hsl(0, 0%, 64%)",
+        redesign: "hsl(38, 92%, 50%)",
+        optimise: "hsl(0, 0%, 64%)",
       };
 
       return phases.map((phase) => ({

@@ -940,6 +940,8 @@ export type Database = {
           neuro_phase: Database["public"]["Enums"]["neuro_phase"] | null
           organisation_id: string | null
           owner_id: string | null
+          service_type: Database["public"]["Enums"]["service_type"] | null
+          stage: Database["public"]["Enums"]["project_stage"] | null
           start_date: string | null
           status: Database["public"]["Enums"]["project_status"]
           updated_at: string
@@ -956,6 +958,8 @@ export type Database = {
           neuro_phase?: Database["public"]["Enums"]["neuro_phase"] | null
           organisation_id?: string | null
           owner_id?: string | null
+          service_type?: Database["public"]["Enums"]["service_type"] | null
+          stage?: Database["public"]["Enums"]["project_stage"] | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           updated_at?: string
@@ -972,6 +976,8 @@ export type Database = {
           neuro_phase?: Database["public"]["Enums"]["neuro_phase"] | null
           organisation_id?: string | null
           owner_id?: string | null
+          service_type?: Database["public"]["Enums"]["service_type"] | null
+          stage?: Database["public"]["Enums"]["project_stage"] | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           updated_at?: string
@@ -1438,7 +1444,16 @@ export type Database = {
         | "follow_up"
         | "complete"
       invoice_status: "draft" | "sent" | "viewed" | "paid" | "overdue"
-      neuro_phase: "needs" | "engage" | "understand" | "realise" | "ongoing"
+      neuro_phase: "needs" | "engage" | "understand" | "redesign" | "optimise"
+      project_stage:
+        | "contract_signing"
+        | "onboarding"
+        | "planning"
+        | "data_gathering"
+        | "content_build"
+        | "delivery"
+        | "analysis_feedback"
+        | "closing"
       project_status: "setup" | "active" | "paused" | "completed"
       service_type:
         | "workshop"
@@ -1596,7 +1611,17 @@ export const Constants = {
         "complete",
       ],
       invoice_status: ["draft", "sent", "viewed", "paid", "overdue"],
-      neuro_phase: ["needs", "engage", "understand", "realise", "ongoing"],
+      neuro_phase: ["needs", "engage", "understand", "redesign", "optimise"],
+      project_stage: [
+        "contract_signing",
+        "onboarding",
+        "planning",
+        "data_gathering",
+        "content_build",
+        "delivery",
+        "analysis_feedback",
+        "closing",
+      ],
       project_status: ["setup", "active", "paused", "completed"],
       service_type: [
         "workshop",

@@ -3,13 +3,12 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useProjects, Project } from "@/hooks/useProjects";
+import { useProjects, useUpdateProject, Project } from "@/hooks/useProjects";
 import { useTasks } from "@/hooks/useTasks";
 import { useSessions } from "@/hooks/useSessions";
 import { useDeliveries } from "@/hooks/useDeliveries";
 import { useAllProjectMilestones } from "@/hooks/useProjectMilestones";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ViewToggle, ViewMode } from "@/components/layout/ViewToggle";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useDialogs } from "@/App";
@@ -28,7 +27,19 @@ const projectCSVColumns: CSVColumn[] = [
 ];
 
 const neuroPhases = ["N", "E", "U", "R", "O"] as const;
-const phaseToIndex: Record<string, number> = { needs: 0, engage: 1, understand: 2, realise: 3, ongoing: 4 };
+const phaseToIndex: Record<string, number> = { needs: 0, engage: 1, understand: 2, redesign: 3, optimise: 4 };
+
+const pipelineStages = [
+  { key: "contract_signing", label: "Contract Signing" },
+  { key: "onboarding", label: "Onboarding" },
+  { key: "planning", label: "Planning" },
+  { key: "data_gathering", label: "Data Gathering" },
+  { key: "content_build", label: "Content Build" },
+  { key: "delivery", label: "Delivery" },
+  { key: "analysis_feedback", label: "Analysis & Feedback" },
+  { key: "closing", label: "Closing" },
+] as const;
+
 const statusStyles: Record<string, string> = {
   setup: "bg-muted text-muted-foreground",
   active: "bg-[hsl(var(--stage-won))]/20 text-[hsl(var(--stage-won))]",
@@ -44,10 +55,11 @@ export default function Projects() {
   const { data: sessions } = useSessions();
   const { data: deliveries } = useDeliveries();
   const { data: allMilestones } = useAllProjectMilestones();
-  const [view, setView] = useState<ViewMode>("board");
+  const [view, setView] = useState<"board" | "pipeline" | "list" | "table">("board");
   const [filter, setFilter] = useState<FilterMode>("all");
   const [importOpen, setImportOpen] = useState(false);
   const { openCreateProject, openCreateProjectFromPlan } = useDialogs();
+  const updateProject = useUpdateProject();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -111,7 +123,17 @@ export default function Projects() {
               Needs Action
             </button>
           </div>
-          <ViewToggle value={view} onChange={setView} options={["board", "list", "table"]} />
+          <div className="flex rounded-md border border-border overflow-hidden text-xs">
+            {(["board", "pipeline", "list", "table"] as const).map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`px-2.5 py-1.5 transition-colors capitalize ${view === v ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+              >
+                {v === "pipeline" ? "Pipeline" : v.charAt(0).toUpperCase() + v.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
       </PageHeader>
       <CSVImportDialog
@@ -203,6 +225,14 @@ export default function Projects() {
               );
             })}
           </div>
+        ) : view === "pipeline" ? (
+          <PipelineBoard
+            projects={filteredProjects}
+            tasks={tasks}
+            getProjectSummary={getProjectSummary}
+            onProjectClick={(id) => navigate(`/projects/${id}`)}
+            updateProject={updateProject}
+          />
         ) : view === "list" ? (
           <div className="space-y-2">
             {filteredProjects.map((p) => {
@@ -259,5 +289,103 @@ export default function Projects() {
       </div>
 
     </>
+  );
+}
+
+function PipelineBoard({
+  projects,
+  tasks,
+  getProjectSummary,
+  onProjectClick,
+  updateProject,
+}: {
+  projects: Project[];
+  tasks: any[] | undefined;
+  getProjectSummary: (p: Project) => any;
+  onProjectClick: (id: string) => void;
+  updateProject: ReturnType<typeof useUpdateProject>;
+}) {
+  const moveToStage = (projectId: string, stage: string) => {
+    updateProject.mutate({ id: projectId, stage: stage as any });
+  };
+
+  return (
+    <div className="flex gap-3 overflow-x-auto pb-4 min-h-[400px]">
+      {pipelineStages.map((stage) => {
+        const stageProjects = projects.filter(
+          (p) => (p.stage || "contract_signing") === stage.key
+        );
+        return (
+          <div key={stage.key} className="flex-shrink-0 w-[260px]">
+            <div className="flex items-center gap-2 pb-2 mb-2 border-b">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                {stage.label}
+              </span>
+              <Badge variant="secondary" className="text-[10px] ml-auto">
+                {stageProjects.length}
+              </Badge>
+            </div>
+            <div className="space-y-2 min-h-[100px]">
+              {stageProjects.map((p) => {
+                const phaseIndex = phaseToIndex[p.neuro_phase || "needs"] || 0;
+                const pTasks = tasks?.filter((t) => t.project_id === p.id) || [];
+                const taskCount = pTasks.length;
+                const doneTasks = pTasks.filter((t) => t.status === "done").length;
+                return (
+                  <Card
+                    key={p.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => onProjectClick(p.id)}
+                  >
+                    <CardContent className="p-3 space-y-2">
+                      <div className="flex items-start justify-between gap-1.5">
+                        <p className="text-sm font-medium leading-tight truncate">{p.name}</p>
+                        <Badge className={`${statusStyles[p.status]} text-[9px] shrink-0`}>{p.status}</Badge>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground truncate">
+                        {p.organisations?.name || "No organisation"}
+                      </p>
+                      {/* NEURO mini bar */}
+                      <div className="flex gap-0.5">
+                        {neuroPhases.map((letter, i) => (
+                          <div key={letter} className={`flex-1 h-1 rounded-full ${i <= phaseIndex ? "bg-primary" : "bg-muted"}`} />
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <span>{doneTasks}/{taskCount} tasks</span>
+                        {p.budget ? <span className="font-medium text-primary">£{p.budget.toLocaleString()}</span> : null}
+                      </div>
+                      {/* Move buttons */}
+                      <div className="flex gap-1 flex-wrap pt-1">
+                        {pipelineStages
+                          .filter((s) => s.key !== stage.key)
+                          .slice(0, 3)
+                          .map((s) => (
+                            <button
+                              key={s.key}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                moveToStage(p.id, s.key);
+                              }}
+                              className="text-[8px] px-1.5 py-0.5 rounded bg-muted hover:bg-accent text-muted-foreground hover:text-foreground transition-colors leading-tight"
+                            >
+                              {s.label}
+                            </button>
+                          ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+              {stageProjects.length === 0 && (
+                <div className="text-center py-6 text-xs text-muted-foreground/50">
+                  No projects
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
