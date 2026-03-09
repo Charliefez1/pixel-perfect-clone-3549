@@ -72,7 +72,7 @@ export default function PublicForm() {
   const handleSubmit = async () => {
     if (!validate() || !formId) return;
     setSubmitting(true);
-    const { error } = await supabase.from("form_responses").insert({
+    const { error } = await (supabase as any).from("form_responses").insert({
       form_id: formId,
       respondent_name: respondentName || null,
       respondent_email: respondentEmail || null,
