@@ -354,7 +354,7 @@ Project context: ${JSON.stringify(context)}`,
                 <span>No organisation</span>
               )}
               {project.budget ? <span> · £{project.budget.toLocaleString()}</span> : null}
-              {project.service_type && <span> · <span className="capitalize">{project.service_type}</span></span>}
+              {(project as any).service_type && <span> · <span className="capitalize">{(project as any).service_type}</span></span>}
             </div>
             {/* Budget progress bar */}
             {project.budget ? (
