@@ -18,15 +18,43 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
 import { toast } from "sonner";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
+import { CSVImportDialog, CSVColumn } from "@/components/dialogs/CSVImportDialog";
+import { Upload } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+
+const contactCSVColumns: CSVColumn[] = [
+  { key: "first_name", label: "First Name", required: true },
+  { key: "last_name", label: "Last Name", required: true },
+  { key: "email", label: "Email" },
+  { key: "phone", label: "Phone" },
+  { key: "job_title", label: "Job Title" },
+  { key: "linkedin_url", label: "LinkedIn URL" },
+  { key: "notes", label: "Notes" },
+];
 
 export default function Contacts() {
   const { data: contacts, isLoading } = useContacts();
   const [selected, setSelected] = useState<Contact | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const { openCreateContact } = useDialogs();
+  const queryClient = useQueryClient();
 
   return (
     <>
-      <PageHeader title="Contacts" searchPlaceholder="Search contacts..." actionLabel="New Contact" onAction={openCreateContact} />
+      <PageHeader title="Contacts" searchPlaceholder="Search contacts..." actionLabel="New Contact" onAction={openCreateContact}>
+        <Button variant="outline" size="sm" className="gap-2 rounded-lg" onClick={() => setImportOpen(true)}>
+          <Upload className="h-4 w-4" />
+          <span className="hidden sm:inline">Import CSV</span>
+        </Button>
+      </PageHeader>
+      <CSVImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Contacts"
+        tableName="contacts"
+        columns={contactCSVColumns}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["contacts"] })}
+      />
       <div className="flex-1 overflow-auto">
         <Card className="border-0 rounded-none shadow-none">
           <CardContent className="p-0">

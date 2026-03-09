@@ -24,7 +24,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { EntityDocuments } from "@/components/documents/EntityDocuments";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
+import { CSVImportDialog, CSVColumn } from "@/components/dialogs/CSVImportDialog";
+import { Upload } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
+const dealCSVColumns: CSVColumn[] = [
+  { key: "title", label: "Title", required: true },
+  { key: "value", label: "Value" },
+  { key: "stage", label: "Stage" },
+  { key: "service_type", label: "Service Type" },
+  { key: "probability", label: "Probability" },
+  { key: "expected_close_date", label: "Expected Close Date" },
+  { key: "notes", label: "Notes" },
+];
 const stages = [
   { id: "lead", label: "Lead", color: "bg-slate-400" },
   { id: "qualified", label: "Qualified", color: "bg-blue-400" },
@@ -57,9 +69,11 @@ export default function Deals() {
   const [view, setView] = useState<ViewMode>("board");
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [calendarDate, setCalendarDate] = useState(new Date());
+  const [importOpen, setImportOpen] = useState(false);
   const { openCreateDeal } = useDialogs();
   const updateDeal = useUpdateDeal();
   const logActivity = useLogActivity();
+  const queryClient = useQueryClient();
   const [draggedDealId, setDraggedDealId] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -124,8 +138,27 @@ export default function Deals() {
   return (
     <>
       <PageHeader title="Deals" searchPlaceholder="Search deals..." actionLabel="New Deal" onAction={openCreateDeal}>
+        <Button variant="outline" size="sm" className="gap-2 rounded-lg" onClick={() => setImportOpen(true)}>
+          <Upload className="h-4 w-4" />
+          <span className="hidden sm:inline">Import CSV</span>
+        </Button>
         <ViewToggle value={view} onChange={setView} showCalendar />
       </PageHeader>
+      <CSVImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Deals"
+        tableName="deals"
+        columns={dealCSVColumns}
+        transformRow={(row) => ({
+          ...row,
+          value: row.value ? parseFloat(row.value) || 0 : 0,
+          probability: row.probability ? parseInt(row.probability) || 0 : 0,
+          stage: row.stage || "lead",
+          expected_close_date: row.expected_close_date || null,
+        })}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["deals"] })}
+      />
 
       <div className="border-b bg-card/50 px-6 py-3 flex items-center gap-6 text-sm">
         <span>Pipeline: <strong>£{totalPipeline.toLocaleString()}</strong></span>

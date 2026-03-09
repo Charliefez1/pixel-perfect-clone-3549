@@ -19,6 +19,9 @@ import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
+import { CSVImportDialog, CSVColumn } from "@/components/dialogs/CSVImportDialog";
+import { Upload } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 const sectorColors: Record<string, string> = {
   Healthcare: "bg-[hsl(var(--stage-lead))]/20 text-[hsl(var(--stage-lead))]",
@@ -29,14 +32,40 @@ const sectorColors: Record<string, string> = {
   Education: "bg-primary/20 text-primary",
 };
 
+const orgCSVColumns: CSVColumn[] = [
+  { key: "name", label: "Name", required: true },
+  { key: "sector", label: "Sector" },
+  { key: "email", label: "Email" },
+  { key: "phone", label: "Phone" },
+  { key: "website", label: "Website" },
+  { key: "address", label: "Address" },
+  { key: "vat_number", label: "VAT Number" },
+  { key: "notes", label: "Notes" },
+];
+
 export default function Clients() {
   const { data: clients, isLoading } = useOrganisations();
   const [selected, setSelected] = useState<Organisation | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const { openCreateClient } = useDialogs();
+  const queryClient = useQueryClient();
 
   return (
     <>
-      <PageHeader title="Clients" searchPlaceholder="Search organisations..." actionLabel="New Client" onAction={openCreateClient} />
+      <PageHeader title="Clients" searchPlaceholder="Search organisations..." actionLabel="New Client" onAction={openCreateClient}>
+        <Button variant="outline" size="sm" className="gap-2 rounded-lg" onClick={() => setImportOpen(true)}>
+          <Upload className="h-4 w-4" />
+          <span className="hidden sm:inline">Import CSV</span>
+        </Button>
+      </PageHeader>
+      <CSVImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Clients"
+        tableName="organisations"
+        columns={orgCSVColumns}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["organisations"] })}
+      />
       <div className="flex-1 overflow-auto">
         <Card className="border-0 rounded-none shadow-none">
           <CardContent className="p-0">

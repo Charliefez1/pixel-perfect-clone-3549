@@ -27,7 +27,18 @@ import { SessionsTab } from "@/components/projects/SessionsTab";
 import { DeliveriesTab } from "@/components/projects/DeliveriesTab";
 import { DocumentsTab } from "@/components/projects/DocumentsTab";
 import { ActivityTab } from "@/components/projects/ActivityTab";
-import { AlertTriangle, CalendarDays, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CalendarDays, CheckCircle2, Upload } from "lucide-react";
+import { CSVImportDialog, CSVColumn } from "@/components/dialogs/CSVImportDialog";
+import { useQueryClient } from "@tanstack/react-query";
+
+const projectCSVColumns: CSVColumn[] = [
+  { key: "name", label: "Name", required: true },
+  { key: "status", label: "Status" },
+  { key: "budget", label: "Budget" },
+  { key: "start_date", label: "Start Date" },
+  { key: "end_date", label: "End Date" },
+  { key: "description", label: "Description" },
+];
 
 const neuroPhases = ["N", "E", "U", "R", "O"] as const;
 const phaseLabels: Record<string, string> = { N: "Needs", E: "Engage", U: "Understand", R: "Realise", O: "Ongoing" };
@@ -56,7 +67,9 @@ export default function Projects() {
   const [view, setView] = useState<ViewMode>("board");
   const [filter, setFilter] = useState<FilterMode>("all");
   const [selected, setSelected] = useState<Project | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
   const { openCreateProject } = useDialogs();
+  const queryClient = useQueryClient();
 
   const now = new Date();
 
@@ -95,6 +108,10 @@ export default function Projects() {
     <>
       <PageHeader title="Projects" searchPlaceholder="Search projects..." actionLabel="New Project" onAction={openCreateProject}>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-2 rounded-lg" onClick={() => setImportOpen(true)}>
+            <Upload className="h-4 w-4" />
+            <span className="hidden sm:inline">Import CSV</span>
+          </Button>
           <div className="flex rounded-md border border-border overflow-hidden text-xs">
             <button
               onClick={() => setFilter("all")}
@@ -113,6 +130,21 @@ export default function Projects() {
           <ViewToggle value={view} onChange={setView} options={["board", "list", "table"]} />
         </div>
       </PageHeader>
+      <CSVImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Projects"
+        tableName="projects"
+        columns={projectCSVColumns}
+        transformRow={(row) => ({
+          ...row,
+          budget: row.budget ? parseFloat(row.budget) || 0 : 0,
+          status: row.status || "setup",
+          start_date: row.start_date || null,
+          end_date: row.end_date || null,
+        })}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["projects"] })}
+      />
       <div className="flex-1 overflow-auto p-6">
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-48 w-full" />)}</div>
