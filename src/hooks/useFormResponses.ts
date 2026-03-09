@@ -40,7 +40,7 @@ export function useCreateFormResponse() {
       respondent_email?: string | null;
       answers: Record<string, any>;
     }) => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("form_responses")
         .insert(response)
         .select()

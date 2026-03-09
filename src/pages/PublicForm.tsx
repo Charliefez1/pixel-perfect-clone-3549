@@ -85,7 +85,7 @@ export default function PublicForm() {
     }
     // Increment responses_count
     try {
-      await supabase.rpc("increment_form_responses", { form_id_param: formId } as any);
+      await (supabase as any).rpc("increment_form_responses", { form_id_param: formId });
     } catch {
       // Fallback: just succeed even if the count doesn't update
     }

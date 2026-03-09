@@ -167,7 +167,7 @@ function useDocumentTemplates() {
         .select("*")
         .order("name");
       if (error) throw error;
-      return data as DocumentTemplate[];
+      return data as unknown as DocumentTemplate[];
     },
   });
 }
