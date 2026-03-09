@@ -39,7 +39,6 @@ const priorityStyles: Record<string, string> = {
 export default function Tasks() {
   const { data: tasks, isLoading } = useTasks();
   const updateTask = useUpdateTask();
-  const createTask = useCreateTask();
   const [view, setView] = useState<ViewMode>("board");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [search, setSearch] = useState("");
@@ -47,8 +46,6 @@ export default function Tasks() {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
   const [calendarDate, setCalendarDate] = useState(new Date());
-  const [addingSubtaskFor, setAddingSubtaskFor] = useState<string | null>(null);
-  const [subtaskTitle, setSubtaskTitle] = useState("");
 
   // Separate parent tasks and subtasks
   const parentTasks = useMemo(() => tasks?.filter(t => !(t as any).parent_task_id) || [], [tasks]);
@@ -72,24 +69,6 @@ export default function Tasks() {
       return next;
     });
   };
-
-  const handleAddSubtask = (parentId: string) => {
-    if (!subtaskTitle.trim()) return;
-    const parent = tasks?.find(t => t.id === parentId);
-    createTask.mutate(
-      {
-        title: subtaskTitle,
-        project_id: parent?.project_id || null,
-        parent_task_id: parentId,
-      } as any,
-      {
-        onSuccess: () => {
-          toast.success("Subtask added");
-          setSubtaskTitle("");
-          setAddingSubtaskFor(null);
-          setExpandedParents(prev => new Set(prev).add(parentId));
-        },
-      }
     );
   };
 
