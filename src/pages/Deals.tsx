@@ -140,8 +140,27 @@ export default function Deals() {
   return (
     <>
       <PageHeader title="Deals" searchPlaceholder="Search deals..." actionLabel="New Deal" onAction={openCreateDeal}>
+        <Button variant="outline" size="sm" className="gap-2 rounded-lg" onClick={() => setImportOpen(true)}>
+          <Upload className="h-4 w-4" />
+          <span className="hidden sm:inline">Import CSV</span>
+        </Button>
         <ViewToggle value={view} onChange={setView} showCalendar />
       </PageHeader>
+      <CSVImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Deals"
+        tableName="deals"
+        columns={dealCSVColumns}
+        transformRow={(row) => ({
+          ...row,
+          value: row.value ? parseFloat(row.value) || 0 : 0,
+          probability: row.probability ? parseInt(row.probability) || 0 : 0,
+          stage: row.stage || "lead",
+          expected_close_date: row.expected_close_date || null,
+        })}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["deals"] })}
+      />
 
       <div className="border-b bg-card/50 px-6 py-3 flex items-center gap-6 text-sm">
         <span>Pipeline: <strong>£{totalPipeline.toLocaleString()}</strong></span>

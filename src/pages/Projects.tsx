@@ -27,7 +27,18 @@ import { SessionsTab } from "@/components/projects/SessionsTab";
 import { DeliveriesTab } from "@/components/projects/DeliveriesTab";
 import { DocumentsTab } from "@/components/projects/DocumentsTab";
 import { ActivityTab } from "@/components/projects/ActivityTab";
-import { AlertTriangle, CalendarDays, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CalendarDays, CheckCircle2, Upload } from "lucide-react";
+import { CSVImportDialog, CSVColumn } from "@/components/dialogs/CSVImportDialog";
+import { useQueryClient } from "@tanstack/react-query";
+
+const projectCSVColumns: CSVColumn[] = [
+  { key: "name", label: "Name", required: true },
+  { key: "status", label: "Status" },
+  { key: "budget", label: "Budget" },
+  { key: "start_date", label: "Start Date" },
+  { key: "end_date", label: "End Date" },
+  { key: "description", label: "Description" },
+];
 
 const neuroPhases = ["N", "E", "U", "R", "O"] as const;
 const phaseLabels: Record<string, string> = { N: "Needs", E: "Engage", U: "Understand", R: "Realise", O: "Ongoing" };
