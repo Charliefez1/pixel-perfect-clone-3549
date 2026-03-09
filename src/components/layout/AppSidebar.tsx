@@ -2,32 +2,26 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  Bell,
   Users,
   Building2,
-  Briefcase,
   CalendarDays,
-  FileText,
   FileSignature,
   ClipboardList,
   Globe,
   FolderKanban,
   CheckSquare,
-  Clock,
-  UserCog,
-  Timer,
   Receipt,
-  CalendarClock,
   ShoppingCart,
-  CreditCard,
   Layers,
   Search,
   ChevronLeft,
   ChevronRight,
   Sparkles,
   BarChart3,
+  Circle,
 } from "lucide-react";
 import { useState } from "react";
+import { useProjects } from "@/hooks/useProjects";
 
 const mainNav = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
@@ -73,6 +67,49 @@ function NavItem({ item, collapsed }: { item: typeof mainNav[0]; collapsed: bool
   );
 }
 
+const statusDot: Record<string, string> = {
+  active: "text-green-500",
+  setup: "text-muted-foreground",
+  paused: "text-amber-500",
+  completed: "text-primary",
+};
+
+function RecentProjects({ collapsed }: { collapsed: boolean }) {
+  const { data: projects } = useProjects();
+  if (collapsed || !projects?.length) return null;
+
+  // Show up to 5 recently active projects (active first, then by updated_at)
+  const recent = [...(projects || [])]
+    .sort((a, b) => {
+      if (a.status === "active" && b.status !== "active") return -1;
+      if (b.status === "active" && a.status !== "active") return 1;
+      return new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime();
+    })
+    .slice(0, 5);
+
+  return (
+    <div className="mt-1 space-y-0.5">
+      {recent.map((p) => (
+        <NavLink
+          key={p.id}
+          to={`/projects/${p.id}`}
+          className={({ isActive }) =>
+            cn(
+              "flex items-center gap-2 pl-9 pr-3 py-1.5 rounded-lg text-xs transition-all duration-normal",
+              isActive
+                ? "bg-sidebar-accent text-sidebar-primary"
+                : "text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+            )
+          }
+        >
+          <Circle className={cn("h-2 w-2 fill-current", statusDot[p.status] || "text-muted-foreground")} />
+          <span className="truncate">{p.name}</span>
+        </NavLink>
+      ))}
+    </div>
+  );
+}
+
 export function AppSidebar({ onOpenAI }: { onOpenAI?: () => void }) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -109,7 +146,10 @@ export function AppSidebar({ onOpenAI }: { onOpenAI?: () => void }) {
       {/* Main Nav */}
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
         {mainNav.map((item) => (
-          <NavItem key={item.to} item={item} collapsed={collapsed} />
+          <div key={item.to}>
+            <NavItem item={item} collapsed={collapsed} />
+            {item.to === "/projects" && <RecentProjects collapsed={collapsed} />}
+          </div>
         ))}
 
         {/* Workspace Section */}

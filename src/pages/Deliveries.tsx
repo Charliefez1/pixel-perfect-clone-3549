@@ -1,11 +1,13 @@
 import { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Plus, CheckCircle2 } from "lucide-react";
+import { Plus, CheckCircle2, ClipboardList } from "lucide-react";
 import { useDeliveries, useDeliveryTasks, useUpdateDeliveryTask, useUpdateDelivery, Delivery } from "@/hooks/useDeliveries";
+import { useForms } from "@/hooks/useForms";
 import { useLogActivity } from "@/hooks/useActivityLog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ViewToggle, ViewMode } from "@/components/layout/ViewToggle";
@@ -49,8 +51,10 @@ function getSatisfactionColor(score: number | null): string {
 
 export default function Deliveries() {
   const { data: deliveries, isLoading } = useDeliveries();
+  const { data: forms } = useForms();
   const updateDelivery = useUpdateDelivery();
   const logActivity = useLogActivity();
+  const navigate = useNavigate();
   const [view, setView] = useState<ViewMode>("board");
   const [selected, setSelected] = useState<Delivery | null>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
@@ -87,7 +91,27 @@ export default function Deliveries() {
             action: "status_changed",
             metadata: { from: delivery.status, to: statusId },
           });
-          toast.success(`Moved "${delivery.title}" to ${deliveryStatuses.find(s => s.id === statusId)?.label}`);
+          const label = deliveryStatuses.find(s => s.id === statusId)?.label;
+          if (statusId === "delivered") {
+            const feedbackForms = forms?.filter(f => f.active && (f.type === "feedback" || f.type === "survey")) || [];
+            if (feedbackForms.length > 0) {
+              toast.success(`Session delivered! Send feedback form?`, {
+                action: {
+                  label: "Send Form",
+                  onClick: () => {
+                    const formUrl = `${window.location.origin}/form/${feedbackForms[0].id}`;
+                    navigator.clipboard.writeText(formUrl);
+                    toast.success("Feedback form link copied to clipboard");
+                  },
+                },
+                duration: 8000,
+              });
+            } else {
+              toast.success(`Moved "${delivery.title}" to ${label}`);
+            }
+          } else {
+            toast.success(`Moved "${delivery.title}" to ${label}`);
+          }
         },
       }
     );
@@ -363,6 +387,7 @@ function DeliveryDetailPanel({ delivery, onClose }: { delivery: Delivery; onClos
           )}
         </TabsContent>
         <TabsContent value="feedback" className="pt-4 space-y-4">
+          <SendFeedbackFormButton deliveryId={delivery.id} />
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm">Pre-assessment complete</span>
@@ -393,5 +418,25 @@ function DeliveryDetailPanel({ delivery, onClose }: { delivery: Delivery; onClos
         </TabsContent>
       </Tabs>
     </DetailPanel>
+  );
+}
+
+function SendFeedbackFormButton({ deliveryId }: { deliveryId: string }) {
+  const { data: forms } = useForms();
+  const feedbackForms = forms?.filter(f => f.active && (f.type === "feedback" || f.type === "survey")) || [];
+
+  if (!feedbackForms.length) return null;
+
+  const handleCopyLink = () => {
+    const formUrl = `${window.location.origin}/form/${feedbackForms[0].id}`;
+    navigator.clipboard.writeText(formUrl);
+    toast.success("Feedback form link copied to clipboard");
+  };
+
+  return (
+    <Button variant="outline" size="sm" className="w-full gap-2" onClick={handleCopyLink}>
+      <ClipboardList className="h-4 w-4" />
+      Copy Feedback Form Link
+    </Button>
   );
 }
