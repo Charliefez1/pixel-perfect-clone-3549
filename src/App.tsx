@@ -33,8 +33,6 @@ import Services from "@/pages/Services";
 import Templates from "@/pages/Templates";
 import Auth from "@/pages/Auth";
 import Reporting from "@/pages/Reporting";
-import Deals from "@/pages/Deals";
-import Proposals from "@/pages/Proposals";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import NotFound from "@/pages/NotFound";
 import { CommandPalette } from "@/components/layout/CommandPalette";
