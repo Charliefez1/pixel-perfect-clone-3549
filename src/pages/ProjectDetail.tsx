@@ -637,10 +637,10 @@ Project context: ${JSON.stringify(context)}`,
                       <span className="text-muted-foreground">NEURO Phase</span>
                       <span className="font-medium capitalize">{project.neuro_phase || "needs"}</span>
                     </div>
-                    {project.service_type && (
+                    {(project as any).service_type && (
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">Service Type</span>
-                        <span className="font-medium capitalize">{project.service_type}</span>
+                        <span className="font-medium capitalize">{(project as any).service_type}</span>
                       </div>
                     )}
                     {project.start_date && (

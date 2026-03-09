@@ -313,7 +313,7 @@ function PipelineBoard({
     <div className="flex gap-3 overflow-x-auto pb-4 min-h-[400px]">
       {pipelineStages.map((stage) => {
         const stageProjects = projects.filter(
-          (p) => (p.stage || "contract_signing") === stage.key
+          (p) => ((p as any).stage || "contract_signing") === stage.key
         );
         return (
           <div key={stage.key} className="flex-shrink-0 w-[260px]">
