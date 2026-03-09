@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProject, useProjects, useUpdateProject, useDeleteProject } from "@/hooks/useProjects";
-import { useTasks, useUpdateTask } from "@/hooks/useTasks";
+import { useTasks, Task, useUpdateTask } from "@/hooks/useTasks";
 import { useDeliveries } from "@/hooks/useDeliveries";
 import { useSessions } from "@/hooks/useSessions";
 import { useInvoices } from "@/hooks/useInvoices";
@@ -39,6 +39,10 @@ import {
 } from "lucide-react";
 import { isPast } from "date-fns";
 import ReactMarkdown from "react-markdown";
+import { ViewToggle, ViewMode } from "@/components/layout/ViewToggle";
+import { TaskListView } from "@/components/tasks/TaskListView";
+import { TaskTimelineView } from "@/components/tasks/TaskTimelineView";
+import { TaskCalendarView } from "@/components/tasks/TaskCalendarView";
 
 const neuroPhases = ["N", "E", "U", "R", "O"] as const;
 const phaseNames = ["needs", "engage", "understand", "redesign", "optimise"];
@@ -109,7 +113,8 @@ export default function ProjectDetail() {
   const [editing, setEditing] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
-  const [taskView, setTaskView] = useState<"list" | "board">("list");
+  const [taskView, setTaskView] = useState<ViewMode>("list");
+  const [calendarDate, setCalendarDate] = useState(new Date());
   const [newUpdateOpen, setNewUpdateOpen] = useState(false);
   const [updateTitle, setUpdateTitle] = useState("");
   const [updateBody, setUpdateBody] = useState("");
@@ -140,6 +145,15 @@ export default function ProjectDetail() {
   }
 
   const projectTasks = allTasks?.filter((t) => t.project_id === id) || [];
+  const parentProjectTasks = projectTasks.filter(t => !(t as any).parent_task_id);
+  const subtasksByParent: Record<string, Task[]> = {};
+  projectTasks.forEach(t => {
+    const parentId = (t as any).parent_task_id;
+    if (parentId) {
+      if (!subtasksByParent[parentId]) subtasksByParent[parentId] = [];
+      subtasksByParent[parentId].push(t);
+    }
+  });
   const projectDeliveries = allDeliveries?.filter((d) => d.project_id === id) || [];
   const projectSessions = allSessions?.filter((s) => s.project_id === id) || [];
   const projectInvoices = allInvoices?.filter((i) => i.project_id === id || (project.deal_id && i.deal_id === project.deal_id)) || [];
@@ -730,20 +744,7 @@ Project context: ${JSON.stringify(context)}`,
           {/* Tasks Tab */}
           <TabsContent value="tasks" className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex rounded-md border border-border overflow-hidden text-xs">
-                <button
-                  onClick={() => setTaskView("list")}
-                  className={`px-3 py-1.5 transition-colors ${taskView === "list" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
-                >
-                  List
-                </button>
-                <button
-                  onClick={() => setTaskView("board")}
-                  className={`px-3 py-1.5 transition-colors ${taskView === "board" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
-                >
-                  Board
-                </button>
-              </div>
+              <ViewToggle value={taskView} onChange={setTaskView} showCalendar />
             </div>
 
             {totalTasks > 0 && (
@@ -757,27 +758,17 @@ Project context: ${JSON.stringify(context)}`,
             )}
 
             {taskView === "list" ? (
-              <div className="space-y-1.5">
-                {!projectTasks.length ? (
-                  <p className="text-sm text-muted-foreground py-4">No tasks yet.</p>
-                ) : (
-                  projectTasks.map((t) => (
-                    <div key={t.id} className="flex items-center gap-2 p-2.5 rounded-md border text-sm">
-                      <div className={`w-2 h-2 rounded-full shrink-0 ${taskStatusColors[t.status] || "bg-muted-foreground"}`} />
-                      <span className={`flex-1 truncate ${t.status === "done" ? "line-through text-muted-foreground" : ""}`}>{t.title}</span>
-                      <Badge variant="secondary" className="text-[9px] capitalize">{t.priority}</Badge>
-                      <Badge variant="outline" className="text-[9px] capitalize">{t.status.replace("_", " ")}</Badge>
-                      {t.due_date && (
-                        <span className={`text-[10px] ${isPast(new Date(t.due_date)) && t.status !== "done" ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-                          {new Date(t.due_date).toLocaleDateString("en-GB")}
-                        </span>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            ) : (
+              !parentProjectTasks.length ? (
+                <p className="text-sm text-muted-foreground py-4">No tasks yet.</p>
+              ) : (
+                <TaskListView parentTasks={parentProjectTasks} subtasksByParent={subtasksByParent} onSelectTask={() => {}} />
+              )
+            ) : taskView === "board" ? (
               <TaskBoard tasks={projectTasks} />
+            ) : taskView === "timeline" ? (
+              <TaskTimelineView tasks={parentProjectTasks} onSelectTask={() => {}} />
+            ) : (
+              <TaskCalendarView tasks={projectTasks} date={calendarDate} onDateChange={setCalendarDate} onSelectTask={() => {}} />
             )}
           </TabsContent>
 
