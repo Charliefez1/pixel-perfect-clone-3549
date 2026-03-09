@@ -500,6 +500,8 @@ export default function Templates() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }} title="template" onConfirm={handleDeleteTemplate} loading={deleting} />
     </>
   );
 }
