@@ -33,8 +33,6 @@ import Services from "@/pages/Services";
 import Templates from "@/pages/Templates";
 import Auth from "@/pages/Auth";
 import Reporting from "@/pages/Reporting";
-import Deals from "@/pages/Deals";
-import Proposals from "@/pages/Proposals";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import NotFound from "@/pages/NotFound";
 import { CommandPalette } from "@/components/layout/CommandPalette";
@@ -196,8 +194,6 @@ function AppShell() {
           <Route path="/services" element={<Services />} />
           <Route path="/templates" element={<Templates />} />
           <Route path="/reporting" element={<Reporting />} />
-          <Route path="/deals" element={<Deals />} />
-          <Route path="/proposals" element={<Proposals />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

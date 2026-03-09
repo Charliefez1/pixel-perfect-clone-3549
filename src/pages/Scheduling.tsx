@@ -41,7 +41,9 @@ export default function Scheduling() {
   const totalThisWeek = Array.from(weekSessions.values()).reduce((s, arr) => s + arr.length, 0);
 
   const copyBookingLink = () => {
-    toast.success("Booking link copied (placeholder — booking page coming soon)");
+    const url = `${window.location.origin}/scheduling`;
+    navigator.clipboard.writeText(url);
+    toast.success("Scheduling page link copied to clipboard");
   };
 
   return (

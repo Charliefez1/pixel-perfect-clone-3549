@@ -5,18 +5,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useContracts, useCreateContract, useUpdateContract, Contract } from "@/hooks/useContracts";
+import { useContracts, useCreateContract, useUpdateContract, useDeleteContract, Contract } from "@/hooks/useContracts";
 import { useOrganisations } from "@/hooks/useOrganisations";
-import { useDeals } from "@/hooks/useDeals";
+import { useLogActivity } from "@/hooks/useActivityLog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DetailPanel } from "@/components/layout/DetailPanel";
+import { EmptyState } from "@/components/layout/EmptyState";
+import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { FileSignature } from "lucide-react";
+import { FileSignature, Loader2 } from "lucide-react";
 import { EntityDocuments } from "@/components/documents/EntityDocuments";
 
 const statusStyles: Record<string, string> = {
@@ -29,35 +32,89 @@ const statusStyles: Record<string, string> = {
 export default function Contracts() {
   const { data: contracts, isLoading } = useContracts();
   const { data: orgs } = useOrganisations();
-  const { data: deals } = useDeals();
   const createContract = useCreateContract();
   const updateContract = useUpdateContract();
+  const deleteContract = useDeleteContract();
+  const logActivity = useLogActivity();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState<Contract | null>(null);
+  const [search, setSearch] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{ label: string; action: () => void } | null>(null);
 
   const [title, setTitle] = useState("");
   const [orgId, setOrgId] = useState("");
-  const [dealId, setDealId] = useState("");
   const [value, setValue] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [notes, setNotes] = useState("");
 
+  // Edit state
+  const [editTitle, setEditTitle] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [editValue, setEditValue] = useState("");
+
   const handleCreate = () => {
     if (!title.trim()) { toast.error("Title is required"); return; }
     createContract.mutate(
-      { title, organisation_id: orgId || null, deal_id: dealId || null, value: parseFloat(value) || 0, start_date: startDate || undefined, end_date: endDate || undefined, notes },
-      { onSuccess: () => { toast.success("Contract created"); setDialogOpen(false); setTitle(""); setOrgId(""); setDealId(""); setValue(""); setStartDate(""); setEndDate(""); setNotes(""); } }
+      { title, organisation_id: orgId || null, value: parseFloat(value) || 0, start_date: startDate || undefined, end_date: endDate || undefined, notes },
+      { onSuccess: () => { toast.success("Contract created"); setDialogOpen(false); setTitle(""); setOrgId(""); setValue(""); setStartDate(""); setEndDate(""); setNotes(""); } }
     );
   };
 
-  const totalValue = contracts?.reduce((s, c) => s + (c.value || 0), 0) || 0;
-  const signedCount = contracts?.filter(c => c.status === "signed").length || 0;
-  const activeCount = contracts?.filter(c => ["draft", "sent"].includes(c.status)).length || 0;
+  const startEditing = (c: Contract) => {
+    setEditTitle(c.title);
+    setEditNotes(c.notes || "");
+    setEditValue((c.value || 0).toString());
+    setEditing(true);
+  };
+
+  const handleSave = () => {
+    if (!selected) return;
+    updateContract.mutate(
+      { id: selected.id, title: editTitle, notes: editNotes, value: parseFloat(editValue) || 0 },
+      {
+        onSuccess: (data) => {
+          toast.success("Contract updated");
+          setEditing(false);
+          setSelected(null);
+        },
+      }
+    );
+  };
+
+  const handleStatusChange = (contract: Contract, newStatus: string, extraFields?: Record<string, any>) => {
+    setConfirmAction({
+      label: `Mark as ${newStatus}`,
+      action: () => {
+        updateContract.mutate(
+          { id: contract.id, status: newStatus, ...extraFields },
+          {
+            onSuccess: () => {
+              logActivity.mutate({ entity_type: "contract", entity_id: contract.id, entity_title: contract.title, action: "status_changed", metadata: { from: contract.status, to: newStatus } });
+              toast.success(`Contract marked as ${newStatus}`);
+              setSelected(null);
+              setConfirmAction(null);
+            },
+          }
+        );
+      },
+    });
+  };
+
+  const filtered = contracts?.filter(c =>
+    c.title.toLowerCase().includes(search.toLowerCase()) ||
+    c.organisations?.name?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalValue = filtered?.reduce((s, c) => s + (c.value || 0), 0) || 0;
+  const signedCount = filtered?.filter(c => c.status === "signed").length || 0;
+  const activeCount = filtered?.filter(c => ["draft", "sent"].includes(c.status)).length || 0;
 
   return (
     <>
-      <PageHeader title="Contracts" searchPlaceholder="Search contracts..." actionLabel="New Contract" onAction={() => setDialogOpen(true)} />
+      <PageHeader title="Contracts" searchPlaceholder="Search contracts..." actionLabel="New Contract" onAction={() => setDialogOpen(true)} onSearch={setSearch} />
       <div className="flex-1 overflow-auto p-6 space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Total Value</p>{isLoading ? <Skeleton className="h-8 w-24" /> : <p className="text-2xl font-bold">£{totalValue.toLocaleString()}</p>}</CardContent></Card>
@@ -69,8 +126,8 @@ export default function Contracts() {
           <CardContent className="p-0">
             {isLoading ? (
               <div className="p-6 space-y-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
-            ) : !contracts?.length ? (
-              <div className="p-12 text-center text-muted-foreground"><p>No contracts yet. Create your first contract.</p></div>
+            ) : !filtered?.length ? (
+              <EmptyState icon={FileSignature} title="No contracts found" description={search ? "No contracts match your search." : "Create your first contract."} action={!search ? { label: "New Contract", onClick: () => setDialogOpen(true) } : undefined} />
             ) : (
               <Table>
                 <TableHeader>
@@ -84,7 +141,7 @@ export default function Contracts() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {contracts.map(c => (
+                  {filtered.map(c => (
                     <TableRow key={c.id} className="cursor-pointer" onClick={() => setSelected(c)}>
                       <TableCell className="pl-6">
                         <div className="flex items-center gap-3">
@@ -106,6 +163,7 @@ export default function Contracts() {
         </Card>
       </div>
 
+      {/* Create dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>New Contract</DialogTitle></DialogHeader>
@@ -113,10 +171,9 @@ export default function Contracts() {
             <div className="space-y-2"><Label>Title</Label><Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Contract title" /></div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Client</Label><Select value={orgId} onValueChange={setOrgId}><SelectTrigger><SelectValue placeholder="Select client" /></SelectTrigger><SelectContent>{orgs?.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent></Select></div>
-              <div className="space-y-2"><Label>Deal</Label><Select value={dealId} onValueChange={setDealId}><SelectTrigger><SelectValue placeholder="Select deal" /></SelectTrigger><SelectContent>{deals?.map(d => <SelectItem key={d.id} value={d.id}>{d.title}</SelectItem>)}</SelectContent></Select></div>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2"><Label>Value (£)</Label><Input type="number" value={value} onChange={e => setValue(e.target.value)} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Start</Label><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></div>
               <div className="space-y-2"><Label>End</Label><Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></div>
             </div>
@@ -126,15 +183,15 @@ export default function Contracts() {
         </DialogContent>
       </Dialog>
 
+      {/* Detail panel with edit/delete */}
       {selected && (
         <DetailPanel
           open={!!selected}
-          onOpenChange={() => setSelected(null)}
+          onOpenChange={() => { setSelected(null); setEditing(false); }}
           title={selected.title}
           badge={{ label: selected.status, className: statusStyles[selected.status] }}
-          fields={[
+          fields={editing ? [] : [
             { label: "Client", value: selected.organisations?.name },
-            { label: "Deal", value: selected.deals?.title },
             { label: "Value", value: `£${(selected.value || 0).toLocaleString()}` },
             { label: "Start Date", value: selected.start_date ? format(new Date(selected.start_date), "dd/MM/yyyy") : undefined },
             { label: "End Date", value: selected.end_date ? format(new Date(selected.end_date), "dd/MM/yyyy") : undefined },
@@ -142,20 +199,66 @@ export default function Contracts() {
             { label: "Notes", value: selected.notes },
           ]}
         >
-          <div className="flex gap-2 mb-4">
-            {selected.status === "draft" && (
-              <Button size="sm" onClick={() => { updateContract.mutate({ id: selected.id, status: "sent" }, { onSuccess: () => { toast.success("Marked as sent"); setSelected(null); } }); }}>Mark as Sent</Button>
-            )}
-            {selected.status === "sent" && (
-              <Button size="sm" onClick={() => { updateContract.mutate({ id: selected.id, status: "signed", signed_at: new Date().toISOString() }, { onSuccess: () => { toast.success("Marked as signed"); setSelected(null); } }); }}>Mark as Signed</Button>
-            )}
-          </div>
+          {editing ? (
+            <div className="space-y-3 mb-4">
+              <div className="space-y-1"><label className="text-xs text-muted-foreground">Title</label><Input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="h-9" /></div>
+              <div className="space-y-1"><label className="text-xs text-muted-foreground">Value (£)</label><Input type="number" value={editValue} onChange={e => setEditValue(e.target.value)} className="h-9" /></div>
+              <div className="space-y-1"><label className="text-xs text-muted-foreground">Notes</label><Textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} rows={2} /></div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleSave} disabled={updateContract.isPending}>{updateContract.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}</Button>
+                <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2 mb-4">
+              <Button variant="outline" size="sm" onClick={() => startEditing(selected)}>Edit</Button>
+              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>Delete</Button>
+              {selected.status === "draft" && (
+                <Button size="sm" onClick={() => handleStatusChange(selected, "sent")} disabled={updateContract.isPending}>
+                  {updateContract.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Mark as Sent"}
+                </Button>
+              )}
+              {selected.status === "sent" && (
+                <Button size="sm" onClick={() => handleStatusChange(selected, "signed", { signed_at: new Date().toISOString() })} disabled={updateContract.isPending}>
+                  {updateContract.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Mark as Signed"}
+                </Button>
+              )}
+            </div>
+          )}
           <div>
             <p className="text-xs font-medium text-muted-foreground mb-2">File Attachments</p>
             <EntityDocuments entityType="contract" entityId={selected.id} />
           </div>
         </DetailPanel>
       )}
+
+      {/* Status change confirmation */}
+      <AlertDialog open={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to {confirmAction?.label?.toLowerCase()}? This action will be logged.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmAction?.action}>Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <DeleteConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title={selected?.title || ""}
+        onConfirm={() => {
+          if (!selected) return;
+          deleteContract.mutate(selected.id, {
+            onSuccess: () => { toast.success("Contract deleted"); setSelected(null); setDeleteOpen(false); },
+            onError: (e) => toast.error(e.message),
+          });
+        }}
+        loading={deleteContract.isPending}
+      />
     </>
   );
 }

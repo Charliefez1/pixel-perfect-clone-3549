@@ -30,8 +30,6 @@ import { useProjects } from "@/hooks/useProjects";
 
 const mainNav = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
-  { to: "/deals", icon: TrendingUp, label: "Deals" },
-  { to: "/proposals", icon: FileText, label: "Proposals" },
   { to: "/projects", icon: FolderKanban, label: "Projects" },
   { to: "/deliveries", icon: Package, label: "Deliveries" },
   { to: "/tasks", icon: CheckSquare, label: "Tasks" },

@@ -39,6 +39,7 @@ export default function Tasks() {
   const createTask = useCreateTask();
   const [view, setView] = useState<ViewMode>("board");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [search, setSearch] = useState("");
   const { openCreateTask } = useDialogs();
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
@@ -117,7 +118,7 @@ export default function Tasks() {
 
   return (
     <>
-      <PageHeader title="Tasks" searchPlaceholder="Search tasks..." actionLabel="New Task" onAction={openCreateTask}>
+      <PageHeader title="Tasks" searchPlaceholder="Search tasks..." actionLabel="New Task" onAction={openCreateTask} onSearch={setSearch}>
         <ViewToggle value={view} onChange={setView} showCalendar />
       </PageHeader>
 

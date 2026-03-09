@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { CreateDeliveryDialog } from "@/components/dialogs/CreateDeliveryDialog";
 import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,6 +59,13 @@ export default function Deliveries() {
   const [view, setView] = useState<ViewMode>("board");
   const [selected, setSelected] = useState<Delivery | null>(null);
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const filtered = deliveries?.filter(d =>
+    d.title.toLowerCase().includes(search.toLowerCase()) ||
+    d.organisations?.name?.toLowerCase().includes(search.toLowerCase())
+  );
 
   const activeDeliveries = deliveries?.filter((d) => d.status !== "complete").length || 0;
   const avgSatisfaction = deliveries?.filter((d) => d.satisfaction_score).reduce((sum, d) => sum + (d.satisfaction_score || 0), 0) / (deliveries?.filter((d) => d.satisfaction_score).length || 1) || 0;
@@ -120,9 +128,10 @@ export default function Deliveries() {
 
   return (
     <>
-      <PageHeader title="Deliveries" searchPlaceholder="Search deliveries..." actionLabel="New Delivery" onAction={() => navigate("/projects")}>
+      <PageHeader title="Deliveries" searchPlaceholder="Search deliveries..." actionLabel="New Delivery" onAction={() => setCreateOpen(true)} onSearch={setSearch}>
         <ViewToggle value={view} onChange={setView} />
       </PageHeader>
+      <CreateDeliveryDialog open={createOpen} onOpenChange={setCreateOpen} />
 
       <div className="border-b bg-card/50 px-6 py-3 flex items-center gap-6 text-sm">
         <span><strong>{activeDeliveries}</strong> active deliveries</span>
@@ -142,7 +151,7 @@ export default function Deliveries() {
         ) : view === "board" ? (
           <div className="flex gap-4 overflow-x-auto pb-4 min-h-[calc(100vh-16rem)]">
             {deliveryStatuses.map((status) => {
-              const statusDeliveries = deliveries?.filter((d) => d.status === status.id) || [];
+              const statusDeliveries = filtered?.filter((d) => d.status === status.id) || [];
               return (
                 <div
                   key={status.id}
@@ -172,7 +181,7 @@ export default function Deliveries() {
           </div>
         ) : view === "list" ? (
           <div className="space-y-2">
-            {deliveries?.map((delivery) => (
+            {filtered?.map((delivery) => (
               <Card key={delivery.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelected(delivery)}>
                 <CardContent className="p-4 flex items-center gap-4">
                   <div className="flex-1 min-w-0">
@@ -200,7 +209,7 @@ export default function Deliveries() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {deliveries?.map((delivery) => (
+                {filtered?.map((delivery) => (
                   <TableRow key={delivery.id} className="cursor-pointer" onClick={() => setSelected(delivery)}>
                     <TableCell className="pl-6 font-medium">{delivery.title}</TableCell>
                     <TableCell className="text-muted-foreground">{delivery.organisations?.name || "—"}</TableCell>

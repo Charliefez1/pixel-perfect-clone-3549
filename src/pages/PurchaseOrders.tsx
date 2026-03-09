@@ -5,18 +5,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { usePurchaseOrders, useCreatePurchaseOrder, useUpdatePurchaseOrder, PurchaseOrder } from "@/hooks/usePurchaseOrders";
+import { usePurchaseOrders, useCreatePurchaseOrder, useUpdatePurchaseOrder, useDeletePurchaseOrder, PurchaseOrder } from "@/hooks/usePurchaseOrders";
 import { useOrganisations } from "@/hooks/useOrganisations";
 import { useProjects } from "@/hooks/useProjects";
+import { useLogActivity } from "@/hooks/useActivityLog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DetailPanel } from "@/components/layout/DetailPanel";
+import { EmptyState } from "@/components/layout/EmptyState";
+import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Loader2 } from "lucide-react";
 
 const statusStyles: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -33,8 +37,14 @@ export default function PurchaseOrders() {
   const { data: projects } = useProjects();
   const createPO = useCreatePurchaseOrder();
   const updatePO = useUpdatePurchaseOrder();
+  const deletePO = useDeletePurchaseOrder();
+  const logActivity = useLogActivity();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState<PurchaseOrder | null>(null);
+  const [search, setSearch] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{ label: string; action: () => void } | null>(null);
 
   const [poNumber, setPoNumber] = useState("");
   const [orgId, setOrgId] = useState("");
@@ -44,6 +54,11 @@ export default function PurchaseOrders() {
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
 
+  // Edit state
+  const [editDesc, setEditDesc] = useState("");
+  const [editAmount, setEditAmount] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+
   const handleCreate = () => {
     if (!poNumber.trim()) { toast.error("PO number is required"); return; }
     createPO.mutate(
@@ -52,13 +67,53 @@ export default function PurchaseOrders() {
     );
   };
 
-  const totalSpend = pos?.reduce((s, p) => s + (p.amount || 0), 0) || 0;
-  const approvedSpend = pos?.filter(p => p.status === "approved").reduce((s, p) => s + (p.amount || 0), 0) || 0;
-  const pendingCount = pos?.filter(p => ["draft", "submitted"].includes(p.status)).length || 0;
+  const startEditing = (p: PurchaseOrder) => {
+    setEditDesc(p.description || "");
+    setEditAmount((p.amount || 0).toString());
+    setEditNotes(p.notes || "");
+    setEditing(true);
+  };
+
+  const handleSave = () => {
+    if (!selected) return;
+    updatePO.mutate(
+      { id: selected.id, description: editDesc, amount: parseFloat(editAmount) || 0, notes: editNotes },
+      { onSuccess: () => { toast.success("PO updated"); setEditing(false); setSelected(null); } }
+    );
+  };
+
+  const handleStatusChange = (po: PurchaseOrder, newStatus: string, extraFields?: Record<string, any>) => {
+    setConfirmAction({
+      label: newStatus === "approved" ? "Approve" : newStatus === "rejected" ? "Reject" : `Mark as ${newStatus}`,
+      action: () => {
+        updatePO.mutate(
+          { id: po.id, status: newStatus, ...extraFields },
+          {
+            onSuccess: () => {
+              logActivity.mutate({ entity_type: "purchase_order", entity_id: po.id, entity_title: po.po_number, action: "status_changed", metadata: { from: po.status, to: newStatus } });
+              toast.success(`PO ${newStatus}`);
+              setSelected(null);
+              setConfirmAction(null);
+            },
+          }
+        );
+      },
+    });
+  };
+
+  const filtered = pos?.filter(p =>
+    p.po_number.toLowerCase().includes(search.toLowerCase()) ||
+    p.organisations?.name?.toLowerCase().includes(search.toLowerCase()) ||
+    p.description?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const totalSpend = filtered?.reduce((s, p) => s + (p.amount || 0), 0) || 0;
+  const approvedSpend = filtered?.filter(p => p.status === "approved").reduce((s, p) => s + (p.amount || 0), 0) || 0;
+  const pendingCount = filtered?.filter(p => ["draft", "submitted"].includes(p.status)).length || 0;
 
   return (
     <>
-      <PageHeader title="Purchase Orders" searchPlaceholder="Search POs..." actionLabel="New PO" onAction={() => setDialogOpen(true)} />
+      <PageHeader title="Purchase Orders" searchPlaceholder="Search POs..." actionLabel="New PO" onAction={() => setDialogOpen(true)} onSearch={setSearch} />
       <div className="flex-1 overflow-auto p-6 space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Total Spend</p>{isLoading ? <Skeleton className="h-8 w-24" /> : <p className="text-2xl font-bold">£{totalSpend.toLocaleString()}</p>}</CardContent></Card>
@@ -70,29 +125,15 @@ export default function PurchaseOrders() {
           <CardContent className="p-0">
             {isLoading ? (
               <div className="p-6 space-y-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
-            ) : !pos?.length ? (
-              <div className="p-12 text-center text-muted-foreground"><p>No purchase orders yet. Track your first expense.</p></div>
+            ) : !filtered?.length ? (
+              <EmptyState icon={ShoppingCart} title="No purchase orders found" description={search ? "No POs match your search." : "Track your first expense."} action={!search ? { label: "New PO", onClick: () => setDialogOpen(true) } : undefined} />
             ) : (
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-6">PO Number</TableHead>
-                    <TableHead>Supplier / Client</TableHead>
-                    <TableHead>Project</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
+                <TableHeader><TableRow><TableHead className="pl-6">PO Number</TableHead><TableHead>Supplier</TableHead><TableHead>Project</TableHead><TableHead>Category</TableHead><TableHead>Amount</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  {pos.map(p => (
+                  {filtered.map(p => (
                     <TableRow key={p.id} className="cursor-pointer" onClick={() => setSelected(p)}>
-                      <TableCell className="pl-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center"><ShoppingCart className="h-4 w-4 text-primary" /></div>
-                          <span className="font-medium text-sm">{p.po_number}</span>
-                        </div>
-                      </TableCell>
+                      <TableCell className="pl-6"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center"><ShoppingCart className="h-4 w-4 text-primary" /></div><span className="font-medium text-sm">{p.po_number}</span></div></TableCell>
                       <TableCell className="text-sm text-muted-foreground">{p.organisations?.name || "—"}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{p.projects?.name || "—"}</TableCell>
                       <TableCell><Badge variant="secondary">{p.category || "—"}</Badge></TableCell>
@@ -116,7 +157,7 @@ export default function PurchaseOrders() {
               <div className="space-y-2"><Label>Category</Label><Select value={category} onValueChange={setCategory}><SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger><SelectContent>{poCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Supplier / Client</Label><Select value={orgId} onValueChange={setOrgId}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{orgs?.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-2"><Label>Supplier</Label><Select value={orgId} onValueChange={setOrgId}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{orgs?.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-2"><Label>Project</Label><Select value={projectId} onValueChange={setProjectId}><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger><SelectContent>{projects?.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select></div>
             </div>
             <div className="space-y-2"><Label>Amount (£)</Label><Input type="number" value={amount} onChange={e => setAmount(e.target.value)} /></div>
@@ -130,10 +171,10 @@ export default function PurchaseOrders() {
       {selected && (
         <DetailPanel
           open={!!selected}
-          onOpenChange={() => setSelected(null)}
+          onOpenChange={() => { setSelected(null); setEditing(false); }}
           title={selected.po_number}
           badge={{ label: selected.status, className: statusStyles[selected.status] }}
-          fields={[
+          fields={editing ? [] : [
             { label: "Supplier", value: selected.organisations?.name },
             { label: "Project", value: selected.projects?.name },
             { label: "Category", value: selected.category },
@@ -143,19 +184,48 @@ export default function PurchaseOrders() {
             { label: "Notes", value: selected.notes },
           ]}
         >
-          <div className="flex gap-2">
-            {selected.status === "draft" && (
-              <Button size="sm" onClick={() => { updatePO.mutate({ id: selected.id, status: "submitted" }, { onSuccess: () => { toast.success("Submitted for approval"); setSelected(null); } }); }}>Submit</Button>
-            )}
-            {selected.status === "submitted" && (
-              <>
-                <Button size="sm" onClick={() => { updatePO.mutate({ id: selected.id, status: "approved", approved_at: new Date().toISOString() }, { onSuccess: () => { toast.success("Approved"); setSelected(null); } }); }}>Approve</Button>
-                <Button size="sm" variant="destructive" onClick={() => { updatePO.mutate({ id: selected.id, status: "rejected" }, { onSuccess: () => { toast.success("Rejected"); setSelected(null); } }); }}>Reject</Button>
-              </>
-            )}
-          </div>
+          {editing ? (
+            <div className="space-y-3 mb-4">
+              <div className="space-y-1"><label className="text-xs text-muted-foreground">Description</label><Input value={editDesc} onChange={e => setEditDesc(e.target.value)} className="h-9" /></div>
+              <div className="space-y-1"><label className="text-xs text-muted-foreground">Amount (£)</label><Input type="number" value={editAmount} onChange={e => setEditAmount(e.target.value)} className="h-9" /></div>
+              <div className="space-y-1"><label className="text-xs text-muted-foreground">Notes</label><Textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} rows={2} /></div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleSave} disabled={updatePO.isPending}>{updatePO.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}</Button>
+                <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2 mb-4">
+              <Button variant="outline" size="sm" onClick={() => startEditing(selected)}>Edit</Button>
+              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>Delete</Button>
+              {selected.status === "draft" && (
+                <Button size="sm" onClick={() => handleStatusChange(selected, "submitted")} disabled={updatePO.isPending}>
+                  {updatePO.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit"}
+                </Button>
+              )}
+              {selected.status === "submitted" && (
+                <>
+                  <Button size="sm" onClick={() => handleStatusChange(selected, "approved", { approved_at: new Date().toISOString() })} disabled={updatePO.isPending}>
+                    {updatePO.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Approve"}
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => handleStatusChange(selected, "rejected")} disabled={updatePO.isPending}>Reject</Button>
+                </>
+              )}
+            </div>
+          )}
         </DetailPanel>
       )}
+
+      <AlertDialog open={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader><AlertDialogTitle>Confirm Action</AlertDialogTitle><AlertDialogDescription>Are you sure you want to {confirmAction?.label?.toLowerCase()}?</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={confirmAction?.action}>Confirm</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <DeleteConfirmDialog open={deleteOpen} onOpenChange={setDeleteOpen} title={selected?.po_number || ""}
+        onConfirm={() => { if (!selected) return; deletePO.mutate(selected.id, { onSuccess: () => { toast.success("PO deleted"); setSelected(null); setDeleteOpen(false); }, onError: (e) => toast.error(e.message) }); }}
+        loading={deletePO.isPending} />
     </>
   );
 }
