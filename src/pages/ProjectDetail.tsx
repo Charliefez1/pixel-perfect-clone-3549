@@ -631,7 +631,7 @@ Project context: ${JSON.stringify(context)}`,
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Stage</span>
-                      <span className="font-medium">{stageLabels[project.stage || "contract_signing"] || "—"}</span>
+                      <span className="font-medium">{stageLabels[(project as any).stage || "contract_signing"] || "—"}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">NEURO Phase</span>
