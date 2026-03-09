@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTemplates, Template } from "@/hooks/useDeliveries";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Trash2, GripVertical, FileText, FileSignature, ShoppingCart, Layers, Copy, Variable } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
