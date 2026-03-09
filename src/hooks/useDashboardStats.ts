@@ -5,15 +5,6 @@ export function useDashboardStats() {
   return useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
-      // Get pipeline value (deals not won/lost)
-      const { data: deals } = await supabase
-        .from("deals")
-        .select("value, stage")
-        .not("stage", "in", '("won","lost")');
-
-      const pipelineValue = deals?.reduce((sum, d) => sum + (d.value || 0), 0) || 0;
-      const dealCount = deals?.length || 0;
-
       // Get active projects
       const { count: activeProjects } = await supabase
         .from("projects")
@@ -37,8 +28,6 @@ export function useDashboardStats() {
       const unpaidCount = invoices?.length || 0;
 
       return {
-        pipelineValue,
-        dealCount,
         activeProjects: activeProjects || 0,
         overdueTasks: overdueTasks || 0,
         outstandingAmount,
@@ -48,29 +37,49 @@ export function useDashboardStats() {
   });
 }
 
-export function usePipelineByStage() {
+export function useProjectsByPhase() {
   return useQuery({
-    queryKey: ["pipeline-by-stage"],
+    queryKey: ["projects-by-phase"],
     queryFn: async () => {
-      const { data: deals } = await supabase
-        .from("deals")
-        .select("value, stage")
-        .not("stage", "in", '("won","lost")');
+      const { data: projects } = await supabase
+        .from("projects")
+        .select("neuro_phase, status")
+        .eq("status", "active");
 
-      const stages = ["lead", "qualified", "proposal", "negotiation", "verbal"];
-      const stageColors: Record<string, string> = {
-        lead: "hsl(var(--stage-lead))",
-        qualified: "hsl(var(--stage-qualified))",
-        proposal: "hsl(var(--stage-proposal))",
-        negotiation: "hsl(var(--stage-negotiation))",
-        verbal: "hsl(var(--stage-verbal))",
+      const phases = ["needs", "engage", "understand", "realise", "ongoing"];
+      const phaseColors: Record<string, string> = {
+        needs: "hsl(210, 100%, 61%)",
+        engage: "hsl(190, 60%, 50%)",
+        understand: "hsl(142, 71%, 45%)",
+        realise: "hsl(38, 92%, 50%)",
+        ongoing: "hsl(0, 0%, 64%)",
       };
 
-      return stages.map((stage) => ({
-        stage: stage.charAt(0).toUpperCase() + stage.slice(1),
-        value: deals?.filter((d) => d.stage === stage).reduce((sum, d) => sum + (d.value || 0), 0) || 0,
-        color: stageColors[stage],
+      return phases.map((phase) => ({
+        phase: phase.charAt(0).toUpperCase() + phase.slice(1),
+        count: projects?.filter((p) => p.neuro_phase === phase).length || 0,
+        color: phaseColors[phase],
       }));
+    },
+  });
+}
+
+export function useUpcomingDeliveries() {
+  return useQuery({
+    queryKey: ["upcoming-deliveries"],
+    queryFn: async () => {
+      const now = new Date();
+      const weekFromNow = new Date(now);
+      weekFromNow.setDate(weekFromNow.getDate() + 7);
+
+      const { data } = await supabase
+        .from("deliveries")
+        .select("*, organisations(name), projects(name)")
+        .gte("delivery_date", now.toISOString().split("T")[0])
+        .lte("delivery_date", weekFromNow.toISOString().split("T")[0])
+        .order("delivery_date", { ascending: true });
+
+      return data || [];
     },
   });
 }

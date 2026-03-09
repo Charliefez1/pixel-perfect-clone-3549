@@ -5,16 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bot, Send, Sparkles, TrendingUp, FolderKanban, BarChart3, Briefcase } from "lucide-react";
+import { Bot, Send, Sparkles, Users, FolderKanban, BarChart3, Briefcase } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 
 const agents = [
-  { id: "sales", label: "Sales", icon: TrendingUp, color: "text-blue-500" },
   { id: "pm", label: "Project Mgmt", icon: FolderKanban, color: "text-green-500" },
   { id: "insights", label: "Insights", icon: BarChart3, color: "text-amber-500" },
-  { id: "crm", label: "CRM", icon: Bot, color: "text-cyan-500" },
+  { id: "clients", label: "Client Mgr", icon: Users, color: "text-cyan-500" },
   { id: "business", label: "Business Mgr", icon: Briefcase, color: "text-purple-500" },
 ];
 
@@ -27,7 +26,7 @@ interface Props {
 }
 
 export function AIChatPanel({ open, onOpenChange, context }: Props) {
-  const [agent, setAgent] = useState("business");
+  const [agent, setAgent] = useState("pm");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -122,7 +121,7 @@ export function AIChatPanel({ open, onOpenChange, context }: Props) {
     }
   };
 
-  const currentAgent = agents.find((a) => a.id === agent) || agents[3];
+  const currentAgent = agents.find((a) => a.id === agent) || agents[0];
 
   const isMobile = useIsMobile();
 
@@ -161,10 +160,9 @@ export function AIChatPanel({ open, onOpenChange, context }: Props) {
                   {currentAgent.label} AI
                 </p>
                 <p className="text-xs text-muted-foreground max-w-xs mx-auto">
-                  {agent === "sales" && "Ask about deals, follow-ups, or pipeline strategy."}
                   {agent === "pm" && "Ask about tasks, deadlines, resources, or NEURO phases."}
-                  {agent === "insights" && "Ask about analytics, trends, or forecasting."}
-                  {agent === "crm" && "Ask about contacts, companies, meetings, or CRM data."}
+                  {agent === "insights" && "Ask about delivery metrics, trends, or forecasting."}
+                  {agent === "clients" && "Ask about clients, contacts, sessions, or relationships."}
                   {agent === "business" && "Ask for strategic advice or business overview."}
                 </p>
               </div>

@@ -1,29 +1,27 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Briefcase, FolderKanban, CheckSquare, Menu, X, Receipt, Users, FileText, FileSignature, ClipboardList, Globe, Layers, ShoppingCart, BarChart3, CalendarDays, Sparkles } from "lucide-react";
+import { LayoutDashboard, FolderKanban, CheckSquare, Menu, X, Receipt, Users, FileSignature, ClipboardList, Globe, Layers, ShoppingCart, BarChart3, CalendarDays, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useState } from "react";
 
 const primaryTabs = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
-  { to: "/deals", icon: Briefcase, label: "Deals" },
   { to: "/projects", icon: FolderKanban, label: "Projects" },
   { to: "/tasks", icon: CheckSquare, label: "Tasks" },
+  { to: "/invoices", icon: Receipt, label: "Invoices" },
 ];
 
 const allNav = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
-  { to: "/deals", icon: Briefcase, label: "Deals" },
   { to: "/projects", icon: FolderKanban, label: "Projects" },
+  { to: "/deliveries", icon: FolderKanban, label: "Deliveries" },
   { to: "/tasks", icon: CheckSquare, label: "Tasks" },
   { to: "/invoices", icon: Receipt, label: "Invoices" },
   { to: "/purchase-orders", icon: ShoppingCart, label: "Purchase Orders" },
-  { to: "/deliveries", icon: FolderKanban, label: "Deliveries" },
   { to: "/reporting", icon: BarChart3, label: "Reporting" },
   { to: "/clients", icon: Users, label: "Clients" },
   { to: "/contacts", icon: Users, label: "Contacts" },
   { to: "/meetings", icon: CalendarDays, label: "Sessions" },
-  { to: "/proposals", icon: FileText, label: "Proposals" },
   { to: "/contracts", icon: FileSignature, label: "Contracts" },
   { to: "/forms", icon: ClipboardList, label: "Forms" },
   { to: "/client-portal", icon: Globe, label: "Client Portal" },
