@@ -14,6 +14,7 @@ const agents = [
   { id: "sales", label: "Sales", icon: TrendingUp, color: "text-blue-500" },
   { id: "pm", label: "Project Mgmt", icon: FolderKanban, color: "text-green-500" },
   { id: "insights", label: "Insights", icon: BarChart3, color: "text-amber-500" },
+  { id: "crm", label: "CRM", icon: Bot, color: "text-cyan-500" },
   { id: "business", label: "Business Mgr", icon: Briefcase, color: "text-purple-500" },
 ];
 
@@ -163,6 +164,7 @@ export function AIChatPanel({ open, onOpenChange, context }: Props) {
                   {agent === "sales" && "Ask about deals, follow-ups, or pipeline strategy."}
                   {agent === "pm" && "Ask about tasks, deadlines, resources, or NEURO phases."}
                   {agent === "insights" && "Ask about analytics, trends, or forecasting."}
+                  {agent === "crm" && "Ask about contacts, companies, meetings, or CRM data."}
                   {agent === "business" && "Ask for strategic advice or business overview."}
                 </p>
               </div>

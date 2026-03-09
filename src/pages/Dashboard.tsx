@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { TrendingUp, Briefcase, FolderKanban, CheckSquare, Receipt, Calendar, AlertTriangle, PieChart, ArrowRight, Clock, Mail, Loader2, Plus } from "lucide-react";
+import { TrendingUp, Briefcase, FolderKanban, CheckSquare, Receipt, Calendar, AlertTriangle, PieChart, ArrowRight, Clock, Mail, Loader2, Plus, RefreshCw } from "lucide-react";
 import { useDialogs } from "@/App";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart as RPieChart, Pie } from "recharts";
 import { useDashboardStats, usePipelineByStage } from "@/hooks/useDashboardStats";
@@ -39,6 +39,7 @@ const sectorColors: Record<string, string> = {
 
 export default function Dashboard() {
   const [syncing, setSyncing] = useState(false);
+  const [syncingCRM, setSyncingCRM] = useState(false);
   const { openCreateDeal, openCreateContact, openCreateInvoice } = useDialogs();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: pipelineData, isLoading: pipelineLoading } = usePipelineByStage();
@@ -50,6 +51,24 @@ export default function Dashboard() {
   const { data: deliveries } = useDeliveries();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const handleSyncCRM = async () => {
+    setSyncingCRM(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-clarify", {
+        body: { companies: [], contacts: [], meetings: [] },
+      });
+      if (error) throw error;
+      toast.success(`CRM sync: ${data.companies || 0} orgs, ${data.contacts || 0} contacts, ${data.meetings || 0} meetings`);
+      queryClient.invalidateQueries({ queryKey: ["organisations"] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+    } catch (e: any) {
+      toast.error(e.message || "CRM sync failed");
+    } finally {
+      setSyncingCRM(false);
+    }
+  };
 
   const handleSyncGmail = async () => {
     setSyncing(true);
@@ -224,10 +243,16 @@ export default function Dashboard() {
           <h1 className="text-xl font-bold">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">Welcome back to NDG Hub</p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleSyncGmail} disabled={syncing}>
-          {syncing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
-          Sync Gmail
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleSyncCRM} disabled={syncingCRM}>
+            {syncingCRM ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RefreshCw className="h-4 w-4 mr-1" />}
+            Sync CRM
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleSyncGmail} disabled={syncing}>
+            {syncing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
+            Sync Gmail
+          </Button>
+        </div>
       </div>
       <div className="flex-1 overflow-auto p-6 space-y-6">
         {/* Quick Actions */}
