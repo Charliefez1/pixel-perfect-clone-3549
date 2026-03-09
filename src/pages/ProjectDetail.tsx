@@ -497,7 +497,8 @@ Project context: ${JSON.stringify(context)}`,
             <TabsTrigger value="tasks">Tasks ({totalTasks})</TabsTrigger>
             <TabsTrigger value="deliveries">Deliveries</TabsTrigger>
             <TabsTrigger value="billing">Billing</TabsTrigger>
-            <TabsTrigger value="sessions">Sessions</TabsTrigger>
+            <TabsTrigger value="workshops">Workshops</TabsTrigger>
+            <TabsTrigger value="meetings">Meetings</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="updates">Updates</TabsTrigger>
           </TabsList>
