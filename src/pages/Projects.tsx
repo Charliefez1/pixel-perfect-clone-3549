@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useProjects, Project } from "@/hooks/useProjects";
+import { useProjects, Project, useUpdateProject, useDeleteProject } from "@/hooks/useProjects";
 import { useTasks } from "@/hooks/useTasks";
 import { useDeals } from "@/hooks/useDeals";
 import { useSessions } from "@/hooks/useSessions";
