@@ -75,7 +75,7 @@ export default function ClientDetail() {
   const totalInvoiced = clientInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
   const paidInvoices = clientInvoices.filter((i) => i.status === "paid");
   const totalPaid = paidInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
-  const outstandingInvoices = clientInvoices.filter((i) => i.status !== "paid" && i.status !== "cancelled");
+  const outstandingInvoices = clientInvoices.filter((i) => i.status !== "paid");
   const outstandingTotal = outstandingInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
   const overdueInvoices = clientInvoices.filter((i) => i.status === "overdue" || (i.status === "sent" && i.due_date && isPast(new Date(i.due_date))));
   const overdueTotal = overdueInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
@@ -237,7 +237,7 @@ export default function ClientDetail() {
                           >
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium truncate">{p.name}</p>
-                              <p className="text-xs text-muted-foreground capitalize">{p.service_type || "—"}</p>
+                              <p className="text-xs text-muted-foreground capitalize">{(p as any).service_type || "—"}</p>
                             </div>
                             <Badge className={statusStyles[p.status]}>{p.status}</Badge>
                             <span className="text-sm font-semibold text-primary">£{(p.budget || 0).toLocaleString()}</span>
@@ -420,7 +420,7 @@ export default function ClientDetail() {
 
                         {/* Budget */}
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground capitalize">{p.service_type || "—"}</span>
+                          <span className="text-muted-foreground capitalize">{(p as any).service_type || "—"}</span>
                           <span className="font-semibold text-primary">£{(p.budget || 0).toLocaleString()}</span>
                         </div>
 

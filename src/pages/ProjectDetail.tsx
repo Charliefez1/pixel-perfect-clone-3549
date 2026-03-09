@@ -164,7 +164,7 @@ export default function ProjectDetail() {
   const totalPaid = paidInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
   const overdueInvoices = projectInvoices.filter((i) => i.status === "overdue" || (i.status === "sent" && i.due_date && isPast(new Date(i.due_date))));
   const overdueAmount = overdueInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
-  const outstandingInvoices = projectInvoices.filter((i) => i.status !== "paid" && i.status !== "cancelled");
+  const outstandingInvoices = projectInvoices.filter((i) => i.status !== "paid");
   const outstandingAmount = outstandingInvoices.reduce((sum, i) => sum + (i.total || 0), 0);
   const budgetUsedPct = project.budget ? Math.round((totalBilled / project.budget) * 100) : 0;
 
@@ -179,7 +179,7 @@ export default function ProjectDetail() {
     setEditValues({
       name: project.name,
       status: project.status,
-      stage: project.stage || "contract_signing",
+      stage: (project as any).stage || "contract_signing",
       neuro_phase: project.neuro_phase || "needs",
       budget: project.budget?.toString() || "0",
       start_date: project.start_date || "",
@@ -195,13 +195,12 @@ export default function ProjectDetail() {
         id: project.id,
         name: editValues.name,
         status: editValues.status as any,
-        stage: editValues.stage as any,
         neuro_phase: editValues.neuro_phase as any,
         budget: parseFloat(editValues.budget) || 0,
         start_date: editValues.start_date || null,
         end_date: editValues.end_date || null,
         description: editValues.description || null,
-      },
+      } as any,
       {
         onSuccess: () => {
           toast.success("Project updated");
@@ -335,9 +334,9 @@ Project context: ${JSON.stringify(context)}`,
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold">{project.name}</h1>
               <Badge className={statusStyles[project.status]}>{project.status}</Badge>
-              {project.stage && (
+              {(project as any).stage && (
                 <Badge variant="outline" className="text-[10px]">
-                  {stageLabels[project.stage] || project.stage}
+                  {stageLabels[(project as any).stage] || (project as any).stage}
                 </Badge>
               )}
             </div>
@@ -354,7 +353,7 @@ Project context: ${JSON.stringify(context)}`,
                 <span>No organisation</span>
               )}
               {project.budget ? <span> · £{project.budget.toLocaleString()}</span> : null}
-              {project.service_type && <span> · <span className="capitalize">{project.service_type}</span></span>}
+              {(project as any).service_type && <span> · <span className="capitalize">{(project as any).service_type}</span></span>}
             </div>
             {/* Budget progress bar */}
             {project.budget ? (
@@ -631,16 +630,16 @@ Project context: ${JSON.stringify(context)}`,
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Stage</span>
-                      <span className="font-medium">{stageLabels[project.stage || "contract_signing"] || "—"}</span>
+                      <span className="font-medium">{stageLabels[(project as any).stage || "contract_signing"] || "—"}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">NEURO Phase</span>
                       <span className="font-medium capitalize">{project.neuro_phase || "needs"}</span>
                     </div>
-                    {project.service_type && (
+                    {(project as any).service_type && (
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">Service Type</span>
-                        <span className="font-medium capitalize">{project.service_type}</span>
+                        <span className="font-medium capitalize">{(project as any).service_type}</span>
                       </div>
                     )}
                     {project.start_date && (
