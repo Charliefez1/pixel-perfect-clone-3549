@@ -240,32 +240,58 @@ export default function PortalView() {
                 </TabsContent>
 
                 <TabsContent value="billing" className="space-y-4 pt-4">
-                  <div className="grid grid-cols-3 gap-4">
+                  {(() => {
+                    const outstanding = invoices.filter(i => i.status === "sent" || i.status === "viewed").reduce((s, i) => s + (i.total || 0), 0);
+                    const overdue = invoices.filter(i => i.status === "overdue").reduce((s, i) => s + (i.total || 0), 0);
+                    const paid = invoices.filter(i => i.status === "paid").reduce((s, i) => s + (i.total || 0), 0);
+                    return (
+                      <div className="grid grid-cols-3 gap-4">
+                        <Card><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Outstanding</p><p className="text-xl font-bold text-amber-600">£{outstanding.toLocaleString()}</p></CardContent></Card>
+                        <Card><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Overdue</p><p className="text-xl font-bold text-red-600">£{overdue.toLocaleString()}</p></CardContent></Card>
+                        <Card><CardContent className="p-4 text-center"><p className="text-xs text-muted-foreground">Paid</p><p className="text-xl font-bold text-green-600">£{paid.toLocaleString()}</p></CardContent></Card>
+                      </div>
+                    );
+                  })()}
+                  {invoices.length === 0 ? (
                     <Card>
-                      <CardContent className="p-4 text-center">
-                        <p className="text-xs text-muted-foreground">Outstanding</p>
-                        <p className="text-xl font-bold text-amber-600">£0</p>
+                      <CardContent className="p-8 text-center text-muted-foreground">
+                        <Receipt className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                        <p>No invoices yet.</p>
                       </CardContent>
                     </Card>
+                  ) : (
                     <Card>
-                      <CardContent className="p-4 text-center">
-                        <p className="text-xs text-muted-foreground">Overdue</p>
-                        <p className="text-xl font-bold text-red-600">£0</p>
-                      </CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="pl-6">Invoice</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Issue Date</TableHead>
+                            <TableHead>Due Date</TableHead>
+                            <TableHead className="text-right pr-6">Amount</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {invoices.map(inv => (
+                            <TableRow key={inv.id}>
+                              <TableCell className="pl-6 font-medium">{inv.invoice_number}</TableCell>
+                              <TableCell>
+                                <Badge className={
+                                  inv.status === "paid" ? "bg-green-100 text-green-700" :
+                                  inv.status === "overdue" ? "bg-red-100 text-red-700" :
+                                  inv.status === "sent" || inv.status === "viewed" ? "bg-amber-100 text-amber-700" :
+                                  "bg-muted text-muted-foreground"
+                                }>{inv.status}</Badge>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">{inv.issue_date || "—"}</TableCell>
+                              <TableCell className="text-muted-foreground">{inv.due_date || "—"}</TableCell>
+                              <TableCell className="text-right pr-6 font-medium">£{(inv.total || 0).toLocaleString()}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     </Card>
-                    <Card>
-                      <CardContent className="p-4 text-center">
-                        <p className="text-xs text-muted-foreground">Paid</p>
-                        <p className="text-xl font-bold text-green-600">£0</p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                  <Card>
-                    <CardContent className="p-8 text-center text-muted-foreground">
-                      <Receipt className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
-                      <p>No invoices yet.</p>
-                    </CardContent>
-                  </Card>
+                  )}
                 </TabsContent>
               </Tabs>
             </div>
