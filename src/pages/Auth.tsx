@@ -66,7 +66,7 @@ export default function Auth() {
                   id="displayName"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Charlie Watson"
+                  placeholder="Your name"
                   required={!isLogin}
                 />
               </div>
