@@ -131,7 +131,7 @@ export function CommandPalette({ onCreateTask, onCreateClient, onCreateContact, 
             <CommandSeparator />
             <CommandGroup heading="Projects">
               {projects.slice(0, 8).map((p) => (
-                <CommandItem key={p.id} onSelect={() => go("/projects")}>
+                <CommandItem key={p.id} onSelect={() => go(`/projects/${p.id}`)}>
                   <FolderKanban className="mr-2 h-4 w-4" />
                   {p.name}
                 </CommandItem>

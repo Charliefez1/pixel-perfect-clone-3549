@@ -3,31 +3,18 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useProjects, Project, useUpdateProject, useDeleteProject } from "@/hooks/useProjects";
+import { useProjects, Project } from "@/hooks/useProjects";
 import { useTasks } from "@/hooks/useTasks";
-import { useDeals } from "@/hooks/useDeals";
 import { useSessions } from "@/hooks/useSessions";
 import { useDeliveries } from "@/hooks/useDeliveries";
 import { useAllProjectMilestones } from "@/hooks/useProjectMilestones";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ViewToggle, ViewMode } from "@/components/layout/ViewToggle";
-import { DetailPanel } from "@/components/layout/DetailPanel";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDialogs } from "@/App";
-import { toast } from "sonner";
-import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
-import { MilestonesTab } from "@/components/projects/MilestonesTab";
-import { SessionsTab } from "@/components/projects/SessionsTab";
-import { DeliveriesTab } from "@/components/projects/DeliveriesTab";
-import { DocumentsTab } from "@/components/projects/DocumentsTab";
-import { ActivityTab } from "@/components/projects/ActivityTab";
-import { AlertTriangle, CalendarDays, CheckCircle2, Upload } from "lucide-react";
+import { AlertTriangle, CalendarDays, CheckCircle2, Upload, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { CSVImportDialog, CSVColumn } from "@/components/dialogs/CSVImportDialog";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -41,19 +28,12 @@ const projectCSVColumns: CSVColumn[] = [
 ];
 
 const neuroPhases = ["N", "E", "U", "R", "O"] as const;
-const phaseLabels: Record<string, string> = { N: "Needs", E: "Engage", U: "Understand", R: "Realise", O: "Ongoing" };
 const phaseToIndex: Record<string, number> = { needs: 0, engage: 1, understand: 2, realise: 3, ongoing: 4 };
 const statusStyles: Record<string, string> = {
   setup: "bg-muted text-muted-foreground",
   active: "bg-[hsl(var(--stage-won))]/20 text-[hsl(var(--stage-won))]",
   paused: "bg-[hsl(var(--stage-proposal))]/20 text-[hsl(var(--stage-proposal))]",
   completed: "bg-primary/20 text-primary",
-};
-
-const packageColors: Record<string, string> = {
-  small: "bg-blue-100 text-blue-700",
-  medium: "bg-amber-100 text-amber-700",
-  large: "bg-purple-100 text-purple-700",
 };
 
 type FilterMode = "all" | "needs_action";
@@ -66,10 +46,10 @@ export default function Projects() {
   const { data: allMilestones } = useAllProjectMilestones();
   const [view, setView] = useState<ViewMode>("board");
   const [filter, setFilter] = useState<FilterMode>("all");
-  const [selected, setSelected] = useState<Project | null>(null);
   const [importOpen, setImportOpen] = useState(false);
-  const { openCreateProject } = useDialogs();
+  const { openCreateProject, openCreateProjectFromPlan } = useDialogs();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const now = new Date();
 
@@ -108,6 +88,10 @@ export default function Projects() {
     <>
       <PageHeader title="Projects" searchPlaceholder="Search projects..." actionLabel="New Project" onAction={openCreateProject}>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-2 rounded-lg" onClick={openCreateProjectFromPlan}>
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">New from Plan</span>
+          </Button>
           <Button variant="outline" size="sm" className="gap-2 rounded-lg" onClick={() => setImportOpen(true)}>
             <Upload className="h-4 w-4" />
             <span className="hidden sm:inline">Import CSV</span>
@@ -158,7 +142,7 @@ export default function Projects() {
               const summary = getProjectSummary(p);
               const phaseIndex = phaseToIndex[p.neuro_phase || "needs"] || 0;
               return (
-                <Card key={p.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelected(p)}>
+                <Card key={p.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/projects/${p.id}`)}>
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
@@ -224,7 +208,7 @@ export default function Projects() {
             {filteredProjects.map((p) => {
               const summary = getProjectSummary(p);
               return (
-                <Card key={p.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelected(p)}>
+                <Card key={p.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/projects/${p.id}`)}>
                   <CardContent className="p-4 flex items-center gap-4">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{p.name}</p>
@@ -258,7 +242,7 @@ export default function Projects() {
                 {filteredProjects.map((p) => {
                   const summary = getProjectSummary(p);
                   return (
-                    <TableRow key={p.id} className="cursor-pointer" onClick={() => setSelected(p)}>
+                    <TableRow key={p.id} className="cursor-pointer" onClick={() => navigate(`/projects/${p.id}`)}>
                       <TableCell className="pl-6 font-medium">{p.name}</TableCell>
                       <TableCell className="text-muted-foreground">{p.organisations?.name || "—"}</TableCell>
                       <TableCell><Badge className={statusStyles[p.status]}>{p.status}</Badge></TableCell>
@@ -274,190 +258,6 @@ export default function Projects() {
         )}
       </div>
 
-      {selected && <ProjectDetailPanel project={selected} onClose={() => setSelected(null)} />}
     </>
-  );
-}
-
-function ProjectDetailPanel({ project, onClose }: { project: Project; onClose: () => void }) {
-  const { data: tasks } = useTasks();
-  const { data: deals } = useDeals();
-  const updateProject = useUpdateProject();
-  const deleteProject = useDeleteProject();
-  const [editing, setEditing] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [editValues, setEditValues] = useState({
-    name: project.name,
-    status: project.status,
-    neuro_phase: project.neuro_phase || "needs",
-    budget: project.budget?.toString() || "0",
-    start_date: project.start_date || "",
-    end_date: project.end_date || "",
-    description: project.description || "",
-  });
-
-  const handleSave = () => {
-    updateProject.mutate(
-      { id: project.id, ...editValues, budget: parseFloat(editValues.budget) || 0, start_date: editValues.start_date || null, end_date: editValues.end_date || null, neuro_phase: editValues.neuro_phase as any },
-      { onSuccess: () => { toast.success("Project updated"); setEditing(false); } }
-    );
-  };
-
-  const projectTasks = tasks?.filter((t) => t.project_id === project.id) || [];
-  const linkedDeal = deals?.find((d) => d.id === project.deal_id);
-  const completedTasks = projectTasks.filter((t) => t.status === "done").length;
-  const totalTasks = projectTasks.length;
-  const phaseIndex = phaseToIndex[project.neuro_phase || "needs"] || 0;
-
-  return (
-    <DetailPanel
-      open={!!project}
-      onOpenChange={onClose}
-      title={project.name}
-      badge={{ label: project.status, className: statusStyles[project.status] }}
-      fields={editing ? [] : [
-        { label: "Organisation", value: project.organisations?.name },
-        { label: "NEURO Phase", value: project.neuro_phase ? phaseLabels[neuroPhases[phaseToIndex[project.neuro_phase]]] : undefined },
-        { label: "Budget", value: `£${(project.budget || 0).toLocaleString()}` },
-        { label: "Invoiced", value: `£${(project.invoiced || 0).toLocaleString()}` },
-        { label: "Start Date", value: project.start_date ? new Date(project.start_date).toLocaleDateString("en-GB") : undefined },
-        { label: "End Date", value: project.end_date ? new Date(project.end_date).toLocaleDateString("en-GB") : undefined },
-      ]}
-    >
-      {editing ? (
-        <div className="space-y-3 mb-4">
-          <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Name</label>
-            <Input value={editValues.name} onChange={(e) => setEditValues({ ...editValues, name: e.target.value })} className="h-9" />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Status</label>
-              <Select value={editValues.status} onValueChange={(v) => setEditValues({ ...editValues, status: v as any })}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {["setup", "active", "paused", "completed"].map((s) => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">NEURO Phase</label>
-              <Select value={editValues.neuro_phase} onValueChange={(v: string) => setEditValues({ ...editValues, neuro_phase: v as any })}>
-                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {["needs", "engage", "understand", "realise", "ongoing"].map((p) => <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Budget (£)</label>
-              <Input value={editValues.budget} onChange={(e) => setEditValues({ ...editValues, budget: e.target.value })} className="h-9" type="number" />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Start Date</label>
-              <Input type="date" value={editValues.start_date} onChange={(e) => setEditValues({ ...editValues, start_date: e.target.value })} className="h-9" />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">End Date</label>
-            <Input type="date" value={editValues.end_date} onChange={(e) => setEditValues({ ...editValues, end_date: e.target.value })} className="h-9" />
-          </div>
-          <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Description</label>
-            <Textarea value={editValues.description} onChange={(e) => setEditValues({ ...editValues, description: e.target.value })} rows={2} />
-          </div>
-          <div className="flex gap-2">
-            <Button size="sm" onClick={handleSave} disabled={updateProject.isPending}>Save</Button>
-            <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
-          </div>
-        </div>
-      ) : (
-        <div className="flex gap-2 mb-4">
-          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>Edit Project</Button>
-          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>Delete</Button>
-        </div>
-      )}
-
-      {/* NEURO Phase indicator */}
-      <div className="mb-4">
-        <p className="text-xs text-muted-foreground mb-1.5">NEURO Progress</p>
-        <div className="flex gap-1">
-          {neuroPhases.map((letter, i) => (
-            <div key={letter} className={`flex-1 h-7 rounded flex items-center justify-center text-[10px] font-bold ${i <= phaseIndex ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{letter}</div>
-          ))}
-        </div>
-      </div>
-
-      {linkedDeal && (
-        <div className="mb-4 p-3 rounded-lg border border-border bg-muted/30">
-          <p className="text-xs text-muted-foreground mb-1">Linked Deal</p>
-          <p className="text-sm font-medium">{linkedDeal.title}</p>
-          <span className="text-xs text-primary font-semibold">£{(linkedDeal.value || 0).toLocaleString()}</span>
-        </div>
-      )}
-
-      <Tabs defaultValue="milestones" className="w-full">
-        <TabsList className="w-full grid grid-cols-6">
-          <TabsTrigger value="milestones" className="text-xs">Milestones</TabsTrigger>
-          <TabsTrigger value="tasks" className="text-xs">Tasks ({totalTasks})</TabsTrigger>
-          <TabsTrigger value="sessions" className="text-xs">Sessions</TabsTrigger>
-          <TabsTrigger value="deliveries" className="text-xs">Deliveries</TabsTrigger>
-          <TabsTrigger value="documents" className="text-xs">Docs</TabsTrigger>
-          <TabsTrigger value="activity" className="text-xs">Activity</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="milestones" className="pt-4">
-          <MilestonesTab projectId={project.id} />
-        </TabsContent>
-
-        <TabsContent value="tasks" className="pt-4">
-          {totalTasks > 0 && (
-            <div className="mb-3">
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium">{completedTasks}/{totalTasks} complete</span>
-              </div>
-              <Progress value={(completedTasks / totalTasks) * 100} className="h-1.5" />
-            </div>
-          )}
-          {!projectTasks.length ? (
-            <p className="text-sm text-muted-foreground">No tasks yet.</p>
-          ) : (
-            <div className="space-y-1.5">
-              {projectTasks.map((t) => (
-                <div key={t.id} className="flex items-center gap-2 p-2 rounded-md border text-sm">
-                  <div className={`w-2 h-2 rounded-full shrink-0 ${t.status === "done" ? "bg-green-500" : t.status === "in_progress" ? "bg-blue-500" : t.status === "blocked" ? "bg-red-500" : "bg-muted-foreground"}`} />
-                  <span className={`flex-1 truncate ${t.status === "done" ? "line-through text-muted-foreground" : ""}`}>{t.title}</span>
-                  <Badge variant="secondary" className="text-[9px] capitalize">{t.priority}</Badge>
-                  {t.due_date && <span className="text-[10px] text-muted-foreground">{new Date(t.due_date).toLocaleDateString("en-GB")}</span>}
-                </div>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="sessions" className="pt-4">
-          <SessionsTab projectId={project.id} />
-        </TabsContent>
-
-        <TabsContent value="deliveries" className="pt-4">
-          <DeliveriesTab projectId={project.id} dealId={project.deal_id} />
-        </TabsContent>
-
-        <TabsContent value="documents" className="pt-4">
-          <DocumentsTab projectId={project.id} dealId={project.deal_id} />
-        </TabsContent>
-
-        <TabsContent value="activity" className="pt-4">
-          <ActivityTab organisationId={project.organisation_id} />
-        </TabsContent>
-      </Tabs>
-
-      <DeleteConfirmDialog open={deleteOpen} onOpenChange={setDeleteOpen} title={project.name}
-        onConfirm={() => deleteProject.mutate(project.id, { onSuccess: () => { toast.success("Project deleted"); onClose(); }, onError: (e) => toast.error(e.message) })}
-        loading={deleteProject.isPending} />
-    </DetailPanel>
   );
 }

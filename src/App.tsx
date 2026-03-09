@@ -15,6 +15,7 @@ import Deliveries from "@/pages/Deliveries";
 import Forms from "@/pages/Forms";
 import ClientPortal from "@/pages/ClientPortal";
 import Projects from "@/pages/Projects";
+import ProjectDetail from "@/pages/ProjectDetail";
 import Tasks from "@/pages/Tasks";
 import TimeTracking from "@/pages/TimeTracking";
 import Resourcing from "@/pages/Resourcing";
@@ -35,6 +36,7 @@ import { CreateContactDialog } from "@/components/dialogs/CreateContactDialog";
 import { CreateProjectDialog } from "@/components/dialogs/CreateProjectDialog";
 import { CreateSessionDialog } from "@/components/dialogs/CreateSessionDialog";
 import { CreateInvoiceDialog } from "@/components/dialogs/CreateInvoiceDialog";
+import { CreateProjectFromPlanDialog } from "@/components/dialogs/CreateProjectFromPlanDialog";
 import { useState, useEffect, createContext, useContext, useCallback } from "react";
 
 const queryClient = new QueryClient();
@@ -46,6 +48,7 @@ interface DialogContextType {
   openCreateProject: () => void;
   openCreateSession: () => void;
   openCreateInvoice: () => void;
+  openCreateProjectFromPlan: () => void;
 }
 
 export const DialogContext = createContext<DialogContextType>({
@@ -55,6 +58,7 @@ export const DialogContext = createContext<DialogContextType>({
   openCreateProject: () => {},
   openCreateSession: () => {},
   openCreateInvoice: () => {},
+  openCreateProjectFromPlan: () => {},
 });
 
 export const useDialogs = () => useContext(DialogContext);
@@ -124,6 +128,7 @@ function AppShell() {
   const [projectOpen, setProjectOpen] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
 
   const dialogs: DialogContextType = {
     openCreateTask: useCallback(() => setTaskOpen(true), []),
@@ -132,6 +137,7 @@ function AppShell() {
     openCreateProject: useCallback(() => setProjectOpen(true), []),
     openCreateSession: useCallback(() => setSessionOpen(true), []),
     openCreateInvoice: useCallback(() => setInvoiceOpen(true), []),
+    openCreateProjectFromPlan: useCallback(() => setPlanOpen(true), []),
   };
 
   return (
@@ -150,6 +156,7 @@ function AppShell() {
       <CreateProjectDialog open={projectOpen} onOpenChange={setProjectOpen} />
       <CreateSessionDialog open={sessionOpen} onOpenChange={setSessionOpen} />
       <CreateInvoiceDialog open={invoiceOpen} onOpenChange={setInvoiceOpen} />
+      <CreateProjectFromPlanDialog open={planOpen} onOpenChange={setPlanOpen} />
       <Routes>
         <Route path="/auth" element={<AuthRoute />} />
         <Route element={<ProtectedRoutes />}>
@@ -163,6 +170,7 @@ function AppShell() {
           <Route path="/forms" element={<Forms />} />
           <Route path="/client-portal" element={<ClientPortal />} />
           <Route path="/projects" element={<Projects />} />
+          <Route path="/projects/:id" element={<ProjectDetail />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/time-tracking" element={<TimeTracking />} />
           <Route path="/resourcing" element={<Resourcing />} />
