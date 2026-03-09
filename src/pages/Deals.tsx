@@ -518,6 +518,9 @@ function DealDetailPanel({ deal, onClose }: { deal: Deal; onClose: () => void })
           )}
         </TabsContent>
       </Tabs>
+      <DeleteConfirmDialog open={deleteOpen} onOpenChange={setDeleteOpen} title={deal.title}
+        onConfirm={() => deleteDeal.mutate(deal.id, { onSuccess: () => { toast.success("Deal deleted"); onClose(); }, onError: (e) => toast.error(e.message) })}
+        loading={deleteDeal.isPending} />
     </DetailPanel>
   );
 }
