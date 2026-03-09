@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useOrganisations, Organisation, useDeleteOrganisation } from "@/hooks/useOrganisations";
 import { useUpdateOrganisation } from "@/hooks/useUpdateOrganisation";
 import { useContacts } from "@/hooks/useContacts";
-import { useDeals } from "@/hooks/useDeals";
+import { useProjects } from "@/hooks/useProjects";
 import { useInvoices } from "@/hooks/useInvoices";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DetailPanel } from "@/components/layout/DetailPanel";
@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { CSVImportDialog, CSVColumn } from "@/components/dialogs/CSVImportDialog";
 import { Upload } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 
 const sectorColors: Record<string, string> = {
@@ -48,6 +49,7 @@ export default function Clients() {
   const [selected, setSelected] = useState<Organisation | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const { openCreateClient } = useDialogs();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   return (
@@ -86,7 +88,7 @@ export default function Clients() {
                 </TableHeader>
                 <TableBody>
                   {clients.map((c) => (
-                    <TableRow key={c.id} className="cursor-pointer" onClick={() => setSelected(c)}>
+                    <TableRow key={c.id} className="cursor-pointer" onClick={() => navigate(`/clients/${c.id}`)}>
                       <TableCell className="pl-6">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
@@ -118,7 +120,7 @@ export default function Clients() {
 
 function ClientDetailPanel({ client, onClose }: { client: Organisation; onClose: () => void }) {
   const { data: contacts } = useContacts();
-  const { data: deals } = useDeals();
+  const { data: projects } = useProjects();
   const { data: invoices } = useInvoices();
   const updateOrg = useUpdateOrganisation();
   const deleteOrg = useDeleteOrganisation();
@@ -134,9 +136,9 @@ function ClientDetailPanel({ client, onClose }: { client: Organisation; onClose:
   });
 
   const linkedContacts = contacts?.filter((c) => c.organisation_id === client.id) || [];
-  const linkedDeals = deals?.filter((d) => d.organisation_id === client.id) || [];
+  const linkedProjects = projects?.filter((p) => p.organisation_id === client.id) || [];
   const linkedInvoices = invoices?.filter((i) => i.organisation_id === client.id) || [];
-  const totalDealValue = linkedDeals.reduce((sum, d) => sum + (d.value || 0), 0);
+  const totalProjectValue = linkedProjects.reduce((sum, p) => sum + (p.budget || 0), 0);
 
   const handleSave = () => {
     updateOrg.mutate(
@@ -159,7 +161,7 @@ function ClientDetailPanel({ client, onClose }: { client: Organisation; onClose:
         { label: "Website", value: client.website },
         { label: "Address", value: client.address },
         { label: "Sector", value: client.sector },
-        { label: "Total Deals", value: `${linkedDeals.length} (£${totalDealValue.toLocaleString()})` },
+        { label: "Total Projects", value: `${linkedProjects.length} (£${totalProjectValue.toLocaleString()})` },
         { label: "Notes", value: client.notes },
       ]}
     >
@@ -208,7 +210,7 @@ function ClientDetailPanel({ client, onClose }: { client: Organisation; onClose:
       <Tabs defaultValue="contacts" className="w-full">
         <TabsList className="w-full">
           <TabsTrigger value="contacts" className="flex-1">Contacts ({linkedContacts.length})</TabsTrigger>
-          <TabsTrigger value="deals" className="flex-1">Deals ({linkedDeals.length})</TabsTrigger>
+          <TabsTrigger value="projects" className="flex-1">Projects ({linkedProjects.length})</TabsTrigger>
           <TabsTrigger value="invoices" className="flex-1">Invoices ({linkedInvoices.length})</TabsTrigger>
           <TabsTrigger value="activity" className="flex-1">Activity</TabsTrigger>
         </TabsList>
@@ -231,18 +233,18 @@ function ClientDetailPanel({ client, onClose }: { client: Organisation; onClose:
             </div>
           )}
         </TabsContent>
-        <TabsContent value="deals" className="pt-4">
-          {!linkedDeals.length ? (
-            <p className="text-sm text-muted-foreground">No deals linked to this client.</p>
+        <TabsContent value="projects" className="pt-4">
+          {!linkedProjects.length ? (
+            <p className="text-sm text-muted-foreground">No projects linked to this client.</p>
           ) : (
             <div className="space-y-2">
-              {linkedDeals.map((d) => (
-                <div key={d.id} className="flex items-center gap-3 p-2 rounded-md border">
+              {linkedProjects.map((p) => (
+                <div key={p.id} className="flex items-center gap-3 p-2 rounded-md border">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{d.title}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{d.stage}</p>
+                    <p className="text-sm font-medium">{p.name}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{p.status}</p>
                   </div>
-                  <span className="text-sm font-semibold text-primary">£{(d.value || 0).toLocaleString()}</span>
+                  <span className="text-sm font-semibold text-primary">£{(p.budget || 0).toLocaleString()}</span>
                 </div>
               ))}
             </div>
