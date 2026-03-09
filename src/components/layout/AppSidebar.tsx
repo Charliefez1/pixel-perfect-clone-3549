@@ -31,7 +31,6 @@ import { useState } from "react";
 
 const mainNav = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
-  { to: "/deals", icon: Briefcase, label: "Deals" },
   { to: "/projects", icon: FolderKanban, label: "Projects" },
   { to: "/deliveries", icon: FolderKanban, label: "Deliveries" },
   { to: "/tasks", icon: CheckSquare, label: "Tasks" },
@@ -44,7 +43,6 @@ const workspaceNav = [
   { to: "/clients", icon: Building2, label: "Clients" },
   { to: "/contacts", icon: Users, label: "Contacts" },
   { to: "/meetings", icon: CalendarDays, label: "Sessions" },
-  { to: "/proposals", icon: FileText, label: "Proposals" },
   { to: "/contracts", icon: FileSignature, label: "Contracts" },
   { to: "/forms", icon: ClipboardList, label: "Forms" },
   { to: "/client-portal", icon: Globe, label: "Client Portal" },
@@ -117,7 +115,7 @@ export function AppSidebar({ onOpenAI }: { onOpenAI?: () => void }) {
         {/* Workspace Section */}
         {!collapsed && (
           <p className="px-3 pt-6 pb-2 text-overline text-sidebar-foreground/40">
-            People & Docs
+            Clients & Scheduling
           </p>
         )}
         {collapsed && <div className="h-4" />}

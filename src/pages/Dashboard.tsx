@@ -1,15 +1,12 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { TrendingUp, Briefcase, FolderKanban, CheckSquare, Receipt, Calendar, AlertTriangle, PieChart, ArrowRight, Clock, Mail, Loader2, Plus, RefreshCw } from "lucide-react";
+import { FolderKanban, CheckSquare, Receipt, Calendar, AlertTriangle, PieChart, ArrowRight, Plus } from "lucide-react";
 import { useDialogs } from "@/App";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart as RPieChart, Pie } from "recharts";
-import { useDashboardStats, usePipelineByStage } from "@/hooks/useDashboardStats";
+import { useDashboardStats, useProjectsByPhase, useUpcomingDeliveries } from "@/hooks/useDashboardStats";
 import { useUpcomingSessions } from "@/hooks/useSessions";
 import { useTasks } from "@/hooks/useTasks";
 import { useProjects } from "@/hooks/useProjects";
-import { useDeals } from "@/hooks/useDeals";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useDeliveries } from "@/hooks/useDeliveries";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,61 +25,18 @@ const neuroColors = [
   { name: "Ongoing", color: "hsl(0, 0%, 64%)" },
 ];
 
-const sectorColors: Record<string, string> = {
-  law: "hsl(210, 70%, 55%)",
-  energy: "hsl(38, 92%, 50%)",
-  finance: "hsl(142, 71%, 45%)",
-  public_sector: "hsl(190, 60%, 50%)",
-  tech: "hsl(280, 60%, 55%)",
-  other: "hsl(0, 0%, 64%)",
-};
-
 export default function Dashboard() {
-  const [syncing, setSyncing] = useState(false);
-  const [syncingCRM, setSyncingCRM] = useState(false);
-  const { openCreateDeal, openCreateContact, openCreateInvoice } = useDialogs();
+  const { openCreateProject, openCreateContact, openCreateInvoice } = useDialogs();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  const { data: pipelineData, isLoading: pipelineLoading } = usePipelineByStage();
-  const { data: sessions, isLoading: sessionsLoading } = useUpcomingSessions();
+  const { data: phaseData, isLoading: phaseLoading } = useProjectsByPhase();
+  const { data: upcomingDeliveries } = useUpcomingDeliveries();
+  const { data: sessions } = useUpcomingSessions();
   const { data: tasks } = useTasks();
   const { data: projects } = useProjects();
-  const { data: deals } = useDeals();
   const { data: invoices } = useInvoices();
   const { data: deliveries } = useDeliveries();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
-  const handleSyncCRM = async () => {
-    setSyncingCRM(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("sync-clarify", {
-        body: { companies: [], contacts: [], meetings: [] },
-      });
-      if (error) throw error;
-      toast.success(`CRM sync: ${data.companies || 0} orgs, ${data.contacts || 0} contacts, ${data.meetings || 0} meetings`);
-      queryClient.invalidateQueries({ queryKey: ["organisations"] });
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      queryClient.invalidateQueries({ queryKey: ["activities"] });
-    } catch (e: any) {
-      toast.error(e.message || "CRM sync failed");
-    } finally {
-      setSyncingCRM(false);
-    }
-  };
-
-  const handleSyncGmail = async () => {
-    setSyncing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("sync-gmail");
-      if (error) throw error;
-      toast.success(`Synced ${data.synced} emails, skipped ${data.skipped}`);
-      queryClient.invalidateQueries({ queryKey: ["activities"] });
-    } catch (e: any) {
-      toast.error(e.message || "Gmail sync failed");
-    } finally {
-      setSyncing(false);
-    }
-  };
 
   // NEURO phase distribution
   const neuroData = neuroColors.map((n) => ({
@@ -97,12 +51,6 @@ export default function Dashboard() {
   const completionRate = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
   const overdueTasks = tasks?.filter((t) => t.due_date && isPast(new Date(t.due_date)) && t.status !== "done") || [];
 
-  // Stale deals (no stage change in 14+ days, not won/lost)
-  const staleDeals = deals?.filter((d) => {
-    if (["won", "lost"].includes(d.stage)) return false;
-    return differenceInDays(new Date(), new Date(d.stage_entered_at)) > 14;
-  }) || [];
-
   // Overdue invoices
   const overdueInvoices = invoices?.filter((inv) => inv.status === "overdue" || (inv.status === "sent" && inv.due_date && isPast(new Date(inv.due_date)))) || [];
   const overdueAmount = overdueInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
@@ -115,20 +63,8 @@ export default function Dashboard() {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).reduce((sum, inv) => sum + (inv.total || 0), 0) || 0;
 
-  // Pipeline by sector (from organisations)
-  const sectorMap: Record<string, number> = {};
-  deals?.filter((d) => !["won", "lost"].includes(d.stage)).forEach((d) => {
-    const sector = (d.organisations as any)?.sector || "other";
-    sectorMap[sector] = (sectorMap[sector] || 0) + (d.value || 0);
-  });
-  const sectorData = Object.entries(sectorMap).map(([sector, value]) => ({
-    name: sector,
-    value,
-    fill: sectorColors[sector] || sectorColors.other,
-  }));
-
-  // Upcoming this week (sessions + deal follow-ups)
-  const upcomingItems: Array<{ type: string; title: string; org: string; date: Date; owner: string }> = [];
+  // Upcoming this week (sessions only — deals removed)
+  const upcomingItems: Array<{ type: string; title: string; org: string; date: Date }> = [];
   sessions?.forEach((s) => {
     if (s.session_date && isThisWeek(parseISO(s.session_date), { weekStartsOn: 1 })) {
       upcomingItems.push({
@@ -136,40 +72,19 @@ export default function Dashboard() {
         title: s.title,
         org: s.projects?.organisations?.name || s.projects?.name || "",
         date: parseISO(s.session_date),
-        owner: "team",
-      });
-    }
-  });
-  deals?.forEach((d) => {
-    if (d.expected_close_date && isThisWeek(parseISO(d.expected_close_date), { weekStartsOn: 1 })) {
-      upcomingItems.push({
-        type: "deal",
-        title: d.title,
-        org: d.organisations?.name || "",
-        date: parseISO(d.expected_close_date),
-        owner: (d as any).owner || "—",
       });
     }
   });
   upcomingItems.sort((a, b) => a.date.getTime() - b.date.getTime());
 
   // Deliveries needing feedback (delivered 2+ days ago, feedback not sent)
-  const feedbackNeeded = deliveries?.filter((d) => 
-    d.status === "delivered" && !d.feedback_sent && d.delivery_date && 
+  const feedbackNeeded = deliveries?.filter((d) =>
+    d.status === "delivered" && !d.feedback_sent && d.delivery_date &&
     differenceInDays(new Date(), new Date(d.delivery_date)) >= 2
   ) || [];
 
   // Needs attention items — sorted by urgency, max 5
   const attentionItems: Array<{ id: string; label: string; detail: string; action: string; route: string; onAction?: () => void }> = [];
-  staleDeals.forEach((d) => {
-    attentionItems.push({
-      id: `stale-${d.id}`,
-      label: d.title,
-      detail: `${d.organisations?.name || "Unknown"} · ${differenceInDays(new Date(), new Date(d.stage_entered_at))}d stale`,
-      action: "View Deal",
-      route: `/deals?open=${d.id}`,
-    });
-  });
   overdueInvoices.forEach((inv) => {
     attentionItems.push({
       id: `inv-${inv.id}`,
@@ -202,30 +117,22 @@ export default function Dashboard() {
       },
     });
   });
-  // Sort and limit to 5
   const limitedAttention = attentionItems.slice(0, 5);
 
   const statCards = [
-    {
-      label: "Pipeline Value",
-      value: stats ? `£${stats.pipelineValue.toLocaleString()}` : "—",
-      change: stats ? `${stats.dealCount} deals` : "",
-      icon: Briefcase,
-      color: "text-primary",
-    },
-    {
-      label: "Revenue This Month",
-      value: `£${paidThisMonth.toLocaleString()}`,
-      change: "paid invoices",
-      icon: TrendingUp,
-      color: "text-[hsl(142,71%,45%)]",
-    },
     {
       label: "Active Projects",
       value: stats?.activeProjects?.toString() || "0",
       change: "in progress",
       icon: FolderKanban,
-      color: "text-[hsl(var(--stage-qualified))]",
+      color: "text-primary",
+    },
+    {
+      label: "Overdue Tasks",
+      value: stats?.overdueTasks?.toString() || "0",
+      change: `${totalTasks} total`,
+      icon: CheckSquare,
+      color: "text-destructive",
     },
     {
       label: "Outstanding Invoices",
@@ -233,6 +140,13 @@ export default function Dashboard() {
       change: stats ? `${stats.unpaidCount} unpaid` : "",
       icon: Receipt,
       color: "text-[hsl(var(--stage-proposal))]",
+    },
+    {
+      label: "Revenue This Month",
+      value: `£${paidThisMonth.toLocaleString()}`,
+      change: "paid invoices",
+      icon: Receipt,
+      color: "text-[hsl(142,71%,45%)]",
     },
   ];
 
@@ -243,21 +157,11 @@ export default function Dashboard() {
           <h1 className="text-xl font-bold">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">Welcome back to NDG Hub</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleSyncCRM} disabled={syncingCRM}>
-            {syncingCRM ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <RefreshCw className="h-4 w-4 mr-1" />}
-            Sync CRM
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleSyncGmail} disabled={syncing}>
-            {syncing ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}
-            Sync Gmail
-          </Button>
-        </div>
       </div>
       <div className="flex-1 overflow-auto p-6 space-y-6">
         {/* Quick Actions */}
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => openCreateDeal()}><Plus className="h-4 w-4" />Deal</Button>
+          <Button variant="outline" size="sm" onClick={() => openCreateProject()}><Plus className="h-4 w-4" />Project</Button>
           <Button variant="outline" size="sm" onClick={() => openCreateContact()}><Plus className="h-4 w-4" />Contact</Button>
           <Button variant="outline" size="sm" onClick={() => openCreateInvoice()}><Plus className="h-4 w-4" />Invoice</Button>
           <Button variant="outline" size="sm" onClick={() => navigate("/deliveries")}><Plus className="h-4 w-4" />Delivery</Button>
@@ -300,7 +204,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Row 2: Needs Attention + Pipeline by Sector */}
+        {/* Row 2: Needs Attention + Upcoming Deliveries */}
         <div className="grid gap-6 lg:grid-cols-5">
           <Card className="lg:col-span-3">
             <CardHeader className="pb-2">
@@ -338,69 +242,36 @@ export default function Dashboard() {
           <Card className="lg:col-span-2">
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
-                <PieChart className="h-4 w-4 text-primary" />
-                Pipeline by Sector
+                <Calendar className="h-4 w-4 text-primary" />
+                Deliveries This Week
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {sectorData.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4">No pipeline data yet.</p>
+              {!upcomingDeliveries || upcomingDeliveries.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4">No deliveries scheduled this week.</p>
               ) : (
-                <div className="flex items-center gap-4">
-                  <ResponsiveContainer width={130} height={130}>
-                    <RPieChart>
-                      <Pie data={sectorData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={35} outerRadius={60} paddingAngle={2}>
-                        {sectorData.map((entry, i) => (
-                          <Cell key={i} fill={entry.fill} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(v: number) => `£${v.toLocaleString()}`} />
-                    </RPieChart>
-                  </ResponsiveContainer>
-                  <div className="space-y-1.5 flex-1">
-                    {sectorData.map((s) => (
-                      <div key={s.name} className="flex items-center gap-2 text-sm">
-                        <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: s.fill }} />
-                        <span className="flex-1 capitalize">{s.name.replace("_", " ")}</span>
-                        <span className="font-medium text-xs">£{s.value.toLocaleString()}</span>
+                <div className="space-y-2">
+                  {upcomingDeliveries.slice(0, 5).map((d) => (
+                    <div key={d.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/50 transition-colors">
+                      <div className="text-center shrink-0 w-12">
+                        <p className="text-xs text-muted-foreground">{format(parseISO(d.delivery_date), "EEE")}</p>
+                        <p className="text-lg font-bold">{format(parseISO(d.delivery_date), "d")}</p>
                       </div>
-                    ))}
-                  </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{d.title}</p>
+                        <p className="text-xs text-muted-foreground">{d.organisations?.name || d.projects?.name || ""}</p>
+                      </div>
+                      <Badge variant="secondary" className="text-[10px]">{d.status}</Badge>
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Row 3: Pipeline by Stage + NEURO Phase */}
+        {/* Row 3: NEURO Phase Distribution + Task Completion */}
         <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                Pipeline by Stage
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {pipelineLoading ? (
-                <Skeleton className="h-[220px] w-full" />
-              ) : (
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={pipelineData} layout="vertical" margin={{ left: 0, right: 16 }}>
-                    <XAxis type="number" tickFormatter={(v) => `£${(v / 1000).toFixed(0)}k`} fontSize={11} />
-                    <YAxis type="category" dataKey="stage" width={80} fontSize={11} />
-                    <Tooltip formatter={(v: number) => `£${v.toLocaleString()}`} />
-                    <Bar dataKey="value" radius={4}>
-                      {pipelineData?.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
@@ -409,33 +280,34 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-6">
-                <ResponsiveContainer width={160} height={160}>
-                  <RPieChart>
-                    <Pie data={neuroData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={2}>
-                      {neuroData.map((entry, i) => (
-                        <Cell key={i} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </RPieChart>
-                </ResponsiveContainer>
-                <div className="space-y-2 flex-1">
-                  {neuroData.map((n) => (
-                    <div key={n.name} className="flex items-center gap-2 text-sm">
-                      <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: n.fill }} />
-                      <span className="flex-1">{n.name}</span>
-                      <span className="font-medium">{n.value}</span>
-                    </div>
-                  ))}
+              {phaseLoading ? (
+                <Skeleton className="h-[220px] w-full" />
+              ) : (
+                <div className="flex items-center gap-6">
+                  <ResponsiveContainer width={160} height={160}>
+                    <RPieChart>
+                      <Pie data={neuroData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={70} paddingAngle={2}>
+                        {neuroData.map((entry, i) => (
+                          <Cell key={i} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </RPieChart>
+                  </ResponsiveContainer>
+                  <div className="space-y-2 flex-1">
+                    {neuroData.map((n) => (
+                      <div key={n.name} className="flex items-center gap-2 text-sm">
+                        <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: n.fill }} />
+                        <span className="flex-1">{n.name}</span>
+                        <span className="font-medium">{n.value}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
-        </div>
 
-        {/* Row 4: Task Completion + Upcoming This Week */}
-        <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
@@ -462,37 +334,38 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
-                Upcoming This Week
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {upcomingItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4">Nothing scheduled this week.</p>
-              ) : (
-                <div className="space-y-3">
-                  {upcomingItems.slice(0, 6).map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/50 transition-colors">
-                      <div className="text-center shrink-0 w-12">
-                        <p className="text-xs text-muted-foreground">{format(item.date, "EEE")}</p>
-                        <p className="text-lg font-bold">{format(item.date, "d")}</p>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{item.title}</p>
-                        <p className="text-xs text-muted-foreground">{item.org} · {item.owner}</p>
-                      </div>
-                      <Badge variant="secondary" className="text-[10px]">{item.type}</Badge>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
+
+        {/* Row 4: Upcoming Sessions This Week */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-primary" />
+              Sessions This Week
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {upcomingItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4">Nothing scheduled this week.</p>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {upcomingItems.slice(0, 6).map((item, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/50 transition-colors">
+                    <div className="text-center shrink-0 w-12">
+                      <p className="text-xs text-muted-foreground">{format(item.date, "EEE")}</p>
+                      <p className="text-lg font-bold">{format(item.date, "d")}</p>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{item.title}</p>
+                      <p className="text-xs text-muted-foreground">{item.org}</p>
+                    </div>
+                    <Badge variant="secondary" className="text-[10px]">{item.type}</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </>
   );

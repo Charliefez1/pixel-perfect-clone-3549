@@ -13,7 +13,6 @@ import {
   LayoutDashboard,
   Building2,
   Users,
-  Briefcase,
   FolderKanban,
   CheckSquare,
   Receipt,
@@ -23,34 +22,33 @@ import {
 } from "lucide-react";
 import { useOrganisations } from "@/hooks/useOrganisations";
 import { useContacts } from "@/hooks/useContacts";
-import { useDeals } from "@/hooks/useDeals";
 import { useProjects } from "@/hooks/useProjects";
 
 const pages = [
   { label: "Dashboard", to: "/", icon: LayoutDashboard },
+  { label: "Projects", to: "/projects", icon: FolderKanban },
+  { label: "Deliveries", to: "/deliveries", icon: FolderKanban },
+  { label: "Tasks", to: "/tasks", icon: CheckSquare },
+  { label: "Invoices", to: "/invoices", icon: Receipt },
   { label: "Clients", to: "/clients", icon: Building2 },
   { label: "Contacts", to: "/contacts", icon: Users },
-  { label: "Deals", to: "/deals", icon: Briefcase },
-  { label: "Projects", to: "/projects", icon: FolderKanban },
-  { label: "Tasks", to: "/tasks", icon: CheckSquare },
   { label: "Sessions", to: "/meetings", icon: CalendarDays },
-  { label: "Invoices", to: "/invoices", icon: Receipt },
 ];
 
 interface CommandPaletteProps {
-  onCreateDeal?: () => void;
   onCreateTask?: () => void;
   onCreateClient?: () => void;
   onCreateContact?: () => void;
+  onCreateProject?: () => void;
+  onCreateInvoice?: () => void;
 }
 
-export function CommandPalette({ onCreateDeal, onCreateTask, onCreateClient, onCreateContact }: CommandPaletteProps) {
+export function CommandPalette({ onCreateTask, onCreateClient, onCreateContact, onCreateProject, onCreateInvoice }: CommandPaletteProps) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
   const { data: orgs } = useOrganisations();
   const { data: contacts } = useContacts();
-  const { data: deals } = useDeals();
   const { data: projects } = useProjects();
 
   useEffect(() => {
@@ -81,13 +79,17 @@ export function CommandPalette({ onCreateDeal, onCreateTask, onCreateClient, onC
         <CommandEmpty>No results found.</CommandEmpty>
 
         <CommandGroup heading="Quick Actions">
-          <CommandItem onSelect={() => action(onCreateDeal)}>
+          <CommandItem onSelect={() => action(onCreateProject)}>
             <Plus className="mr-2 h-4 w-4" />
-            New Deal
+            New Project
           </CommandItem>
           <CommandItem onSelect={() => action(onCreateTask)}>
             <Plus className="mr-2 h-4 w-4" />
             New Task
+          </CommandItem>
+          <CommandItem onSelect={() => action(onCreateInvoice)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Invoice
           </CommandItem>
           <CommandItem onSelect={() => action(onCreateClient)}>
             <Plus className="mr-2 h-4 w-4" />
@@ -118,20 +120,6 @@ export function CommandPalette({ onCreateDeal, onCreateTask, onCreateClient, onC
                 <CommandItem key={o.id} onSelect={() => go("/clients")}>
                   <Building2 className="mr-2 h-4 w-4" />
                   {o.name}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </>
-        )}
-
-        {deals && deals.length > 0 && (
-          <>
-            <CommandSeparator />
-            <CommandGroup heading="Deals">
-              {deals.slice(0, 8).map((d) => (
-                <CommandItem key={d.id} onSelect={() => go("/deals")}>
-                  <Briefcase className="mr-2 h-4 w-4" />
-                  {d.title}
                 </CommandItem>
               ))}
             </CommandGroup>

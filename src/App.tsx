@@ -9,9 +9,7 @@ import Dashboard from "@/pages/Dashboard";
 import Notifications from "@/pages/Notifications";
 import Clients from "@/pages/Clients";
 import Contacts from "@/pages/Contacts";
-import Deals from "@/pages/Deals";
 import Meetings from "@/pages/Meetings";
-import Proposals from "@/pages/Proposals";
 import Contracts from "@/pages/Contracts";
 import Deliveries from "@/pages/Deliveries";
 import Forms from "@/pages/Forms";
@@ -31,7 +29,6 @@ import Auth from "@/pages/Auth";
 import Reporting from "@/pages/Reporting";
 import NotFound from "@/pages/NotFound";
 import { CommandPalette } from "@/components/layout/CommandPalette";
-import { CreateDealDialog } from "@/components/dialogs/CreateDealDialog";
 import { CreateTaskDialog } from "@/components/dialogs/CreateTaskDialog";
 import { CreateClientDialog } from "@/components/dialogs/CreateClientDialog";
 import { CreateContactDialog } from "@/components/dialogs/CreateContactDialog";
@@ -43,7 +40,6 @@ import { useState, useEffect, createContext, useContext, useCallback } from "rea
 const queryClient = new QueryClient();
 
 interface DialogContextType {
-  openCreateDeal: () => void;
   openCreateTask: () => void;
   openCreateClient: () => void;
   openCreateContact: () => void;
@@ -53,7 +49,6 @@ interface DialogContextType {
 }
 
 export const DialogContext = createContext<DialogContextType>({
-  openCreateDeal: () => {},
   openCreateTask: () => {},
   openCreateClient: () => {},
   openCreateContact: () => {},
@@ -101,14 +96,13 @@ function KeyboardShortcuts({ dialogs }: { dialogs: DialogContextType }) {
       if (e.key === "n" && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
         // Context-aware new item
-        if (location.pathname === "/deals") dialogs.openCreateDeal();
-        else if (location.pathname === "/tasks") dialogs.openCreateTask();
+        if (location.pathname === "/tasks") dialogs.openCreateTask();
         else if (location.pathname === "/clients") dialogs.openCreateClient();
         else if (location.pathname === "/contacts") dialogs.openCreateContact();
         else if (location.pathname === "/projects") dialogs.openCreateProject();
         else if (location.pathname === "/invoices") dialogs.openCreateInvoice();
         else if (location.pathname === "/meetings") dialogs.openCreateSession();
-        else dialogs.openCreateDeal(); // default
+        else dialogs.openCreateProject(); // default
       }
       if ((e.key === "f" || e.key === "/") && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
@@ -124,7 +118,6 @@ function KeyboardShortcuts({ dialogs }: { dialogs: DialogContextType }) {
 }
 
 function AppShell() {
-  const [dealOpen, setDealOpen] = useState(false);
   const [taskOpen, setTaskOpen] = useState(false);
   const [clientOpen, setClientOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
@@ -133,7 +126,6 @@ function AppShell() {
   const [invoiceOpen, setInvoiceOpen] = useState(false);
 
   const dialogs: DialogContextType = {
-    openCreateDeal: useCallback(() => setDealOpen(true), []),
     openCreateTask: useCallback(() => setTaskOpen(true), []),
     openCreateClient: useCallback(() => setClientOpen(true), []),
     openCreateContact: useCallback(() => setContactOpen(true), []),
@@ -146,12 +138,12 @@ function AppShell() {
     <DialogContext.Provider value={dialogs}>
       <KeyboardShortcuts dialogs={dialogs} />
       <CommandPalette
-        onCreateDeal={dialogs.openCreateDeal}
         onCreateTask={dialogs.openCreateTask}
         onCreateClient={dialogs.openCreateClient}
         onCreateContact={dialogs.openCreateContact}
+        onCreateProject={dialogs.openCreateProject}
+        onCreateInvoice={dialogs.openCreateInvoice}
       />
-      <CreateDealDialog open={dealOpen} onOpenChange={setDealOpen} />
       <CreateTaskDialog open={taskOpen} onOpenChange={setTaskOpen} />
       <CreateClientDialog open={clientOpen} onOpenChange={setClientOpen} />
       <CreateContactDialog open={contactOpen} onOpenChange={setContactOpen} />
@@ -165,9 +157,7 @@ function AppShell() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/clients" element={<Clients />} />
           <Route path="/contacts" element={<Contacts />} />
-          <Route path="/deals" element={<Deals />} />
           <Route path="/meetings" element={<Meetings />} />
-          <Route path="/proposals" element={<Proposals />} />
           <Route path="/contracts" element={<Contracts />} />
           <Route path="/deliveries" element={<Deliveries />} />
           <Route path="/forms" element={<Forms />} />
