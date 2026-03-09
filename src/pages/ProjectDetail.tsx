@@ -39,6 +39,10 @@ import {
 } from "lucide-react";
 import { isPast } from "date-fns";
 import ReactMarkdown from "react-markdown";
+import { ViewToggle, ViewMode } from "@/components/layout/ViewToggle";
+import { TaskListView } from "@/components/tasks/TaskListView";
+import { TaskTimelineView } from "@/components/tasks/TaskTimelineView";
+import { TaskCalendarView } from "@/components/tasks/TaskCalendarView";
 
 const neuroPhases = ["N", "E", "U", "R", "O"] as const;
 const phaseNames = ["needs", "engage", "understand", "redesign", "optimise"];
