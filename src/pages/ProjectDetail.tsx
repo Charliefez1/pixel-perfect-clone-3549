@@ -744,20 +744,7 @@ Project context: ${JSON.stringify(context)}`,
           {/* Tasks Tab */}
           <TabsContent value="tasks" className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex rounded-md border border-border overflow-hidden text-xs">
-                <button
-                  onClick={() => setTaskView("list")}
-                  className={`px-3 py-1.5 transition-colors ${taskView === "list" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
-                >
-                  List
-                </button>
-                <button
-                  onClick={() => setTaskView("board")}
-                  className={`px-3 py-1.5 transition-colors ${taskView === "board" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
-                >
-                  Board
-                </button>
-              </div>
+              <ViewToggle value={taskView} onChange={setTaskView} showCalendar />
             </div>
 
             {totalTasks > 0 && (
@@ -771,27 +758,17 @@ Project context: ${JSON.stringify(context)}`,
             )}
 
             {taskView === "list" ? (
-              <div className="space-y-1.5">
-                {!projectTasks.length ? (
-                  <p className="text-sm text-muted-foreground py-4">No tasks yet.</p>
-                ) : (
-                  projectTasks.map((t) => (
-                    <div key={t.id} className="flex items-center gap-2 p-2.5 rounded-md border text-sm">
-                      <div className={`w-2 h-2 rounded-full shrink-0 ${taskStatusColors[t.status] || "bg-muted-foreground"}`} />
-                      <span className={`flex-1 truncate ${t.status === "done" ? "line-through text-muted-foreground" : ""}`}>{t.title}</span>
-                      <Badge variant="secondary" className="text-[9px] capitalize">{t.priority}</Badge>
-                      <Badge variant="outline" className="text-[9px] capitalize">{t.status.replace("_", " ")}</Badge>
-                      {t.due_date && (
-                        <span className={`text-[10px] ${isPast(new Date(t.due_date)) && t.status !== "done" ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-                          {new Date(t.due_date).toLocaleDateString("en-GB")}
-                        </span>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
+              !parentProjectTasks.length ? (
+                <p className="text-sm text-muted-foreground py-4">No tasks yet.</p>
+              ) : (
+                <TaskListView parentTasks={parentProjectTasks} subtasksByParent={subtasksByParent} onSelectTask={() => {}} />
+              )
+            ) : taskView === "board" ? (
+              <TaskBoard tasks={projectTasks} subtasksByParent={subtasksByParent} />
+            ) : taskView === "timeline" ? (
+              <TaskTimelineView tasks={parentProjectTasks} onSelectTask={() => {}} />
             ) : (
-              <TaskBoard tasks={projectTasks} />
+              <TaskCalendarView tasks={projectTasks} date={calendarDate} onDateChange={setCalendarDate} onSelectTask={() => {}} />
             )}
           </TabsContent>
 
