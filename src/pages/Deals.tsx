@@ -346,10 +346,12 @@ function DealCard({ deal, onClick, onDragStart }: { deal: Deal; onClick: () => v
 
 function DealDetailPanel({ deal, onClose }: { deal: Deal; onClose: () => void }) {
   const updateDeal = useUpdateDeal();
+  const deleteDeal = useDeleteDeal();
   const logActivity = useLogActivity();
   const { data: invoices } = useInvoices();
   const { data: activities } = useActivityLog("deal", deal.id);
   const [editing, setEditing] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [editValues, setEditValues] = useState({
     stage: deal.stage,
     value: deal.value?.toString() || "0",
