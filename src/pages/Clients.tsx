@@ -170,7 +170,10 @@ function ClientDetailPanel({ client, onClose }: { client: Organisation; onClose:
           </div>
         </div>
       ) : (
-        <Button variant="outline" size="sm" className="mb-4" onClick={() => setEditing(true)}>Edit Client</Button>
+        <div className="flex gap-2 mb-4">
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>Edit Client</Button>
+          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>Delete</Button>
+        </div>
       )}
 
       <Tabs defaultValue="contacts" className="w-full">
