@@ -141,13 +141,17 @@ export default function Contracts() {
             { label: "Notes", value: selected.notes },
           ]}
         >
-          <div className="flex gap-2">
+          <div className="flex gap-2 mb-4">
             {selected.status === "draft" && (
               <Button size="sm" onClick={() => { updateContract.mutate({ id: selected.id, status: "sent" }, { onSuccess: () => { toast.success("Marked as sent"); setSelected(null); } }); }}>Mark as Sent</Button>
             )}
             {selected.status === "sent" && (
               <Button size="sm" onClick={() => { updateContract.mutate({ id: selected.id, status: "signed", signed_at: new Date().toISOString() }, { onSuccess: () => { toast.success("Marked as signed"); setSelected(null); } }); }}>Mark as Signed</Button>
             )}
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2">File Attachments</p>
+            <EntityDocuments entityType="contract" entityId={selected.id} />
           </div>
         </DetailPanel>
       )}
