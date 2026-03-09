@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Mail } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useContacts, Contact } from "@/hooks/useContacts";
+import { useContacts, Contact, useDeleteContact } from "@/hooks/useContacts";
 import { useUpdateContact } from "@/hooks/useUpdateContact";
 import { useDeals } from "@/hooks/useDeals";
 import { Badge } from "@/components/ui/badge";
