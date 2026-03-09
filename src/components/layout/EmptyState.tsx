@@ -22,6 +22,8 @@ export function EmptyState({ icon: Icon, title, description, action, children }:
           {action.label}
         </Button>
       )}
+      {children}
+    </div>
     </div>
   );
 }
