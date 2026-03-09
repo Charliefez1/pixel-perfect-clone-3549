@@ -184,10 +184,11 @@ export default function Templates() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
 
-  const projectTemplates = templates?.filter(t => !(t as any).template_type || (t as any).template_type === "project") || [];
-  const proposalTemplates = templates?.filter(t => (t as any).template_type === "proposal") || [];
-  const contractTemplates = templates?.filter(t => (t as any).template_type === "contract") || [];
-  const poTemplates = templates?.filter(t => (t as any).template_type === "purchase_order") || [];
+  const allTemplates = templates?.filter(t => !search || t.name.toLowerCase().includes(search.toLowerCase())) || [];
+  const projectTemplates = allTemplates.filter(t => !(t as any).template_type || (t as any).template_type === "project");
+  const proposalTemplates = allTemplates.filter(t => (t as any).template_type === "proposal");
+  const contractTemplates = allTemplates.filter(t => (t as any).template_type === "contract");
+  const poTemplates = allTemplates.filter(t => (t as any).template_type === "purchase_order");
 
   const startEditProject = (template: any) => {
     setEditingId(template.id);
