@@ -245,28 +245,32 @@ export default function Projects() {
 function ProjectDetailPanel({ project, onClose }: { project: Project; onClose: () => void }) {
   const { data: tasks } = useTasks();
   const { data: deals } = useDeals();
+  const updateProject = useUpdateProject();
+  const deleteProject = useDeleteProject();
+  const [editing, setEditing] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editValues, setEditValues] = useState({
+    name: project.name,
+    status: project.status,
+    neuro_phase: project.neuro_phase || "needs",
+    budget: project.budget?.toString() || "0",
+    start_date: project.start_date || "",
+    end_date: project.end_date || "",
+    description: project.description || "",
+  });
+
+  const handleSave = () => {
+    updateProject.mutate(
+      { id: project.id, ...editValues, budget: parseFloat(editValues.budget) || 0, start_date: editValues.start_date || null, end_date: editValues.end_date || null, neuro_phase: editValues.neuro_phase as any },
+      { onSuccess: () => { toast.success("Project updated"); setEditing(false); } }
+    );
+  };
 
   const projectTasks = tasks?.filter((t) => t.project_id === project.id) || [];
   const linkedDeal = deals?.find((d) => d.id === project.deal_id);
   const completedTasks = projectTasks.filter((t) => t.status === "done").length;
   const totalTasks = projectTasks.length;
   const phaseIndex = phaseToIndex[project.neuro_phase || "needs"] || 0;
-
-  return (
-    <DetailPanel
-      open={!!project}
-      onOpenChange={onClose}
-      title={project.name}
-      badge={{ label: project.status, className: statusStyles[project.status] }}
-      fields={[
-        { label: "Organisation", value: project.organisations?.name },
-        { label: "NEURO Phase", value: project.neuro_phase ? phaseLabels[neuroPhases[phaseToIndex[project.neuro_phase]]] : undefined },
-        { label: "Budget", value: `£${(project.budget || 0).toLocaleString()}` },
-        { label: "Invoiced", value: `£${(project.invoiced || 0).toLocaleString()}` },
-        { label: "Start Date", value: project.start_date ? new Date(project.start_date).toLocaleDateString("en-GB") : undefined },
-        { label: "End Date", value: project.end_date ? new Date(project.end_date).toLocaleDateString("en-GB") : undefined },
-      ]}
-    >
       {/* NEURO Phase indicator */}
       <div className="mb-4">
         <p className="text-xs text-muted-foreground mb-1.5">NEURO Progress</p>
