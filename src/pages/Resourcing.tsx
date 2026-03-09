@@ -15,6 +15,26 @@ export default function Resourcing() {
   const { data: projects, isLoading: loadingProjects } = useProjects();
   const { data: tasks, isLoading: loadingTasks } = useTasks();
   const { data: timeEntries, isLoading: loadingTime } = useTimeEntries();
+  const { data: profiles } = useQuery({
+    queryKey: ["profiles"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const team: TeamMember[] = useMemo(() => {
+    const members = (profiles || []).map(p => ({
+      id: p.user_id,
+      name: p.display_name || p.email || "Unknown",
+      role: "",
+      avatar: (p.display_name || p.email || "?")[0].toUpperCase(),
+    }));
+    members.push({ id: "unassigned", name: "Unassigned", role: "", avatar: "?" });
+    return members;
+  }, [profiles]);
+
   const isLoading = loadingProjects || loadingTasks || loadingTime;
 
   const activeProjects = projects?.filter(p => p.status === "active") || [];

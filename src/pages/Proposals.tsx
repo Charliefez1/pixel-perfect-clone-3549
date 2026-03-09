@@ -163,7 +163,7 @@ export default function Proposals() {
           open={!!selected}
           onOpenChange={() => setSelected(null)}
           title={selected.title}
-          badge={{ label: statusConfig[selected.status]?.label || selected.status, variant: statusConfig[selected.status]?.variant }}
+          badge={{ label: statusConfig[selected.status]?.label || selected.status, className: selected.status === "accepted" ? "bg-green-500" : selected.status === "declined" ? "bg-red-400" : undefined }}
           fields={[
             { label: "Organisation", value: selected.organisations?.name },
             { label: "Deal", value: selected.deals?.title },
