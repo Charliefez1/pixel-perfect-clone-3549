@@ -179,7 +179,7 @@ export default function ProjectDetail() {
     setEditValues({
       name: project.name,
       status: project.status,
-      stage: project.stage || "contract_signing",
+      stage: (project as any).stage || "contract_signing",
       neuro_phase: project.neuro_phase || "needs",
       budget: project.budget?.toString() || "0",
       start_date: project.start_date || "",
