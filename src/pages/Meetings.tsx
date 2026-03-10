@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, MapPin, Video, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Clock, MapPin, Video, Pencil, Trash2, Loader2, ListOrdered } from "lucide-react";
+import { AgendaBuilder } from "@/components/sessions/AgendaBuilder";
 import { useSessions, useUpdateSession, useDeleteSession, Session } from "@/hooks/useSessions";
 import { useProjects } from "@/hooks/useProjects";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -190,9 +191,16 @@ export default function Meetings() {
               </div>
             </div>
           ) : (
-            <div className="flex gap-2 justify-end">
-              <Button size="sm" variant="outline" onClick={startEdit}><Pencil className="h-3.5 w-3.5 mr-1" /> Edit</Button>
-              <Button size="sm" variant="destructive" onClick={() => setDeleteOpen(true)}><Trash2 className="h-3.5 w-3.5 mr-1" /> Delete</Button>
+            <div className="space-y-4">
+              <div className="flex gap-2 justify-end">
+                <Button size="sm" variant="outline" onClick={startEdit}><Pencil className="h-3.5 w-3.5 mr-1" /> Edit</Button>
+                <Button size="sm" variant="destructive" onClick={() => setDeleteOpen(true)}><Trash2 className="h-3.5 w-3.5 mr-1" /> Delete</Button>
+              </div>
+              {selected.session_type === "workshop" && (
+                <div className="border-t pt-4">
+                  <AgendaBuilder sessionId={selected.id} sessionDuration={selected.duration_minutes} />
+                </div>
+              )}
             </div>
           )}
         </DetailPanel>

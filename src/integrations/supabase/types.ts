@@ -78,6 +78,95 @@ export type Database = {
           },
         ]
       }
+      automation_logs: {
+        Row: {
+          id: string
+          automation_id: string
+          entity_type: string
+          entity_id: string
+          action_taken: string
+          result: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          automation_id: string
+          entity_type: string
+          entity_id: string
+          action_taken: string
+          result?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          automation_id?: string
+          entity_type?: string
+          entity_id?: string
+          action_taken?: string
+          result?: Json | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_logs_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "automations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automations: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          active: boolean
+          trigger_entity: string
+          trigger_event: string
+          trigger_conditions: Json | null
+          action_type: string
+          action_config: Json | null
+          created_by: string | null
+          run_count: number
+          last_run_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          active?: boolean
+          trigger_entity: string
+          trigger_event: string
+          trigger_conditions?: Json | null
+          action_type: string
+          action_config?: Json | null
+          created_by?: string | null
+          run_count?: number
+          last_run_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          active?: boolean
+          trigger_entity?: string
+          trigger_event?: string
+          trigger_conditions?: Json | null
+          action_type?: string
+          action_config?: Json | null
+          created_by?: string | null
+          run_count?: number
+          last_run_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       activity_log: {
         Row: {
           action: string
@@ -1384,6 +1473,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      session_agenda_items: {
+        Row: {
+          id: string
+          session_id: string
+          title: string
+          description: string | null
+          duration_minutes: number
+          position: number
+          type: string
+          method: string | null
+          materials: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          title: string
+          description?: string | null
+          duration_minutes?: number
+          position?: number
+          type?: string
+          method?: string | null
+          materials?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          session_id?: string
+          title?: string
+          description?: string | null
+          duration_minutes?: number
+          position?: number
+          type?: string
+          method?: string | null
+          materials?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_agenda_items_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sessions: {
         Row: {

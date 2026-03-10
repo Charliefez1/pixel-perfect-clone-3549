@@ -24,18 +24,24 @@ import {
   Clock,
   Package,
   Bell,
+  Sun,
+  Briefcase,
+  Zap,
 } from "lucide-react";
 import { useState } from "react";
 import { useProjects } from "@/hooks/useProjects";
 
 const mainNav = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
+  { to: "/daily", icon: Sun, label: "Daily Brief" },
   { to: "/projects", icon: FolderKanban, label: "Projects" },
+  { to: "/portfolio", icon: Briefcase, label: "Portfolio" },
   { to: "/deliveries", icon: Package, label: "Deliveries" },
   { to: "/tasks", icon: CheckSquare, label: "Tasks" },
   { to: "/invoices", icon: Receipt, label: "Invoices" },
   { to: "/purchase-orders", icon: ShoppingCart, label: "Purchase Orders" },
   { to: "/reporting", icon: BarChart3, label: "Reporting" },
+  { to: "/automations", icon: Zap, label: "Automations" },
 ];
 
 const workspaceNav = [
