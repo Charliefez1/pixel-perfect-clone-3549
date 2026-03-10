@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { usePortalMessages, useCreatePortalMessage } from "@/hooks/usePortalMessages";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,9 @@ export default function PortalView() {
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<PortalProject | null>(null);
   const [invoices, setInvoices] = useState<PortalInvoice[]>([]);
+  const { data: portalMessages } = usePortalMessages(orgId);
+  const createMessage = useCreatePortalMessage();
+  const [messageInput, setMessageInput] = useState("");
 
   useEffect(() => {
     if (!orgId) return;
@@ -224,17 +228,73 @@ export default function PortalView() {
                 <TabsContent value="messages" className="space-y-4 pt-4">
                   <Card>
                     <CardContent className="p-5 space-y-4">
-                      <div className="bg-primary/5 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-medium text-primary">NDG Team</span>
-                          <span className="text-[10px] text-muted-foreground">Just now</span>
-                        </div>
-                        <p className="text-sm">Welcome to your project portal! We'll keep you updated on progress here.</p>
+                      <div className="max-h-80 overflow-y-auto space-y-3">
+                        {(!portalMessages || portalMessages.length === 0) && (
+                          <div className="bg-primary/5 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs font-medium text-primary">NDG Team</span>
+                            </div>
+                            <p className="text-sm">Welcome to your project portal! We'll keep you updated on progress here.</p>
+                          </div>
+                        )}
+                        {portalMessages?.map((msg) => (
+                          <div
+                            key={msg.id}
+                            className={`rounded-lg p-3 ${
+                              msg.sender_type === "team"
+                                ? "bg-primary/5"
+                                : "bg-muted ml-8"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1">
+                              <span className={`text-xs font-medium ${msg.sender_type === "team" ? "text-primary" : ""}`}>
+                                {msg.sender_name || (msg.sender_type === "team" ? "NDG Team" : org.name)}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {new Date(msg.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            </div>
+                            <p className="text-sm">{msg.body}</p>
+                          </div>
+                        ))}
                       </div>
                       <Separator />
                       <div className="flex gap-2">
-                        <Input placeholder="Type a message..." className="flex-1" />
-                        <Button size="sm"><Send className="h-4 w-4" /></Button>
+                        <Input
+                          placeholder="Type a message..."
+                          className="flex-1"
+                          value={messageInput}
+                          onChange={(e) => setMessageInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && messageInput.trim()) {
+                              createMessage.mutate({
+                                organisation_id: orgId!,
+                                project_id: selectedProject?.id || null,
+                                sender_type: "client",
+                                sender_name: org.name,
+                                body: messageInput.trim(),
+                              });
+                              setMessageInput("");
+                            }
+                          }}
+                        />
+                        <Button
+                          size="sm"
+                          disabled={!messageInput.trim() || createMessage.isPending}
+                          onClick={() => {
+                            if (!messageInput.trim()) return;
+                            createMessage.mutate({
+                              organisation_id: orgId!,
+                              project_id: selectedProject?.id || null,
+                              sender_type: "client",
+                              sender_name: org.name,
+                              body: messageInput.trim(),
+                            });
+                            setMessageInput("");
+                          }}
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>

@@ -58,10 +58,10 @@ export default function Invoices() {
         updateInvoice.mutate(
           { id: inv.id, status: newStatus as any, ...extraFields },
           {
-            onSuccess: () => {
+            onSuccess: (data) => {
               logActivity.mutate({ entity_type: "invoice", entity_id: inv.id, entity_title: inv.invoice_number, action: `marked_${newStatus}` });
               toast.success(`Invoice marked as ${newStatus}`);
-              setSelected(null);
+              setSelected({ ...inv, ...data, organisations: inv.organisations, projects: inv.projects } as Invoice);
               setConfirmAction(null);
             },
           }

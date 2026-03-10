@@ -78,7 +78,7 @@ export default function PurchaseOrders() {
     if (!selected) return;
     updatePO.mutate(
       { id: selected.id, description: editDesc, amount: parseFloat(editAmount) || 0, notes: editNotes },
-      { onSuccess: () => { toast.success("PO updated"); setEditing(false); setSelected(null); } }
+      { onSuccess: (data) => { toast.success("PO updated"); setEditing(false); setSelected({ ...selected, ...data, organisations: selected.organisations, projects: selected.projects } as PurchaseOrder); } }
     );
   };
 
@@ -89,10 +89,10 @@ export default function PurchaseOrders() {
         updatePO.mutate(
           { id: po.id, status: newStatus, ...extraFields },
           {
-            onSuccess: () => {
+            onSuccess: (data) => {
               logActivity.mutate({ entity_type: "purchase_order", entity_id: po.id, entity_title: po.po_number, action: "status_changed", metadata: { from: po.status, to: newStatus } });
               toast.success(`PO ${newStatus}`);
-              setSelected(null);
+              setSelected({ ...po, ...data, organisations: po.organisations, projects: po.projects } as PurchaseOrder);
               setConfirmAction(null);
             },
           }

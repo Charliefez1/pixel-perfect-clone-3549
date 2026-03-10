@@ -78,6 +78,95 @@ export type Database = {
           },
         ]
       }
+      automation_logs: {
+        Row: {
+          id: string
+          automation_id: string
+          entity_type: string
+          entity_id: string
+          action_taken: string
+          result: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          automation_id: string
+          entity_type: string
+          entity_id: string
+          action_taken: string
+          result?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          automation_id?: string
+          entity_type?: string
+          entity_id?: string
+          action_taken?: string
+          result?: Json | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_logs_automation_id_fkey"
+            columns: ["automation_id"]
+            isOneToOne: false
+            referencedRelation: "automations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automations: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          active: boolean
+          trigger_entity: string
+          trigger_event: string
+          trigger_conditions: Json | null
+          action_type: string
+          action_config: Json | null
+          created_by: string | null
+          run_count: number
+          last_run_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          active?: boolean
+          trigger_entity: string
+          trigger_event: string
+          trigger_conditions?: Json | null
+          action_type: string
+          action_config?: Json | null
+          created_by?: string | null
+          run_count?: number
+          last_run_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          active?: boolean
+          trigger_entity?: string
+          trigger_event?: string
+          trigger_conditions?: Json | null
+          action_type?: string
+          action_config?: Json | null
+          created_by?: string | null
+          run_count?: number
+          last_run_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       activity_log: {
         Row: {
           action: string
@@ -441,8 +530,10 @@ export type Database = {
           deal_id: string | null
           delegate_count: number | null
           delivery_date: string | null
+          facilitator_id: string | null
           feedback_received: boolean | null
           feedback_sent: boolean | null
+          form_id: string | null
           id: string
           kirkpatrick_level: number | null
           neuro_stage: string | null
@@ -462,8 +553,10 @@ export type Database = {
           deal_id?: string | null
           delegate_count?: number | null
           delivery_date?: string | null
+          facilitator_id?: string | null
           feedback_received?: boolean | null
           feedback_sent?: boolean | null
+          form_id?: string | null
           id?: string
           kirkpatrick_level?: number | null
           neuro_stage?: string | null
@@ -483,8 +576,10 @@ export type Database = {
           deal_id?: string | null
           delegate_count?: number | null
           delivery_date?: string | null
+          facilitator_id?: string | null
           feedback_received?: boolean | null
           feedback_sent?: boolean | null
+          form_id?: string | null
           id?: string
           kirkpatrick_level?: number | null
           neuro_stage?: string | null
@@ -600,6 +695,39 @@ export type Database = {
         }
         Relationships: []
       }
+      entity_links: {
+        Row: {
+          id: string
+          source_type: string
+          source_id: string
+          target_type: string
+          target_id: string
+          relationship: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          source_type: string
+          source_id: string
+          target_type: string
+          target_id: string
+          relationship?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          source_type?: string
+          source_id?: string
+          target_type?: string
+          target_id?: string
+          relationship?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       form_responses: {
         Row: {
           answers: Json
@@ -663,6 +791,8 @@ export type Database = {
           description: string | null
           fields_json: Json | null
           id: string
+          is_template: boolean | null
+          template_category: string | null
           responses_count: number | null
           title: string
           type: string | null
@@ -675,6 +805,8 @@ export type Database = {
           description?: string | null
           fields_json?: Json | null
           id?: string
+          is_template?: boolean | null
+          template_category?: string | null
           responses_count?: number | null
           title: string
           type?: string | null
@@ -687,6 +819,8 @@ export type Database = {
           description?: string | null
           fields_json?: Json | null
           id?: string
+          is_template?: boolean | null
+          template_category?: string | null
           responses_count?: number | null
           title?: string
           type?: string | null
@@ -911,6 +1045,47 @@ export type Database = {
         }
         Relationships: []
       }
+      portal_messages: {
+        Row: {
+          id: string
+          organisation_id: string
+          project_id: string | null
+          sender_type: string
+          sender_name: string | null
+          body: string
+          read_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organisation_id: string
+          project_id?: string | null
+          sender_type?: string
+          sender_name?: string | null
+          body: string
+          read_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organisation_id?: string
+          project_id?: string | null
+          sender_type?: string
+          sender_name?: string | null
+          body?: string
+          read_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_messages_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -975,6 +1150,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "project_milestones_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_notes: {
+        Row: {
+          id: string
+          project_id: string
+          title: string | null
+          body: string
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          title?: string | null
+          body: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          title?: string | null
+          body?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_notes_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -1260,6 +1473,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      session_agenda_items: {
+        Row: {
+          id: string
+          session_id: string
+          title: string
+          description: string | null
+          duration_minutes: number
+          position: number
+          type: string
+          method: string | null
+          materials: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          title: string
+          description?: string | null
+          duration_minutes?: number
+          position?: number
+          type?: string
+          method?: string | null
+          materials?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          session_id?: string
+          title?: string
+          description?: string | null
+          duration_minutes?: number
+          position?: number
+          type?: string
+          method?: string | null
+          materials?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_agenda_items_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sessions: {
         Row: {

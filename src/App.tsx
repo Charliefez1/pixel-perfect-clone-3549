@@ -33,6 +33,9 @@ import Services from "@/pages/Services";
 import Templates from "@/pages/Templates";
 import Auth from "@/pages/Auth";
 import Reporting from "@/pages/Reporting";
+import Portfolio from "@/pages/Portfolio";
+import DailyBrief from "@/pages/DailyBrief";
+import Automations from "@/pages/Automations";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import NotFound from "@/pages/NotFound";
 import { CommandPalette } from "@/components/layout/CommandPalette";
@@ -44,6 +47,7 @@ import { CreateSessionDialog } from "@/components/dialogs/CreateSessionDialog";
 import { CreateInvoiceDialog } from "@/components/dialogs/CreateInvoiceDialog";
 import { CreateProjectFromPlanDialog } from "@/components/dialogs/CreateProjectFromPlanDialog";
 import { useState, useEffect, createContext, useContext, useCallback } from "react";
+import { AIContext, useAIContextProvider } from "@/hooks/useAIContext";
 
 const queryClient = new QueryClient();
 
@@ -135,6 +139,7 @@ function AppShell() {
   const [sessionOpen, setSessionOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
+  const aiContextProvider = useAIContextProvider();
 
   const dialogs: DialogContextType = {
     openCreateTask: useCallback(() => setTaskOpen(true), []),
@@ -147,6 +152,7 @@ function AppShell() {
   };
 
   return (
+    <AIContext.Provider value={aiContextProvider}>
     <DialogContext.Provider value={dialogs}>
       <KeyboardShortcuts dialogs={dialogs} />
       <CommandPalette
@@ -194,10 +200,14 @@ function AppShell() {
           <Route path="/services" element={<Services />} />
           <Route path="/templates" element={<Templates />} />
           <Route path="/reporting" element={<Reporting />} />
+          <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/daily" element={<DailyBrief />} />
+          <Route path="/automations" element={<Automations />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
     </DialogContext.Provider>
+    </AIContext.Provider>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProject, useProjects, useUpdateProject, useDeleteProject } from "@/hooks/useProjects";
 import { useTasks, Task, useUpdateTask } from "@/hooks/useTasks";
@@ -22,6 +22,7 @@ import { SessionsTab } from "@/components/projects/SessionsTab";
 import { DeliveriesTab } from "@/components/projects/DeliveriesTab";
 import { DocumentsTab } from "@/components/projects/DocumentsTab";
 import { ActivityTab } from "@/components/projects/ActivityTab";
+import { NotesTab } from "@/components/projects/NotesTab";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -36,6 +37,7 @@ import {
   Sparkles,
   AlertTriangle,
   Receipt,
+  StickyNote,
 } from "lucide-react";
 import { isPast } from "date-fns";
 import ReactMarkdown from "react-markdown";
@@ -43,6 +45,7 @@ import { ViewToggle, ViewMode } from "@/components/layout/ViewToggle";
 import { TaskListView } from "@/components/tasks/TaskListView";
 import { TaskTimelineView } from "@/components/tasks/TaskTimelineView";
 import { TaskCalendarView } from "@/components/tasks/TaskCalendarView";
+import { useAIContext } from "@/hooks/useAIContext";
 
 const neuroPhases = ["N", "E", "U", "R", "O"] as const;
 const phaseNames = ["needs", "engage", "understand", "redesign", "optimise"];
@@ -119,6 +122,29 @@ export default function ProjectDetail() {
   const [updateTitle, setUpdateTitle] = useState("");
   const [updateBody, setUpdateBody] = useState("");
   const [generatingUpdate, setGeneratingUpdate] = useState(false);
+  const { setContext } = useAIContext();
+
+  useEffect(() => {
+    if (project) {
+      setContext({
+        page: "project_detail",
+        entityType: "project",
+        entityId: project.id,
+        entityName: project.name,
+        data: {
+          status: project.status,
+          neuro_phase: project.neuro_phase,
+          stage: (project as any).stage,
+          budget: project.budget,
+          organisation: project.organisations?.name,
+          start_date: project.start_date,
+          end_date: project.end_date,
+          description: project.description,
+        },
+      });
+    }
+    return () => setContext(null);
+  }, [project, setContext]);
 
   if (isLoading) {
     return (
@@ -513,6 +539,7 @@ Project context: ${JSON.stringify(context)}`,
             <TabsTrigger value="billing">Billing</TabsTrigger>
             <TabsTrigger value="workshops">Workshops</TabsTrigger>
             <TabsTrigger value="meetings">Meetings</TabsTrigger>
+            <TabsTrigger value="notes">Notes</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
             <TabsTrigger value="updates">Updates</TabsTrigger>
           </TabsList>
@@ -871,6 +898,11 @@ Project context: ${JSON.stringify(context)}`,
           {/* Meetings Tab */}
           <TabsContent value="meetings">
             <SessionsTab projectId={project.id} type="meeting" />
+          </TabsContent>
+
+          {/* Notes Tab */}
+          <TabsContent value="notes">
+            <NotesTab projectId={project.id} />
           </TabsContent>
 
           {/* Documents Tab */}

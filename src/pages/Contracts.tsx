@@ -78,7 +78,7 @@ export default function Contracts() {
         onSuccess: (data) => {
           toast.success("Contract updated");
           setEditing(false);
-          setSelected(null);
+          setSelected({ ...selected, ...data, organisations: selected.organisations } as Contract);
         },
       }
     );
@@ -91,10 +91,10 @@ export default function Contracts() {
         updateContract.mutate(
           { id: contract.id, status: newStatus, ...extraFields },
           {
-            onSuccess: () => {
+            onSuccess: (data) => {
               logActivity.mutate({ entity_type: "contract", entity_id: contract.id, entity_title: contract.title, action: "status_changed", metadata: { from: contract.status, to: newStatus } });
               toast.success(`Contract marked as ${newStatus}`);
-              setSelected(null);
+              setSelected({ ...contract, ...data, organisations: contract.organisations } as Contract);
               setConfirmAction(null);
             },
           }
