@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 
 export interface ProjectMilestone {
   id: string;
@@ -22,7 +24,7 @@ export function useProjectMilestones(projectId: string | undefined) {
         .select("*")
         .eq("project_id", projectId)
         .order("sort_order", { ascending: true });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading milestones"); return []; }
       return data as ProjectMilestone[];
     },
     enabled: !!projectId,
@@ -48,7 +50,9 @@ export function useToggleMilestone() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["project_milestones", data.project_id] });
       queryClient.invalidateQueries({ queryKey: ["project_milestones"] });
+      toast.success("Milestone updated");
     },
+    onError: (error) => handleSupabaseError(error as any, "Updating milestone"),
   });
 }
 
@@ -61,7 +65,7 @@ export function useAllProjectMilestones() {
         .from("project_milestones")
         .select("*")
         .order("sort_order", { ascending: true });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading milestones"); return []; }
       return data as ProjectMilestone[];
     },
   });

@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 
 export interface Form {
   id: string;
@@ -19,7 +21,7 @@ export function useForms() {
     queryKey: ["forms"],
     queryFn: async () => {
       const { data, error } = await supabase.from("forms").select("*").order("created_at", { ascending: false });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading forms"); return []; }
       return data as Form[];
     },
   });
@@ -33,7 +35,8 @@ export function useCreateForm() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["forms"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["forms"] }); toast.success("Form created"); },
+    onError: (error) => handleSupabaseError(error as any, "Creating form"),
   });
 }
 
@@ -45,7 +48,8 @@ export function useUpdateForm() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["forms"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["forms"] }); toast.success("Form updated"); },
+    onError: (error) => handleSupabaseError(error as any, "Updating form"),
   });
 }
 
@@ -56,6 +60,7 @@ export function useDeleteForm() {
       const { error } = await supabase.from("forms").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["forms"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["forms"] }); toast.success("Form deleted"); },
+    onError: (error) => handleSupabaseError(error as any, "Deleting form"),
   });
 }

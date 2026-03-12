@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export type Organisation = Tables<"organisations">;
@@ -12,7 +14,7 @@ export function useOrganisations() {
         .from("organisations")
         .select("*")
         .order("name");
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading organisations"); return []; }
       return data as Organisation[];
     },
   });
@@ -28,7 +30,7 @@ export function useOrganisation(id: string | undefined) {
         .select("*")
         .eq("id", id)
         .maybeSingle();
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading organisation"); return null; }
       return data;
     },
     enabled: !!id,
@@ -49,7 +51,9 @@ export function useCreateOrganisation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["organisations"] });
+      toast.success("Organisation created");
     },
+    onError: (error) => handleSupabaseError(error as any, "Creating organisation"),
   });
 }
 
@@ -62,6 +66,8 @@ export function useDeleteOrganisation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["organisations"] });
+      toast.success("Organisation deleted");
     },
+    onError: (error) => handleSupabaseError(error as any, "Deleting organisation"),
   });
 }

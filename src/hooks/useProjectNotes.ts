@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export type ProjectNote = Tables<"project_notes">;
@@ -14,7 +16,7 @@ export function useProjectNotes(projectId: string | undefined) {
         .select("*")
         .eq("project_id", projectId)
         .order("created_at", { ascending: false });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading notes"); return []; }
       return data as ProjectNote[];
     },
     enabled: !!projectId,
@@ -35,7 +37,9 @@ export function useCreateProjectNote() {
     },
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ["project_notes", variables.project_id] });
+      toast.success("Note created");
     },
+    onError: (error) => handleSupabaseError(error as any, "Creating note"),
   });
 }
 
@@ -54,7 +58,9 @@ export function useUpdateProjectNote() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["project_notes"] });
+      toast.success("Note updated");
     },
+    onError: (error) => handleSupabaseError(error as any, "Updating note"),
   });
 }
 
@@ -67,6 +73,8 @@ export function useDeleteProjectNote() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["project_notes"] });
+      toast.success("Note deleted");
     },
+    onError: (error) => handleSupabaseError(error as any, "Deleting note"),
   });
 }

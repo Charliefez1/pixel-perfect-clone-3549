@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 
 export interface PurchaseOrder {
   id: string;
@@ -28,7 +30,7 @@ export function usePurchaseOrders() {
         .from("purchase_orders")
         .select("*, organisations(name), projects(name)")
         .order("created_at", { ascending: false });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading purchase orders"); return []; }
       return data as PurchaseOrder[];
     },
   });
@@ -42,7 +44,8 @@ export function useCreatePurchaseOrder() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["purchase_orders"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["purchase_orders"] }); toast.success("Purchase order created"); },
+    onError: (error) => handleSupabaseError(error as any, "Creating purchase order"),
   });
 }
 
@@ -54,7 +57,8 @@ export function useUpdatePurchaseOrder() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["purchase_orders"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["purchase_orders"] }); toast.success("Purchase order updated"); },
+    onError: (error) => handleSupabaseError(error as any, "Updating purchase order"),
   });
 }
 
@@ -65,6 +69,7 @@ export function useDeletePurchaseOrder() {
       const { error } = await supabase.from("purchase_orders").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["purchase_orders"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["purchase_orders"] }); toast.success("Purchase order deleted"); },
+    onError: (error) => handleSupabaseError(error as any, "Deleting purchase order"),
   });
 }

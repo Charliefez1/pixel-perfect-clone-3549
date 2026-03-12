@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 
 export interface InvoiceItem {
   id: string;
@@ -21,7 +23,7 @@ export function useInvoiceItems(invoiceId: string | undefined) {
         .select("*")
         .eq("invoice_id", invoiceId)
         .order("created_at");
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading invoice items"); return []; }
       return data as InvoiceItem[];
     },
     enabled: !!invoiceId,
@@ -42,6 +44,8 @@ export function useCreateInvoiceItem() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoice_items"] });
+      toast.success("Invoice item added");
     },
+    onError: (error) => handleSupabaseError(error as any, "Adding invoice item"),
   });
 }

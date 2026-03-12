@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 
 export interface Service {
   id: string;
@@ -18,7 +20,7 @@ export function useServices() {
     queryKey: ["services"],
     queryFn: async () => {
       const { data, error } = await supabase.from("services").select("*").order("name");
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading services"); return []; }
       return data as Service[];
     },
   });
@@ -32,7 +34,8 @@ export function useCreateService() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["services"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["services"] }); toast.success("Service created"); },
+    onError: (error) => handleSupabaseError(error as any, "Creating service"),
   });
 }
 
@@ -44,7 +47,8 @@ export function useUpdateService() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["services"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["services"] }); toast.success("Service updated"); },
+    onError: (error) => handleSupabaseError(error as any, "Updating service"),
   });
 }
 
@@ -55,6 +59,7 @@ export function useDeleteService() {
       const { error } = await supabase.from("services").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["services"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["services"] }); toast.success("Service deleted"); },
+    onError: (error) => handleSupabaseError(error as any, "Deleting service"),
   });
 }

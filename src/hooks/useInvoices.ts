@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export type Invoice = Tables<"invoices"> & {
@@ -15,7 +17,7 @@ export function useInvoices() {
         .from("invoices")
         .select("*, organisations(name), projects(name)")
         .order("created_at", { ascending: false });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading invoices"); return []; }
       return data as Invoice[];
     },
   });
@@ -31,7 +33,7 @@ export function useInvoice(id: string | undefined) {
         .select("*, organisations(name), projects(name), invoice_items(*)")
         .eq("id", id)
         .maybeSingle();
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading invoice"); return null; }
       return data;
     },
     enabled: !!id,
@@ -52,7 +54,9 @@ export function useCreateInvoice() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      toast.success("Invoice created");
     },
+    onError: (error) => handleSupabaseError(error as any, "Creating invoice"),
   });
 }
 
@@ -65,6 +69,8 @@ export function useDeleteInvoice() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      toast.success("Invoice deleted");
     },
+    onError: (error) => handleSupabaseError(error as any, "Deleting invoice"),
   });
 }

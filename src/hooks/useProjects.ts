@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export type Project = Tables<"projects"> & {
@@ -14,7 +16,7 @@ export function useProjects() {
         .from("projects")
         .select("*, organisations(name)")
         .order("created_at", { ascending: false });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading projects"); return []; }
       return data as Project[];
     },
   });
@@ -30,7 +32,7 @@ export function useProject(id: string | undefined) {
         .select("*, organisations(name)")
         .eq("id", id)
         .maybeSingle();
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading project"); return null; }
       return data;
     },
     enabled: !!id,
@@ -51,7 +53,9 @@ export function useCreateProject() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast.success("Project created");
     },
+    onError: (error) => handleSupabaseError(error as any, "Creating project"),
   });
 }
 
@@ -65,7 +69,9 @@ export function useUpdateProject() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast.success("Project updated");
     },
+    onError: (error) => handleSupabaseError(error as any, "Updating project"),
   });
 }
 
@@ -78,6 +84,8 @@ export function useDeleteProject() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast.success("Project deleted");
     },
+    onError: (error) => handleSupabaseError(error as any, "Deleting project"),
   });
 }

@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 
 export function useUpdateInvoice() {
@@ -17,6 +19,8 @@ export function useUpdateInvoice() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      toast.success("Invoice updated");
     },
+    onError: (error) => handleSupabaseError(error as any, "Updating invoice"),
   });
 }

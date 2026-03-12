@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 
 export interface DeliveryTask {
   id: string;
@@ -57,7 +59,7 @@ export function useDeliveries() {
         .from("deliveries")
         .select("*, organisations(name), deals(title), forms(title)")
         .order("delivery_date", { ascending: true });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading deliveries"); return []; }
       return data as Delivery[];
     },
   });
@@ -73,8 +75,7 @@ export function useDelivery(id: string | undefined) {
         .select("*, organisations(name), deals(title), forms(title)")
         .eq("id", id)
         .maybeSingle();
-      if (error) throw error;
-      return data as Delivery | null;
+      if (error) { handleSupabaseError(error, "Loading delivery"); return null; }
     },
     enabled: !!id,
   });
@@ -90,7 +91,7 @@ export function useDeliveryTasks(deliveryId: string | undefined) {
         .select("*")
         .eq("delivery_id", deliveryId)
         .order("sort_order", { ascending: true });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading delivery tasks"); return []; }
       return data as DeliveryTask[];
     },
     enabled: !!deliveryId,
@@ -111,7 +112,9 @@ export function useCreateDelivery() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deliveries"] });
+      toast.success("Delivery created");
     },
+    onError: (error) => handleSupabaseError(error as any, "Creating delivery"),
   });
 }
 
@@ -130,7 +133,9 @@ export function useUpdateDelivery() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deliveries"] });
+      toast.success("Delivery updated");
     },
+    onError: (error) => handleSupabaseError(error as any, "Updating delivery"),
   });
 }
 
@@ -150,7 +155,9 @@ export function useUpdateDeliveryTask() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["delivery_tasks"] });
       queryClient.invalidateQueries({ queryKey: ["deliveries"] });
+      toast.success("Task updated");
     },
+    onError: (error) => handleSupabaseError(error as any, "Updating task"),
   });
 }
 
@@ -163,7 +170,9 @@ export function useDeleteDelivery() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deliveries"] });
+      toast.success("Delivery deleted");
     },
+    onError: (error) => handleSupabaseError(error as any, "Deleting delivery"),
   });
 }
 
@@ -175,7 +184,7 @@ export function useTemplates() {
         .from("templates")
         .select("*")
         .order("name");
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading templates"); return []; }
       return data as unknown as Template[];
     },
   });

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
 import { toast } from "sonner";
 
 export type EntityDocument = {
@@ -25,7 +26,7 @@ export function useEntityDocuments(entityType: string, entityId: string | undefi
         .eq("entity_type", entityType)
         .eq("entity_id", entityId)
         .order("created_at", { ascending: false });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading documents"); return []; }
       return data as EntityDocument[];
     },
     enabled: !!entityId,
@@ -70,7 +71,7 @@ export function useUploadDocument() {
       queryClient.invalidateQueries({ queryKey: ["entity_documents", vars.entityType, vars.entityId] });
       toast.success("File uploaded");
     },
-    onError: (e: any) => toast.error(e.message || "Upload failed"),
+    onError: (error) => handleSupabaseError(error as any, "Uploading file"),
   });
 }
 
@@ -94,7 +95,7 @@ export function useDeleteDocument() {
       queryClient.invalidateQueries({ queryKey: ["entity_documents", doc.entity_type, doc.entity_id] });
       toast.success("File deleted");
     },
-    onError: (e: any) => toast.error(e.message || "Delete failed"),
+    onError: (error) => handleSupabaseError(error as any, "Deleting file"),
   });
 }
 
@@ -104,7 +105,7 @@ export function useDownloadDocument() {
       .from("documents")
       .download(doc.file_path);
     if (error) {
-      toast.error("Download failed");
+      handleSupabaseError(error as any, "Downloading file");
       return;
     }
     const url = URL.createObjectURL(data);

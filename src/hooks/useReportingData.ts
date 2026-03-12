@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
 import { format, subMonths, differenceInDays } from "date-fns";
 
 export function useRevenueByMonth() {
@@ -12,7 +13,7 @@ export function useRevenueByMonth() {
         .eq("status", "paid")
         .not("paid_date", "is", null)
         .order("paid_date", { ascending: true });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading reporting data"); return []; }
 
       const months: Record<string, number> = {};
       // Pre-fill last 12 months
@@ -42,7 +43,7 @@ export function usePipelineByStage() {
         .from("deals")
         .select("stage, value")
         .not("stage", "in", "(won,lost)");
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading reporting data"); return []; }
 
       const stages: Record<string, number> = {
         lead: 0, qualified: 0, proposal: 0, negotiation: 0, verbal: 0,
@@ -66,7 +67,7 @@ export function useInvoiceAging() {
         .from("invoices")
         .select("due_date, total, status")
         .in("status", ["sent", "viewed", "overdue"]);
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading reporting data"); return []; }
 
       const buckets = { "Current": 0, "1-30 days": 0, "31-60 days": 0, "60+ days": 0 };
       const now = new Date();
@@ -92,7 +93,7 @@ export function useSatisfactionScores() {
         .from("deliveries")
         .select("satisfaction_score, service_type")
         .not("satisfaction_score", "is", null);
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading reporting data"); return []; }
 
       const types: Record<string, { total: number; count: number }> = {};
       data?.forEach((d) => {

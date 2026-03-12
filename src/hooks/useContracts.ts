@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 
 export interface Contract {
   id: string;
@@ -27,7 +29,7 @@ export function useContracts() {
         .from("contracts")
         .select("*, organisations(name), deals(title)")
         .order("created_at", { ascending: false });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading contracts"); return []; }
       return data as Contract[];
     },
   });
@@ -41,7 +43,8 @@ export function useCreateContract() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["contracts"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["contracts"] }); toast.success("Contract created"); },
+    onError: (error) => handleSupabaseError(error as any, "Creating contract"),
   });
 }
 
@@ -53,7 +56,8 @@ export function useUpdateContract() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["contracts"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["contracts"] }); toast.success("Contract updated"); },
+    onError: (error) => handleSupabaseError(error as any, "Updating contract"),
   });
 }
 
@@ -64,6 +68,7 @@ export function useDeleteContract() {
       const { error } = await supabase.from("contracts").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["contracts"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["contracts"] }); toast.success("Contract deleted"); },
+    onError: (error) => handleSupabaseError(error as any, "Deleting contract"),
   });
 }
