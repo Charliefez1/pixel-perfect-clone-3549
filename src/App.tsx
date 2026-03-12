@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { RequireRole } from "@/components/auth/RequireRole";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { CommandPalette } from "@/components/layout/CommandPalette";
 import { CreateTaskDialog } from "@/components/dialogs/CreateTaskDialog";
@@ -214,13 +215,13 @@ function AppShell() {
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/scheduling" element={<Scheduling />} />
           <Route path="/purchase-orders" element={<PurchaseOrders />} />
-          <Route path="/rate-cards" element={<RateCards />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/templates" element={<Templates />} />
+          <Route path="/rate-cards" element={<RequireRole roles={['admin', 'team']}><RateCards /></RequireRole>} />
+          <Route path="/services" element={<RequireRole roles={['admin', 'team']}><Services /></RequireRole>} />
+          <Route path="/templates" element={<RequireRole roles={['admin', 'team']}><Templates /></RequireRole>} />
           <Route path="/reporting" element={<Reporting />} />
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/daily" element={<DailyBrief />} />
-          <Route path="/automations" element={<Automations />} />
+          <Route path="/automations" element={<RequireRole roles={['admin', 'team']}><Automations /></RequireRole>} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
