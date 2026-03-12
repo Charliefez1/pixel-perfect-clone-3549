@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export type Task = Tables<"tasks"> & {
@@ -14,7 +16,7 @@ export function useTasks() {
         .from("tasks")
         .select("*, projects(name)")
         .order("due_date", { ascending: true });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading tasks"); return []; }
       return data as Task[];
     },
   });
@@ -34,7 +36,9 @@ export function useCreateTask() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      toast.success("Task created");
     },
+    onError: (error) => handleSupabaseError(error as any, "Creating task"),
   });
 }
 
@@ -53,7 +57,9 @@ export function useUpdateTask() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      toast.success("Task updated");
     },
+    onError: (error) => handleSupabaseError(error as any, "Updating task"),
   });
 }
 
@@ -66,6 +72,8 @@ export function useDeleteTask() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      toast.success("Task deleted");
     },
+    onError: (error) => handleSupabaseError(error as any, "Deleting task"),
   });
 }

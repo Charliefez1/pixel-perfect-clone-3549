@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 
 export interface RateCard {
   id: string;
@@ -21,7 +23,7 @@ export function useRateCards() {
     queryKey: ["rate_cards"],
     queryFn: async () => {
       const { data, error } = await supabase.from("rate_cards").select("*").order("name");
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading rate cards"); return []; }
       return data as RateCard[];
     },
   });
@@ -35,7 +37,8 @@ export function useCreateRateCard() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["rate_cards"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["rate_cards"] }); toast.success("Rate card created"); },
+    onError: (error) => handleSupabaseError(error as any, "Creating rate card"),
   });
 }
 
@@ -47,7 +50,8 @@ export function useUpdateRateCard() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["rate_cards"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["rate_cards"] }); toast.success("Rate card updated"); },
+    onError: (error) => handleSupabaseError(error as any, "Updating rate card"),
   });
 }
 
@@ -58,6 +62,7 @@ export function useDeleteRateCard() {
       const { error } = await supabase.from("rate_cards").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["rate_cards"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["rate_cards"] }); toast.success("Rate card deleted"); },
+    onError: (error) => handleSupabaseError(error as any, "Deleting rate card"),
   });
 }

@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 
 export interface Proposal {
   id: string;
@@ -28,7 +30,7 @@ export function useProposals() {
         .from("proposals")
         .select("*, organisations(name), deals(title)")
         .order("created_at", { ascending: false });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading proposals"); return []; }
       return data as Proposal[];
     },
   });
@@ -42,7 +44,8 @@ export function useCreateProposal() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["proposals"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["proposals"] }); toast.success("Proposal created"); },
+    onError: (error) => handleSupabaseError(error as any, "Creating proposal"),
   });
 }
 
@@ -54,7 +57,8 @@ export function useUpdateProposal() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["proposals"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["proposals"] }); toast.success("Proposal updated"); },
+    onError: (error) => handleSupabaseError(error as any, "Updating proposal"),
   });
 }
 
@@ -65,6 +69,7 @@ export function useDeleteProposal() {
       const { error } = await supabase.from("proposals").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["proposals"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["proposals"] }); toast.success("Proposal deleted"); },
+    onError: (error) => handleSupabaseError(error as any, "Deleting proposal"),
   });
 }

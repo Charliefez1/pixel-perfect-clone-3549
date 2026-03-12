@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 
 export interface FormResponse {
   id: string;
@@ -22,7 +24,7 @@ export function useFormResponses(formId: string | undefined) {
         .select("*")
         .eq("form_id", formId)
         .order("submitted_at", { ascending: false });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading form responses"); return []; }
       return (data || []) as FormResponse[];
     },
     enabled: !!formId,
@@ -51,6 +53,8 @@ export function useCreateFormResponse() {
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ["form_responses", variables.form_id] });
       qc.invalidateQueries({ queryKey: ["forms"] });
+      toast.success("Response submitted");
     },
+    onError: (error) => handleSupabaseError(error as any, "Submitting response"),
   });
 }

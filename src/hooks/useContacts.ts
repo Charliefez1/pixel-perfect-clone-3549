@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export type Contact = Tables<"contacts"> & {
@@ -14,7 +16,7 @@ export function useContacts() {
         .from("contacts")
         .select("*, organisations(name)")
         .order("last_name");
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading contacts"); return []; }
       return data as Contact[];
     },
   });
@@ -30,7 +32,7 @@ export function useContact(id: string | undefined) {
         .select("*, organisations(name)")
         .eq("id", id)
         .maybeSingle();
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading contact"); return null; }
       return data;
     },
     enabled: !!id,
@@ -51,7 +53,9 @@ export function useCreateContact() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      toast.success("Contact created");
     },
+    onError: (error) => handleSupabaseError(error as any, "Creating contact"),
   });
 }
 
@@ -64,6 +68,8 @@ export function useDeleteContact() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      toast.success("Contact deleted");
     },
+    onError: (error) => handleSupabaseError(error as any, "Deleting contact"),
   });
 }

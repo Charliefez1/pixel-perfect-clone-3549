@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export type Session = Tables<"sessions"> & {
@@ -14,7 +16,7 @@ export function useSessions() {
         .from("sessions")
         .select("*, projects(name, organisations(name))")
         .order("session_date", { ascending: true });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading sessions"); return []; }
       return data as Session[];
     },
   });
@@ -30,7 +32,7 @@ export function useUpcomingSessions() {
         .gte("session_date", new Date().toISOString())
         .order("session_date", { ascending: true })
         .limit(10);
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading upcoming sessions"); return []; }
       return data as Session[];
     },
   });
@@ -50,7 +52,9 @@ export function useCreateSession() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      toast.success("Session created");
     },
+    onError: (error) => handleSupabaseError(error as any, "Creating session"),
   });
 }
 
@@ -64,7 +68,9 @@ export function useUpdateSession() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      toast.success("Session updated");
     },
+    onError: (error) => handleSupabaseError(error as any, "Updating session"),
   });
 }
 
@@ -77,6 +83,8 @@ export function useDeleteSession() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      toast.success("Session deleted");
     },
+    onError: (error) => handleSupabaseError(error as any, "Deleting session"),
   });
 }

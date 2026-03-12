@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 
 export interface Activity {
   id: string;
@@ -24,7 +26,7 @@ export function useActivities(entityType?: "organisation" | "contact" | "deal", 
       else if (entityType === "contact" && entityId) query = query.eq("contact_id", entityId);
       else if (entityType === "deal" && entityId) query = query.eq("deal_id", entityId);
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading activities"); return []; }
       return data as Activity[];
     },
     enabled: !!entityId,
@@ -45,6 +47,8 @@ export function useCreateActivity() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["activities"] });
+      toast.success("Activity created");
     },
+    onError: (error) => handleSupabaseError(error as any, "Creating activity"),
   });
 }

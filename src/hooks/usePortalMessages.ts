@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export type PortalMessage = Tables<"portal_messages">;
@@ -14,7 +16,7 @@ export function usePortalMessages(organisationId: string | undefined) {
         .select("*")
         .eq("organisation_id", organisationId)
         .order("created_at", { ascending: true });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading messages"); return []; }
       return data as PortalMessage[];
     },
     enabled: !!organisationId,
@@ -35,6 +37,8 @@ export function useCreatePortalMessage() {
     },
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ["portal_messages", variables.organisation_id] });
+      toast.success("Message sent");
     },
+    onError: (error) => handleSupabaseError(error as any, "Sending message"),
   });
 }

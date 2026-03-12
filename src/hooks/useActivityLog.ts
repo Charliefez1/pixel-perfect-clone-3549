@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
 
 export interface ActivityEntry {
   id: string;
@@ -24,7 +25,7 @@ export function useActivityLog(entityType?: string, entityId?: string) {
       if (entityType) query = query.eq("entity_type", entityType);
       if (entityId) query = query.eq("entity_id", entityId);
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading activity log"); return []; }
       return data as ActivityEntry[];
     },
     enabled: !entityId || !!entityId,
@@ -51,5 +52,6 @@ export function useLogActivity() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["activity_log"] });
     },
+    onError: (error) => handleSupabaseError(error as any, "Logging activity"),
   });
 }

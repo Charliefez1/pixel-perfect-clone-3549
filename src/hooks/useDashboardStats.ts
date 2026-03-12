@@ -1,28 +1,32 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
 
 export function useDashboardStats() {
   return useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
       // Get active projects
-      const { count: activeProjects } = await supabase
+      const { count: activeProjects, error: e1 } = await supabase
         .from("projects")
         .select("*", { count: "exact", head: true })
         .eq("status", "active");
+      if (e1) { handleSupabaseError(e1, "Loading dashboard stats"); return { activeProjects: 0, overdueTasks: 0, outstandingAmount: 0, unpaidCount: 0 }; }
 
       // Get overdue tasks
-      const { count: overdueTasks } = await supabase
+      const { count: overdueTasks, error: e2 } = await supabase
         .from("tasks")
         .select("*", { count: "exact", head: true })
         .lt("due_date", new Date().toISOString().split("T")[0])
         .not("status", "eq", "done");
+      if (e2) { handleSupabaseError(e2, "Loading dashboard stats"); return { activeProjects: activeProjects || 0, overdueTasks: 0, outstandingAmount: 0, unpaidCount: 0 }; }
 
       // Get outstanding invoices
-      const { data: invoices } = await supabase
+      const { data: invoices, error: e3 } = await supabase
         .from("invoices")
         .select("total, status")
         .not("status", "eq", "paid");
+      if (e3) { handleSupabaseError(e3, "Loading dashboard stats"); return { activeProjects: activeProjects || 0, overdueTasks: overdueTasks || 0, outstandingAmount: 0, unpaidCount: 0 }; }
 
       const outstandingAmount = invoices?.reduce((sum, i) => sum + (i.total || 0), 0) || 0;
       const unpaidCount = invoices?.length || 0;
@@ -41,10 +45,11 @@ export function useProjectsByPhase() {
   return useQuery({
     queryKey: ["projects-by-phase"],
     queryFn: async () => {
-      const { data: projects } = await supabase
+      const { data: projects, error } = await supabase
         .from("projects")
         .select("neuro_phase, status")
         .eq("status", "active");
+      if (error) { handleSupabaseError(error, "Loading projects by phase"); return []; }
 
       const phases = ["needs", "engage", "understand", "redesign", "optimise"];
       const phaseColors: Record<string, string> = {
@@ -72,12 +77,13 @@ export function useUpcomingDeliveries() {
       const weekFromNow = new Date(now);
       weekFromNow.setDate(weekFromNow.getDate() + 7);
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("deliveries")
         .select("*, organisations(name), projects(name)")
         .gte("delivery_date", now.toISOString().split("T")[0])
         .lte("delivery_date", weekFromNow.toISOString().split("T")[0])
         .order("delivery_date", { ascending: true });
+      if (error) { handleSupabaseError(error, "Loading upcoming deliveries"); return []; }
 
       return data || [];
     },

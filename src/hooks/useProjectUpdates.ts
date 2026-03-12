@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { handleSupabaseError } from "@/lib/errors";
+import { toast } from "sonner";
 
 export interface ProjectUpdate {
   id: string;
@@ -20,7 +22,7 @@ export function useProjectUpdates(projectId: string | undefined) {
         .select("*")
         .eq("project_id", projectId)
         .order("created_at", { ascending: false });
-      if (error) throw error;
+      if (error) { handleSupabaseError(error, "Loading project updates"); return []; }
       return data as unknown as ProjectUpdate[];
     },
     enabled: !!projectId,
@@ -41,6 +43,8 @@ export function useCreateProjectUpdate() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["project_updates", data.project_id] });
+      toast.success("Update posted");
     },
+    onError: (error) => handleSupabaseError(error as any, "Posting update"),
   });
 }
