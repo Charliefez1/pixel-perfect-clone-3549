@@ -5,39 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/layout/AppLayout";
-import Dashboard from "@/pages/Dashboard";
-import Notifications from "@/pages/Notifications";
-import Clients from "@/pages/Clients";
-import ClientDetail from "@/pages/ClientDetail";
-import Contacts from "@/pages/Contacts";
-import Meetings from "@/pages/Meetings";
-import Contracts from "@/pages/Contracts";
-import Deliveries from "@/pages/Deliveries";
-import Forms from "@/pages/Forms";
-import FormDetail from "@/pages/FormDetail";
-import FormBuilder from "@/pages/FormBuilder";
-import PublicForm from "@/pages/PublicForm";
-import PortalView from "@/pages/PortalView";
-import ClientPortal from "@/pages/ClientPortal";
-import Projects from "@/pages/Projects";
-import ProjectDetail from "@/pages/ProjectDetail";
-import Tasks from "@/pages/Tasks";
-import TimeTracking from "@/pages/TimeTracking";
-import Resourcing from "@/pages/Resourcing";
-import Timesheets from "@/pages/Timesheets";
-import Invoices from "@/pages/Invoices";
-import Scheduling from "@/pages/Scheduling";
-import PurchaseOrders from "@/pages/PurchaseOrders";
-import RateCards from "@/pages/RateCards";
-import Services from "@/pages/Services";
-import Templates from "@/pages/Templates";
-import Auth from "@/pages/Auth";
-import Reporting from "@/pages/Reporting";
-import Portfolio from "@/pages/Portfolio";
-import DailyBrief from "@/pages/DailyBrief";
-import Automations from "@/pages/Automations";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import NotFound from "@/pages/NotFound";
 import { CommandPalette } from "@/components/layout/CommandPalette";
 import { CreateTaskDialog } from "@/components/dialogs/CreateTaskDialog";
 import { CreateClientDialog } from "@/components/dialogs/CreateClientDialog";
@@ -46,10 +14,53 @@ import { CreateProjectDialog } from "@/components/dialogs/CreateProjectDialog";
 import { CreateSessionDialog } from "@/components/dialogs/CreateSessionDialog";
 import { CreateInvoiceDialog } from "@/components/dialogs/CreateInvoiceDialog";
 import { CreateProjectFromPlanDialog } from "@/components/dialogs/CreateProjectFromPlanDialog";
-import { useState, useEffect, createContext, useContext, useCallback } from "react";
+import { useState, useEffect, createContext, useContext, useCallback, lazy, Suspense } from "react";
 import { AIContext, useAIContextProvider } from "@/hooks/useAIContext";
 
-const queryClient = new QueryClient();
+// Lazy-loaded page components for code splitting
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const Notifications = lazy(() => import("@/pages/Notifications"));
+const Clients = lazy(() => import("@/pages/Clients"));
+const ClientDetail = lazy(() => import("@/pages/ClientDetail"));
+const Contacts = lazy(() => import("@/pages/Contacts"));
+const Meetings = lazy(() => import("@/pages/Meetings"));
+const Contracts = lazy(() => import("@/pages/Contracts"));
+const Deliveries = lazy(() => import("@/pages/Deliveries"));
+const Forms = lazy(() => import("@/pages/Forms"));
+const FormDetail = lazy(() => import("@/pages/FormDetail"));
+const FormBuilder = lazy(() => import("@/pages/FormBuilder"));
+const PublicForm = lazy(() => import("@/pages/PublicForm"));
+const PortalView = lazy(() => import("@/pages/PortalView"));
+const ClientPortal = lazy(() => import("@/pages/ClientPortal"));
+const Projects = lazy(() => import("@/pages/Projects"));
+const ProjectDetail = lazy(() => import("@/pages/ProjectDetail"));
+const Tasks = lazy(() => import("@/pages/Tasks"));
+const TimeTracking = lazy(() => import("@/pages/TimeTracking"));
+const Resourcing = lazy(() => import("@/pages/Resourcing"));
+const Timesheets = lazy(() => import("@/pages/Timesheets"));
+const Invoices = lazy(() => import("@/pages/Invoices"));
+const Scheduling = lazy(() => import("@/pages/Scheduling"));
+const PurchaseOrders = lazy(() => import("@/pages/PurchaseOrders"));
+const RateCards = lazy(() => import("@/pages/RateCards"));
+const Services = lazy(() => import("@/pages/Services"));
+const Templates = lazy(() => import("@/pages/Templates"));
+const Auth = lazy(() => import("@/pages/Auth"));
+const Reporting = lazy(() => import("@/pages/Reporting"));
+const Portfolio = lazy(() => import("@/pages/Portfolio"));
+const DailyBrief = lazy(() => import("@/pages/DailyBrief"));
+const Automations = lazy(() => import("@/pages/Automations"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,     // 5 minutes
+      gcTime: 10 * 60 * 1000,        // 10 minutes
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 interface DialogContextType {
   openCreateTask: () => void;
@@ -169,6 +180,13 @@ function AppShell() {
       <CreateSessionDialog open={sessionOpen} onOpenChange={setSessionOpen} />
       <CreateInvoiceDialog open={invoiceOpen} onOpenChange={setInvoiceOpen} />
       <CreateProjectFromPlanDialog open={planOpen} onOpenChange={setPlanOpen} />
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm animate-pulse">
+            N
+          </div>
+        </div>
+      }>
       <Routes>
         <Route path="/auth" element={<AuthRoute />} />
         {/* Public routes — no auth required */}
@@ -206,6 +224,7 @@ function AppShell() {
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
     </DialogContext.Provider>
     </AIContext.Provider>
   );

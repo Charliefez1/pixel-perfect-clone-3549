@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FolderKanban, CheckSquare, Receipt, Calendar, AlertTriangle, PieChart, ArrowRight, Plus } from "lucide-react";
@@ -39,49 +40,56 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
 
   // NEURO phase distribution
-  const neuroData = neuroColors.map((n) => ({
+  const neuroData = useMemo(() => neuroColors.map((n) => ({
     name: n.name,
     value: projects?.filter((p) => p.neuro_phase === n.name.toLowerCase()).length || 0,
     fill: n.color,
-  }));
+  })), [projects]);
 
   // Task stats
-  const totalTasks = tasks?.length || 0;
-  const doneTasks = tasks?.filter((t) => t.status === "done").length || 0;
-  const completionRate = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
-  const overdueTasks = tasks?.filter((t) => t.due_date && isPast(new Date(t.due_date)) && t.status !== "done") || [];
+  const { totalTasks, doneTasks, completionRate, overdueTasks } = useMemo(() => {
+    const total = tasks?.length || 0;
+    const done = tasks?.filter((t) => t.status === "done").length || 0;
+    const rate = total > 0 ? Math.round((done / total) * 100) : 0;
+    const overdue = tasks?.filter((t) => t.due_date && isPast(new Date(t.due_date)) && t.status !== "done") || [];
+    return { totalTasks: total, doneTasks: done, completionRate: rate, overdueTasks: overdue };
+  }, [tasks]);
 
   // Overdue invoices
-  const overdueInvoices = invoices?.filter((inv) => inv.status === "overdue" || (inv.status === "sent" && inv.due_date && isPast(new Date(inv.due_date)))) || [];
-  const overdueAmount = overdueInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
-
-  // Paid this month
-  const paidThisMonth = invoices?.filter((inv) => {
-    if (inv.status !== "paid" || !inv.paid_date) return false;
-    const d = new Date(inv.paid_date);
-    const now = new Date();
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  }).reduce((sum, inv) => sum + (inv.total || 0), 0) || 0;
+  const { overdueInvoices, overdueAmount, paidThisMonth } = useMemo(() => {
+    const overdue = invoices?.filter((inv) => inv.status === "overdue" || (inv.status === "sent" && inv.due_date && isPast(new Date(inv.due_date)))) || [];
+    const amount = overdue.reduce((sum, inv) => sum + (inv.total || 0), 0);
+    const paid = invoices?.filter((inv) => {
+      if (inv.status !== "paid" || !inv.paid_date) return false;
+      const d = new Date(inv.paid_date);
+      const now = new Date();
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).reduce((sum, inv) => sum + (inv.total || 0), 0) || 0;
+    return { overdueInvoices: overdue, overdueAmount: amount, paidThisMonth: paid };
+  }, [invoices]);
 
   // Upcoming this week (sessions only — deals removed)
-  const upcomingItems: Array<{ type: string; title: string; org: string; date: Date }> = [];
-  sessions?.forEach((s) => {
-    if (s.session_date && isThisWeek(parseISO(s.session_date), { weekStartsOn: 1 })) {
-      upcomingItems.push({
-        type: "session",
-        title: s.title,
-        org: s.projects?.organisations?.name || s.projects?.name || "",
-        date: parseISO(s.session_date),
-      });
-    }
-  });
-  upcomingItems.sort((a, b) => a.date.getTime() - b.date.getTime());
+  const upcomingItems = useMemo(() => {
+    const items: Array<{ type: string; title: string; org: string; date: Date }> = [];
+    sessions?.forEach((s) => {
+      if (s.session_date && isThisWeek(parseISO(s.session_date), { weekStartsOn: 1 })) {
+        items.push({
+          type: "session",
+          title: s.title,
+          org: s.projects?.organisations?.name || s.projects?.name || "",
+          date: parseISO(s.session_date),
+        });
+      }
+    });
+    items.sort((a, b) => a.date.getTime() - b.date.getTime());
+    return items;
+  }, [sessions]);
 
   // Deliveries needing feedback (delivered 2+ days ago, feedback not sent)
-  const feedbackNeeded = deliveries?.filter((d) =>
+  const feedbackNeeded = useMemo(() => deliveries?.filter((d) =>
     d.status === "delivered" && !d.feedback_sent && d.delivery_date &&
     differenceInDays(new Date(), new Date(d.delivery_date)) >= 2
-  ) || [];
+  ) || [], [deliveries]);
 
   // Needs attention items — sorted by urgency, max 5
   const attentionItems: Array<{ id: string; label: string; detail: string; action: string; route: string; onAction?: () => void }> = [];

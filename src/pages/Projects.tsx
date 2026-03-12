@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -63,9 +63,9 @@ export default function Projects() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
 
-  function getProjectSummary(p: Project) {
+  const getProjectSummary = useCallback((p: Project) => {
     const pMilestones = allMilestones?.filter((m) => m.project_id === p.id) || [];
     const nextMilestone = pMilestones.find((m) => !m.completed_at);
     const completedMilestones = pMilestones.filter((m) => m.completed_at).length;
@@ -88,13 +88,13 @@ export default function Projects() {
       (daysToDelivery !== null && daysToDelivery <= 7);
 
     return { nextMilestone, completedMilestones, totalMilestones: pMilestones.length, overdueTasks, nextSession, nextDelivery, daysToDelivery, needsAction };
-  }
+  }, [allMilestones, tasks, sessions, deliveries, now]);
 
-  const filteredProjects = projects?.filter((p) => {
+  const filteredProjects = useMemo(() => projects?.filter((p) => {
     if (filter === "all") return true;
     if (p.status === "completed") return false;
     return getProjectSummary(p).needsAction;
-  });
+  }), [projects, filter, getProjectSummary]);
 
   return (
     <>
