@@ -59,6 +59,13 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS role public.app_role NOT NULL DEFAULT 'client',
   ADD COLUMN IF NOT EXISTS organisation_id UUID REFERENCES public.organisations(id) ON DELETE SET NULL;
 
+-- 2b. Add organisation_id to forms table (currently has no org scoping)
+-- REVIEWER FIX #2: forms table had no project_id or organisation_id, so client
+-- form_responses policies couldn't scope to an org. Adding organisation_id to forms
+-- allows proper client scoping: form_responses → forms → organisation_id.
+ALTER TABLE public.forms
+  ADD COLUMN IF NOT EXISTS organisation_id UUID REFERENCES public.organisations(id) ON DELETE SET NULL;
+
 -- 3. Create user_org_access table (client -> org mapping, multi-org support)
 CREATE TABLE IF NOT EXISTS public.user_org_access (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -138,21 +145,29 @@ git commit -m "feat(security): extend role enum, add user_org_access table and h
 
 ---
 
-### Task 2: Drop All Permissive RLS Policies
+### Task 2: Drop All Permissive Policies AND Create Admin/Team Policies (ATOMIC)
+
+> **REVIEWER FIX #1:** Tasks 2 and 3 from the original plan are merged into a single migration.
+> Dropping all permissive policies in one migration and recreating proper policies in the next
+> would leave a window where every table is wide open. This single migration does both atomically.
 
 **Files:**
-- Create: `supabase/migrations/20260312100001_security_phase1_drop_permissive.sql`
+- Create: `supabase/migrations/20260312100001_security_phase1_rls_replace.sql`
 
-**Step 1: Write the migration that drops every `USING (true)` policy**
+**Step 1: Write the migration that drops all permissive policies AND recreates proper ones**
 
-Every table that currently has `FOR ALL TO authenticated USING (true) WITH CHECK (true)` gets its policy dropped. We will re-create proper policies in the next task.
+This single migration drops every `USING (true)` policy, then immediately creates admin/team full-access policies and public form policies. No security gap.
 
 ```sql
 -- ==================================================
--- Security Phase 1: Drop all permissive RLS policies
+-- Security Phase 1: ATOMIC drop-and-replace of all RLS policies
 -- ==================================================
--- IMPORTANT: This migration removes security. The next migration re-adds proper policies.
--- These must be applied together.
+-- This migration drops all permissive policies and recreates proper ones in a single transaction.
+-- Postgres migrations run in a transaction by default, so there is no window of exposure.
+
+-- ============================
+-- PART A: Drop all permissive policies
+-- ============================
 
 -- From initial migration (20260308040541)
 DROP POLICY IF EXISTS "Authenticated users can CRUD organisations" ON public.organisations;
@@ -205,28 +220,9 @@ DROP POLICY IF EXISTS "Authenticated users can manage automations" ON public.aut
 DROP POLICY IF EXISTS "Authenticated users can manage automation logs" ON public.automation_logs;
 ```
 
-**Step 2: Commit**
-
-```bash
-git add supabase/migrations/20260312100001_security_phase1_drop_permissive.sql
-git commit -m "feat(security): drop all permissive USING(true) RLS policies"
-```
-
----
-
-### Task 3: Create Proper RLS Policies — Admin/Team Full Access
-
-**Files:**
-- Create: `supabase/migrations/20260312100002_security_phase1_rls_admin_team.sql`
-
-**Step 1: Write admin/team full-access policies for all tables**
-
-Admin and team users get full CRUD on all tables. Uses the `is_admin_or_team()` SECURITY DEFINER function to avoid RLS recursion.
-
-```sql
--- ==================================================
--- Security Phase 1: Admin/Team full access policies
--- ==================================================
+-- ============================
+-- PART B: Admin/Team full access policies
+-- ============================
 
 -- Org-scoped tables: admin/team get ALL
 CREATE POLICY "admin_team_all_projects" ON public.projects
@@ -310,16 +306,16 @@ CREATE POLICY "anyone_can_view_active_forms" ON public.forms
 **Step 2: Commit**
 
 ```bash
-git add supabase/migrations/20260312100002_security_phase1_rls_admin_team.sql
-git commit -m "feat(security): add admin/team full-access RLS policies for all tables"
+git add supabase/migrations/20260312100001_security_phase1_rls_replace.sql
+git commit -m "feat(security): atomic drop-and-replace of all permissive RLS policies with role-based access"
 ```
 
 ---
 
-### Task 4: Create Proper RLS Policies — Client Org-Scoped Read
+### Task 3: Create Proper RLS Policies — Client Org-Scoped Read
 
 **Files:**
-- Create: `supabase/migrations/20260312100003_security_phase1_rls_client.sql`
+- Create: `supabase/migrations/20260312100002_security_phase1_rls_client.sql`
 
 **Step 1: Write client read-only, org-scoped policies**
 
@@ -407,15 +403,25 @@ CREATE POLICY "client_read_contacts" ON public.contacts
   FOR SELECT TO authenticated
   USING (public.user_has_org_access(auth.uid(), organisation_id));
 
--- forms: clients can view active forms (already covered by public policy)
+-- forms: clients can view active forms for their org
+CREATE POLICY "client_read_forms" ON public.forms
+  FOR SELECT TO authenticated
+  USING (
+    organisation_id IS NOT NULL
+    AND public.user_has_org_access(auth.uid(), organisation_id)
+  );
+
 -- form_responses: clients can view responses for their org's forms
+-- REVIEWER FIX #2: Original policy checked is_admin_or_team = false but never
+-- scoped to the client's org. Now joins through forms → organisation_id.
 CREATE POLICY "client_read_form_responses" ON public.form_responses
   FOR SELECT TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM public.forms f
       WHERE f.id = form_responses.form_id
-        AND public.is_admin_or_team(auth.uid()) = false
+        AND f.organisation_id IS NOT NULL
+        AND public.user_has_org_access(auth.uid(), f.organisation_id)
     )
   );
 
@@ -499,16 +505,37 @@ CREATE POLICY "client_read_own_organisation" ON public.organisations
 **Step 2: Commit**
 
 ```bash
-git add supabase/migrations/20260312100003_security_phase1_rls_client.sql
+git add supabase/migrations/20260312100002_security_phase1_rls_client.sql
 git commit -m "feat(security): add client org-scoped read-only RLS policies"
 ```
 
 ---
 
-### Task 5: Storage Isolation
+### Task 4: Storage Isolation
+
+> **REVIEWER FIX #3:** Before writing the storage policy, verify actual file paths.
+> The policy assumes `documents/{organisation_id}/...`. If the current upload code
+> (built by Lovable) stores files without that path structure, every existing file
+> becomes inaccessible after this migration.
 
 **Files:**
-- Create: `supabase/migrations/20260312100004_security_phase1_storage.sql`
+- Create: `supabase/migrations/20260312100003_security_phase1_storage.sql`
+
+**Step 0 (PREREQUISITE): Check actual storage paths**
+
+Run this in Supabase SQL editor (or via the Supabase client) BEFORE writing the migration:
+
+```sql
+SELECT name FROM storage.objects WHERE bucket_id = 'documents' LIMIT 20;
+```
+
+**If paths already start with `{org_uuid}/...`:** proceed with Step 1 as written.
+
+**If paths do NOT start with an org UUID:** you must either:
+1. Write a data migration to restructure existing files into `{organisation_id}/filename` paths, OR
+2. Adapt the storage policy to match the actual path format (and restructure later).
+
+Do NOT skip this check. Applying the policy blindly will lock out all existing files.
 
 **Step 1: Write storage RLS policies**
 
@@ -554,16 +581,16 @@ CREATE POLICY "client_read_own_org_storage" ON storage.objects
 **Step 2: Commit**
 
 ```bash
-git add supabase/migrations/20260312100004_security_phase1_storage.sql
+git add supabase/migrations/20260312100003_security_phase1_storage.sql
 git commit -m "feat(security): add org-scoped storage RLS policies"
 ```
 
 ---
 
-### Task 6: Audit Columns
+### Task 5: Audit Columns
 
 **Files:**
-- Create: `supabase/migrations/20260312100005_security_phase1_audit.sql`
+- Create: `supabase/migrations/20260312100004_security_phase1_audit.sql`
 
 **Step 1: Write migration adding audit columns and trigger**
 
@@ -619,7 +646,7 @@ END $$;
 **Step 2: Commit**
 
 ```bash
-git add supabase/migrations/20260312100005_security_phase1_audit.sql
+git add supabase/migrations/20260312100004_security_phase1_audit.sql
 git commit -m "feat(security): add updated_by audit columns and triggers to all core tables"
 ```
 
@@ -627,7 +654,7 @@ git commit -m "feat(security): add updated_by audit columns and triggers to all 
 
 ## Phase 2: Auth & Session Hardening
 
-### Task 7: Role-Aware Auth Context
+### Task 6: Role-Aware Auth Context
 
 **Files:**
 - Modify: `src/hooks/useAuth.tsx`
@@ -774,7 +801,7 @@ git commit -m "feat(auth): add role-aware auth context with profile fetching"
 
 ---
 
-### Task 8: RequireRole Component
+### Task 7: RequireRole Component
 
 **Files:**
 - Create: `src/components/auth/RequireRole.tsx`
@@ -823,7 +850,7 @@ git commit -m "feat(auth): add RequireRole route guard component"
 
 ---
 
-### Task 9: Add Role Guards to Routes
+### Task 8: Add Role Guards to Routes
 
 **Files:**
 - Modify: `src/App.tsx`
@@ -851,7 +878,7 @@ git commit -m "feat(auth): add RequireRole guards to admin/team-only routes"
 
 ---
 
-### Task 10: Harden Supabase Client Session Config
+### Task 9: Harden Supabase Client Session Config
 
 **Files:**
 - Modify: `src/integrations/supabase/client.ts`
@@ -889,11 +916,16 @@ git add src/integrations/supabase/client.ts
 git commit -m "feat(auth): harden Supabase client with PKCE flow"
 ```
 
+> **MANUAL STEP (after Task 9):** Go to Supabase Dashboard → Authentication → Settings
+> and set JWT expiry to **3600 seconds** with **refresh token rotation enabled**.
+> Task 9 configures the client-side PKCE flow but the server-side session duration
+> is a dashboard-only setting that cannot be configured via migrations or client code.
+
 ---
 
 ## Phase 3: Error Handling & Observability
 
-### Task 11: Create handleSupabaseError Utility
+### Task 10: Create handleSupabaseError Utility
 
 **Files:**
 - Create: `src/lib/errors.ts`
@@ -948,7 +980,7 @@ git commit -m "feat(errors): add handleSupabaseError utility with friendly messa
 
 ---
 
-### Task 12: Update Data Hooks to Use Error Handling
+### Task 11: Update Data Hooks to Use Error Handling
 
 **Files:**
 - Modify: `src/hooks/useProjects.ts` (example — same pattern applies to all hooks)
@@ -1114,7 +1146,7 @@ Continue in batches until all hooks are updated.
 
 ---
 
-### Task 13: Console Cleanup
+### Task 12: Console Cleanup
 
 **Files:**
 - Modify: `vite.config.ts`
@@ -1161,7 +1193,7 @@ git commit -m "feat(build): strip console/debugger in production, remove lovable
 
 ## Phase 4: Codebase Cleanup
 
-### Task 14: Environment Validation
+### Task 13: Environment Validation
 
 **Files:**
 - Modify: `src/main.tsx`
@@ -1209,7 +1241,7 @@ git commit -m "feat(config): add startup env var validation"
 
 ---
 
-### Task 15: Dependency Audit
+### Task 14: Dependency Audit
 
 **Step 1: Run npm audit**
 
@@ -1235,7 +1267,7 @@ git commit -m "chore(deps): audit fix and remove lovable-tagger"
 
 ---
 
-### Task 16: CORS Lockdown on Edge Functions
+### Task 15: CORS Lockdown on Edge Functions
 
 **Files:**
 - Modify all 7 edge functions:
@@ -1295,7 +1327,7 @@ git commit -m "feat(security): lock down CORS on all edge functions to productio
 
 ---
 
-### Task 17: Update Supabase Types
+### Task 16: Update Supabase Types
 
 After all migrations are written, regenerate the Supabase types to include the new columns and tables.
 
@@ -1314,6 +1346,42 @@ git commit -m "chore: regenerate Supabase types after security migrations"
 
 ---
 
+## Rollback Plan
+
+If any migration breaks the app, run this emergency rollback migration to restore permissive access while you debug:
+
+```sql
+-- EMERGENCY ROLLBACK: Re-apply permissive policies to restore access
+-- File: supabase/migrations/YYYYMMDDHHMMSS_emergency_rollback.sql
+-- WARNING: This removes all security. Use only in emergencies.
+
+-- Re-enable permissive access on all tables
+DO $$
+DECLARE
+  tbl TEXT;
+  tables TEXT[] := ARRAY[
+    'organisations','contacts','deals','projects','tasks','sessions',
+    'invoices','invoice_items','comments','activity_log','deliveries',
+    'delivery_tasks','templates','time_entries','proposals','contracts',
+    'services','rate_cards','purchase_orders','forms','activities',
+    'client_portal_access','project_milestones','project_updates',
+    'form_responses','portal_messages','session_agenda_items',
+    'automations','automation_logs'
+  ];
+BEGIN
+  FOREACH tbl IN ARRAY tables LOOP
+    EXECUTE format(
+      'CREATE POLICY "emergency_permissive_%s" ON public.%I FOR ALL TO authenticated USING (true) WITH CHECK (true)',
+      tbl, tbl
+    );
+  END LOOP;
+END $$;
+```
+
+Keep this file ready but do NOT apply it unless the app is broken. After debugging, remove it and re-apply the proper migrations.
+
+---
+
 ## Verification Checklist
 
 After all tasks are complete, verify:
@@ -1322,6 +1390,7 @@ After all tasks are complete, verify:
 - [ ] `user_org_access` table exists with proper RLS
 - [ ] `is_admin_or_team()` and `user_has_org_access()` functions exist
 - [ ] `profiles` table has `role` and `organisation_id` columns
+- [ ] `forms` table has `organisation_id` column (added for client scoping)
 - [ ] `useAuth` returns `profile`, `isAdmin`, `isTeam`, `isClient`
 - [ ] `RequireRole` component exists and is used on admin routes
 - [ ] `handleSupabaseError` is used in all data hooks
