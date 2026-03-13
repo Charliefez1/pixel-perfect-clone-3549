@@ -101,13 +101,13 @@
 
   /* ── Dark mode palette ── */
   .dark {
-    --background: 0 0% 33%;         /* #545454 */
+    --background: 0 0% 20%;         /* #333333 */
     --foreground: 0 0% 100%;
 
-    --card: 0 0% 39%;               /* #636363 */
+    --card: 0 0% 25%;               /* #404040 */
     --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 39%;
+    --popover: 0 0% 25%;
     --popover-foreground: 0 0% 100%;
 
     --primary: var(--accent);
