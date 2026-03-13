@@ -23,12 +23,16 @@
 
     --primary: var(--accent);
     --primary-foreground: var(--accent-foreground);
+    --primary-hover: var(--accent-hover);
 
     --secondary: 0 0% 96%;
     --secondary-foreground: 0 0% 10%;
 
     --muted: 40 6% 90%;             /* #e5e5e3 */
     --muted-foreground: 0 0% 42%;   /* #6b6b6b */
+
+    --background-elevated: 0 0% 100%;  /* white */
+    --foreground-subtle: 0 0% 55%;     /* #8c8c8c */
 
     --destructive: 0 84% 60%;       /* #dc2626 */
     --destructive-foreground: 0 0% 100%;
@@ -108,12 +112,16 @@
 
     --primary: var(--accent);
     --primary-foreground: var(--accent-foreground);
+    --primary-hover: var(--accent-hover);
 
     --secondary: 0 0% 29%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 0 0% 29%;              /* #4a4a4a */
     --muted-foreground: 0 0% 69%;   /* #b0b0b0 */
+
+    --background-elevated: 0 0% 39%;  /* #636363 */
+    --foreground-subtle: 0 0% 60%;    /* #999 */
 
     --destructive: 0 72% 51%;       /* #ef4444 */
     --destructive-foreground: 0 0% 100%;

@@ -57,13 +57,16 @@ export default {
   			ring: 'hsl(var(--ring))',
   			background: {
   				DEFAULT: 'hsl(var(--background))',
+  				elevated: 'hsl(var(--background-elevated))',
   			},
   			foreground: {
   				DEFAULT: 'hsl(var(--foreground))',
+  				subtle: 'hsl(var(--foreground-subtle))',
   			},
   			primary: {
   				DEFAULT: 'hsl(var(--primary))',
-  				foreground: 'hsl(var(--primary-foreground))'
+  				foreground: 'hsl(var(--primary-foreground))',
+  				hover: 'hsl(var(--primary-hover))'
   			},
   			secondary: {
   				DEFAULT: 'hsl(var(--secondary))',
