@@ -31,9 +31,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId: string) => {
+    // Use select("*") to be resilient to column changes across environments
     const { data: profileData, error: profileError } = await supabase
       .from("profiles")
-      .select("id, user_id, display_name, email, avatar_url, theme_accent, theme_mode")
+      .select("*")
       .eq("user_id", userId)
       .single();
 
@@ -42,15 +43,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
-    const { data: roleData } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
+    // user_roles table may not exist yet — gracefully fallback
+    let role: AppRole = 'client';
+    try {
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (roleData?.role) role = roleData.role as AppRole;
+    } catch {
+      // user_roles table doesn't exist yet — default to client
+    }
 
     return {
       ...profileData,
-      role: (roleData?.role as AppRole) ?? 'client',
+      role,
     } as UserProfile;
   }, []);
 
