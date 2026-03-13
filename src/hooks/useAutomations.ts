@@ -2,21 +2,37 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { handleSupabaseError } from "@/lib/errors";
 import { toast } from "sonner";
-import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
-export type Automation = Tables<"automations">;
-export type AutomationLog = Tables<"automation_logs">;
+export interface Automation {
+  id: string;
+  name: string;
+  trigger_type: string;
+  trigger_config: any;
+  action_type: string;
+  action_config: any;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AutomationLog {
+  id: string;
+  automation_id: string;
+  status: string;
+  message: string | null;
+  created_at: string;
+}
 
 export function useAutomations() {
   return useQuery({
     queryKey: ["automations"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("automations")
+        .from("automations" as any)
         .select("*")
         .order("created_at", { ascending: false });
       if (error) { handleSupabaseError(error, "Loading automations"); return []; }
-      return data as Automation[];
+      return data as unknown as Automation[];
     },
   });
 }
@@ -24,9 +40,9 @@ export function useAutomations() {
 export function useCreateAutomation() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (auto: TablesInsert<"automations">) => {
+    mutationFn: async (auto: Partial<Automation>) => {
       const { data, error } = await supabase
-        .from("automations")
+        .from("automations" as any)
         .insert(auto)
         .select()
         .single();
@@ -43,7 +59,7 @@ export function useUpdateAutomation() {
   return useMutation({
     mutationFn: async ({ id, ...updates }: { id: string } & Partial<Automation>) => {
       const { data, error } = await supabase
-        .from("automations")
+        .from("automations" as any)
         .update(updates)
         .eq("id", id)
         .select()
@@ -60,7 +76,7 @@ export function useDeleteAutomation() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("automations").delete().eq("id", id);
+      const { error } = await supabase.from("automations" as any).delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["automations"] }); toast.success("Automation deleted"); },
@@ -73,14 +89,14 @@ export function useAutomationLogs(automationId?: string) {
     queryKey: ["automation_logs", automationId],
     queryFn: async () => {
       const query = supabase
-        .from("automation_logs")
+        .from("automation_logs" as any)
         .select("*")
         .order("created_at", { ascending: false })
         .limit(50);
       if (automationId) query.eq("automation_id", automationId);
       const { data, error } = await query;
       if (error) { handleSupabaseError(error, "Loading automation logs"); return []; }
-      return data as AutomationLog[];
+      return data as unknown as AutomationLog[];
     },
     enabled: !!automationId || automationId === undefined,
   });
