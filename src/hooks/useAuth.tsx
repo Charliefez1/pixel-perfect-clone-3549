@@ -30,40 +30,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    // Use select("*") to be resilient to column changes across environments
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
+  const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId)
+        .single();
 
-    if (profileError) {
-      console.error("Failed to fetch profile:", profileError);
+      if (profileError || !profileData) {
+        console.error("Failed to fetch profile:", profileError);
+        return null;
+      }
+
+      // user_roles table may not exist — gracefully fallback to 'client'
+      let role: AppRole = 'client';
+      try {
+        const { data: roleData, error: roleError } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (!roleError && roleData?.role) role = roleData.role as AppRole;
+      } catch {
+        // table doesn't exist or network issue — keep default
+      }
+
+      return { ...profileData, role } as UserProfile;
+    } catch (err) {
+      console.error("fetchProfile crashed:", err);
       return null;
     }
-
-    // user_roles table may not exist yet — gracefully fallback
-    let role: AppRole = 'client';
-    try {
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (roleData?.role) role = roleData.role as AppRole;
-    } catch {
-      // user_roles table doesn't exist yet — default to client
-    }
-
-    return {
-      ...profileData,
-      role,
-    } as UserProfile;
   }, []);
 
   useEffect(() => {
     let mounted = true;
+
+    // Safety net: if auth never resolves, force loading off after 8s
+    const timeout = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn("Auth loading timeout — forcing loading off");
+        setLoading(false);
+      }
+    }, 8000);
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!mounted) return;
@@ -75,26 +84,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (mounted) setLoading(false);
+    }).catch((err) => {
+      console.error("getSession failed:", err);
+      if (mounted) setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         if (!mounted) return;
-        setSession(session);
+        try {
+          setSession(session);
 
-        if (session?.user) {
-          const prof = await fetchProfile(session.user.id);
-          if (mounted) setProfile(prof);
-        } else {
-          setProfile(null);
+          if (session?.user) {
+            const prof = await fetchProfile(session.user.id);
+            if (mounted) setProfile(prof);
+          } else {
+            setProfile(null);
+          }
+        } catch (err) {
+          console.error("onAuthStateChange handler failed:", err);
+        } finally {
+          if (mounted) setLoading(false);
         }
-
-        if (mounted) setLoading(false);
       }
     );
 
     return () => {
       mounted = false;
+      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, [fetchProfile]);
