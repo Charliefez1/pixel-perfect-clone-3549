@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         loading,
         isAdmin: role === 'admin',
-        isTeam: role === 'team',
+        isTeam: role === 'user' || role === 'admin',
         isClient: role === 'client',
         signOut,
       }}
