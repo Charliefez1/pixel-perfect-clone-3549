@@ -84,12 +84,6 @@ export default function PortalView() {
     );
   }
 
-  const statusStyles: Record<string, string> = {
-    setup: "bg-muted text-muted-foreground",
-    active: "bg-green-100 text-green-700",
-    paused: "bg-amber-100 text-amber-700",
-    completed: "bg-primary/20 text-primary",
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -143,7 +137,7 @@ export default function PortalView() {
                       <CardContent className="p-5 space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="font-medium">{p.name}</p>
-                          <Badge className={statusStyles[p.status] || "bg-muted"}>{p.status}</Badge>
+                          <StatusBadge status={p.status} />
                         </div>
                         {p.description && (
                           <p className="text-sm text-muted-foreground line-clamp-2">{p.description}</p>
@@ -169,7 +163,7 @@ export default function PortalView() {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-xl font-bold">{selectedProject.name}</h3>
-                  <Badge className={statusStyles[selectedProject.status] || "bg-muted"}>{selectedProject.status}</Badge>
+                  <StatusBadge status={selectedProject.status} />
                 </div>
               </div>
 
@@ -337,12 +331,7 @@ export default function PortalView() {
                             <TableRow key={inv.id}>
                               <TableCell className="pl-6 font-medium">{inv.invoice_number}</TableCell>
                               <TableCell>
-                                <Badge className={
-                                  inv.status === "paid" ? "bg-green-100 text-green-700" :
-                                  inv.status === "overdue" ? "bg-red-100 text-red-700" :
-                                  inv.status === "sent" || inv.status === "viewed" ? "bg-amber-100 text-amber-700" :
-                                  "bg-muted text-muted-foreground"
-                                }>{inv.status}</Badge>
+                                <StatusBadge status={inv.status} />
                               </TableCell>
                               <TableCell className="text-muted-foreground">{inv.issue_date || "—"}</TableCell>
                               <TableCell className="text-muted-foreground">{inv.due_date || "—"}</TableCell>

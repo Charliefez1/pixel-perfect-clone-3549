@@ -2,6 +2,7 @@ import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -21,13 +22,6 @@ import { DeleteConfirmDialog } from "@/components/dialogs/DeleteConfirmDialog";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { ShoppingCart, Loader2 } from "lucide-react";
-
-const statusStyles: Record<string, string> = {
-  draft: "bg-muted text-muted-foreground",
-  submitted: "bg-[hsl(var(--stage-proposal))]/20 text-[hsl(var(--stage-proposal))]",
-  approved: "bg-[hsl(var(--stage-won))]/20 text-[hsl(var(--stage-won))]",
-  rejected: "bg-destructive/20 text-destructive",
-};
 
 const poCategories = ["Venue Hire", "Catering", "Materials", "Travel", "Equipment", "Software", "Contractor", "Other"];
 
@@ -138,7 +132,7 @@ export default function PurchaseOrders() {
                       <TableCell className="text-sm text-muted-foreground">{p.projects?.name || "—"}</TableCell>
                       <TableCell><Badge variant="secondary">{p.category || "—"}</Badge></TableCell>
                       <TableCell className="text-sm font-medium">£{(p.amount || 0).toLocaleString()}</TableCell>
-                      <TableCell><Badge className={statusStyles[p.status] || statusStyles.draft}>{p.status}</Badge></TableCell>
+                      <TableCell><StatusBadge status={p.status} /></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -173,7 +167,7 @@ export default function PurchaseOrders() {
           open={!!selected}
           onOpenChange={() => { setSelected(null); setEditing(false); }}
           title={selected.po_number}
-          badge={{ label: selected.status, className: statusStyles[selected.status] }}
+          badge={{ label: selected.status }}
           fields={editing ? [] : [
             { label: "Supplier", value: selected.organisations?.name },
             { label: "Project", value: selected.projects?.name },

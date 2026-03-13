@@ -27,9 +27,11 @@ import {
   Sun,
   Briefcase,
   Zap,
+  Settings,
 } from "lucide-react";
 import { useState } from "react";
 import { useProjects } from "@/hooks/useProjects";
+import { useAuth } from "@/hooks/useAuth";
 
 const mainNav = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
@@ -55,7 +57,7 @@ const workspaceNav = [
   { to: "/notifications", icon: Bell, label: "Notifications" },
 ];
 
-const settingsNav = [
+const adminNav = [
   { to: "/templates", icon: Layers, label: "Templates" },
   { to: "/services", icon: Layers, label: "Services" },
 ];
@@ -67,10 +69,10 @@ function NavItem({ item, collapsed }: { item: typeof mainNav[0]; collapsed: bool
       end={item.to === "/"}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-normal",
+          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150",
           isActive
-            ? "bg-sidebar-accent text-sidebar-primary"
-            : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+            ? "bg-accent-muted border-l-2 border-accent text-foreground font-medium"
+            : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-muted"
         )
       }
     >
@@ -108,10 +110,10 @@ function RecentProjects({ collapsed }: { collapsed: boolean }) {
           to={`/projects/${p.id}`}
           className={({ isActive }) =>
             cn(
-              "flex items-center gap-2 pl-9 pr-3 py-1.5 rounded-lg text-xs transition-all duration-normal",
+              "flex items-center gap-2 pl-9 pr-3 py-1.5 rounded-lg text-xs transition-all duration-150",
               isActive
-                ? "bg-sidebar-accent text-sidebar-primary"
-                : "text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                ? "bg-accent-muted text-foreground font-medium"
+                : "text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-muted"
             )
           }
         >
@@ -125,6 +127,7 @@ function RecentProjects({ collapsed }: { collapsed: boolean }) {
 
 export function AppSidebar({ onOpenAI }: { onOpenAI?: () => void }) {
   const [collapsed, setCollapsed] = useState(false);
+  const { profile } = useAuth();
 
   return (
     <aside
@@ -133,22 +136,27 @@ export function AppSidebar({ onOpenAI }: { onOpenAI?: () => void }) {
         collapsed ? "w-16" : "w-60"
       )}
     >
-      {/* Brand */}
+      {/* Brand + User */}
       <div className="flex items-center gap-3 px-4 h-16 border-b border-sidebar-border">
         <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
-          N
+          {profile?.display_name?.charAt(0)?.toUpperCase() || "N"}
         </div>
         {!collapsed && (
-          <span className="text-base font-bold tracking-tight">
-            NDG Hub
-          </span>
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-semibold truncate">
+              {profile?.display_name || "NDG Hub"}
+            </span>
+            <span className="text-[11px] text-sidebar-foreground/50 truncate">
+              {profile?.email || ""}
+            </span>
+          </div>
         )}
       </div>
 
       {/* Search */}
       {!collapsed && (
         <div className="px-3 pt-4">
-          <button className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-sidebar-accent/50 text-sidebar-foreground/50 text-sm hover:bg-sidebar-accent transition-all duration-normal">
+          <button className="flex items-center gap-2 w-full px-3 py-2 rounded-lg bg-muted text-sidebar-foreground/50 text-sm hover:bg-sidebar-accent transition-all duration-150">
             <Search className="h-4 w-4" strokeWidth={2} />
             <span>Search</span>
             <kbd className="ml-auto text-[10px] bg-sidebar-accent px-1.5 py-0.5 rounded font-mono">⌘K</kbd>
@@ -157,7 +165,10 @@ export function AppSidebar({ onOpenAI }: { onOpenAI?: () => void }) {
       )}
 
       {/* Main Nav */}
-      <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
+        {!collapsed && (
+          <span className="text-overline text-sidebar-foreground/50 px-3 mb-2 block">MENU</span>
+        )}
         {mainNav.map((item) => (
           <div key={item.to}>
             <NavItem item={item} collapsed={collapsed} />
@@ -167,42 +178,57 @@ export function AppSidebar({ onOpenAI }: { onOpenAI?: () => void }) {
 
         {/* Workspace Section */}
         {!collapsed && (
-          <p className="px-3 pt-6 pb-2 text-overline text-sidebar-foreground/40">
-            Clients & Scheduling
-          </p>
+          <span className="text-overline text-sidebar-foreground/50 px-3 pt-5 pb-1 block">WORKSPACE</span>
         )}
         {collapsed && <div className="h-4" />}
         {workspaceNav.map((item) => (
           <NavItem key={item.to} item={item} collapsed={collapsed} />
         ))}
 
-        {/* Settings Section */}
+        {/* Admin Section */}
         {!collapsed && (
-          <p className="px-3 pt-6 pb-2 text-overline text-sidebar-foreground/40">
-            Settings
-          </p>
+          <span className="text-overline text-sidebar-foreground/50 px-3 pt-5 pb-1 block">ADMIN</span>
         )}
         {collapsed && <div className="h-4" />}
-        {settingsNav.map((item) => (
+        {adminNav.map((item) => (
           <NavItem key={item.to} item={item} collapsed={collapsed} />
         ))}
       </nav>
 
-      {/* AI Assistant toggle */}
-      {onOpenAI && (
-        <button
-          onClick={onOpenAI}
-          className="flex items-center justify-center gap-2 mx-3 mb-2 h-9 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-normal text-sm font-medium"
+      {/* Bottom section */}
+      <div className="px-3 pb-2 space-y-1">
+        {/* AI Assistant toggle */}
+        {onOpenAI && (
+          <button
+            onClick={onOpenAI}
+            className="flex items-center justify-center gap-2 w-full h-9 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-150 text-sm font-medium"
+          >
+            <Sparkles className="h-4 w-4" />
+            {!collapsed && <span>AI Assistant</span>}
+          </button>
+        )}
+
+        {/* Settings link */}
+        <NavLink
+          to="/settings"
+          className={({ isActive }) =>
+            cn(
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150",
+              isActive
+                ? "bg-accent-muted border-l-2 border-accent text-foreground font-medium"
+                : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-muted"
+            )
+          }
         >
-          <Sparkles className="h-4 w-4" />
-          {!collapsed && <span>AI Assistant</span>}
-        </button>
-      )}
+          <Settings className="h-[18px] w-[18px] shrink-0" strokeWidth={2} />
+          {!collapsed && <span>Settings</span>}
+        </NavLink>
+      </div>
 
       {/* Collapse toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center justify-center h-12 border-t border-sidebar-border text-sidebar-foreground/40 hover:text-sidebar-foreground transition-all duration-normal"
+        className="flex items-center justify-center h-12 border-t border-sidebar-border text-sidebar-foreground/40 hover:text-sidebar-foreground transition-all duration-150"
       >
         {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
       </button>

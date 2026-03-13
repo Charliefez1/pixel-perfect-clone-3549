@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -21,13 +21,6 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { FileSignature, Loader2 } from "lucide-react";
 import { EntityDocuments } from "@/components/documents/EntityDocuments";
-
-const statusStyles: Record<string, string> = {
-  draft: "bg-muted text-muted-foreground",
-  sent: "bg-[hsl(var(--stage-proposal))]/20 text-[hsl(var(--stage-proposal))]",
-  signed: "bg-[hsl(var(--stage-won))]/20 text-[hsl(var(--stage-won))]",
-  expired: "bg-destructive/20 text-destructive",
-};
 
 export default function Contracts() {
   const { data: contracts, isLoading } = useContracts();
@@ -151,7 +144,7 @@ export default function Contracts() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{c.organisations?.name || "—"}</TableCell>
                       <TableCell className="text-sm">£{(c.value || 0).toLocaleString()}</TableCell>
-                      <TableCell><Badge className={statusStyles[c.status] || statusStyles.draft}>{c.status}</Badge></TableCell>
+                      <TableCell><StatusBadge status={c.status} /></TableCell>
                       <TableCell className="text-sm text-muted-foreground">{c.start_date ? format(new Date(c.start_date), "dd/MM/yyyy") : "—"}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{c.end_date ? format(new Date(c.end_date), "dd/MM/yyyy") : "—"}</TableCell>
                     </TableRow>
@@ -189,7 +182,7 @@ export default function Contracts() {
           open={!!selected}
           onOpenChange={() => { setSelected(null); setEditing(false); }}
           title={selected.title}
-          badge={{ label: selected.status, className: statusStyles[selected.status] }}
+          badge={{ label: selected.status }}
           fields={editing ? [] : [
             { label: "Client", value: selected.organisations?.name },
             { label: "Value", value: `£${(selected.value || 0).toLocaleString()}` },

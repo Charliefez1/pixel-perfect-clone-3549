@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Calendar, ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -214,7 +215,7 @@ export default function Tasks() {
                           <Avatar className="h-6 w-6"><AvatarFallback className="text-[10px]">{task.assignee_id ? "A" : "?"}</AvatarFallback></Avatar>
                         </TableCell>
                         <TableCell><Badge className={`${priorityStyles[task.priority]} text-[10px]`}>{task.priority}</Badge></TableCell>
-                        <TableCell><Badge variant="secondary">{columns.find(c => c.id === task.status)?.label}</Badge></TableCell>
+                        <TableCell><StatusBadge status={columns.find(c => c.id === task.status)?.label || task.status} /></TableCell>
                         <TableCell className="text-muted-foreground">{task.due_date ? format(new Date(task.due_date), "dd/MM/yyyy") : "—"}</TableCell>
                       </TableRow>
                       {isExpanded && subtasks.map((sub) => (
@@ -225,7 +226,7 @@ export default function Tasks() {
                             <Avatar className="h-5 w-5"><AvatarFallback className="text-[9px]">{sub.assignee_id ? "A" : "?"}</AvatarFallback></Avatar>
                           </TableCell>
                           <TableCell><Badge className={`${priorityStyles[sub.priority]} text-[9px]`}>{sub.priority}</Badge></TableCell>
-                          <TableCell><Badge variant="secondary" className="text-[10px]">{columns.find(c => c.id === sub.status)?.label}</Badge></TableCell>
+                          <TableCell><StatusBadge status={columns.find(c => c.id === sub.status)?.label || sub.status} className="text-[10px]" /></TableCell>
                           <TableCell className="text-muted-foreground text-sm">{sub.due_date ? format(new Date(sub.due_date), "dd/MM/yyyy") : "—"}</TableCell>
                         </TableRow>
                       ))}

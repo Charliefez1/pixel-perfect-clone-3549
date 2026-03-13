@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Plus, CheckCircle2, ClipboardList } from "lucide-react";
@@ -189,7 +190,7 @@ export default function Deliveries() {
                     <p className="text-xs text-muted-foreground">{delivery.organisations?.name || "No organisation"}</p>
                   </div>
                   {delivery.service_type && <Badge className={serviceTypeColors[delivery.service_type] || "bg-muted"}>{delivery.service_type}</Badge>}
-                  <Badge variant="secondary">{deliveryStatuses.find((s) => s.id === delivery.status)?.label}</Badge>
+                  <StatusBadge status={deliveryStatuses.find((s) => s.id === delivery.status)?.label || delivery.status} />
                   {delivery.delivery_date && <span className="text-xs text-muted-foreground">{format(parseISO(delivery.delivery_date), "dd/MM/yyyy")}</span>}
                 </CardContent>
               </Card>
@@ -214,7 +215,7 @@ export default function Deliveries() {
                     <TableCell className="pl-6 font-medium">{delivery.title}</TableCell>
                     <TableCell className="text-muted-foreground">{delivery.organisations?.name || "—"}</TableCell>
                     <TableCell>{delivery.service_type && <Badge className={serviceTypeColors[delivery.service_type] || "bg-muted"}>{delivery.service_type}</Badge>}</TableCell>
-                    <TableCell><Badge variant="secondary">{deliveryStatuses.find((s) => s.id === delivery.status)?.label}</Badge></TableCell>
+                    <TableCell><StatusBadge status={deliveryStatuses.find((s) => s.id === delivery.status)?.label || delivery.status} /></TableCell>
                     <TableCell className="text-muted-foreground">{delivery.delivery_date ? format(parseISO(delivery.delivery_date), "dd/MM/yyyy") : "—"}</TableCell>
                     <TableCell>{delivery.satisfaction_score ? <Badge className={getSatisfactionColor(delivery.satisfaction_score)}>{delivery.satisfaction_score}/10</Badge> : "—"}</TableCell>
                   </TableRow>
