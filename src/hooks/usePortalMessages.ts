@@ -6,8 +6,12 @@ import { toast } from "sonner";
 export interface PortalMessage {
   id: string;
   organisation_id: string;
+  project_id: string | null;
   sender_id: string | null;
+  sender_type: string;
+  sender_name: string | null;
   content: string;
+  body: string;
   is_admin: boolean;
   created_at: string;
 }
