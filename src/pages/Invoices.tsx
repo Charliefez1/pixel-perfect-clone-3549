@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -17,14 +17,6 @@ import { useDialogs } from "@/App";
 import { toast } from "sonner";
 import { Eye, Send, CheckCircle2, Receipt, Loader2 } from "lucide-react";
 import { EntityDocuments } from "@/components/documents/EntityDocuments";
-
-const statusStyles: Record<string, string> = {
-  draft: "bg-muted text-muted-foreground",
-  sent: "bg-[hsl(var(--stage-proposal))]/20 text-[hsl(var(--stage-proposal))]",
-  viewed: "bg-[hsl(var(--stage-qualified))]/20 text-[hsl(var(--stage-qualified))]",
-  paid: "bg-[hsl(var(--stage-won))]/20 text-[hsl(var(--stage-won))]",
-  overdue: "bg-destructive/20 text-destructive",
-};
 
 export default function Invoices() {
   const { data: invoices, isLoading } = useInvoices();
@@ -107,7 +99,7 @@ export default function Invoices() {
                       <TableCell className="text-muted-foreground">{inv.projects?.name || "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{inv.issue_date ? format(new Date(inv.issue_date), "dd/MM/yyyy") : "—"}</TableCell>
                       <TableCell className="text-right font-semibold">£{(inv.total || 0).toLocaleString()}</TableCell>
-                      <TableCell><Badge className={statusStyles[inv.status]}>{inv.status}</Badge></TableCell>
+                      <TableCell><StatusBadge status={inv.status} /></TableCell>
                       <TableCell>
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setPreviewInvoice(inv); }}>
                           <Eye className="h-4 w-4" />
@@ -127,7 +119,7 @@ export default function Invoices() {
           open={!!selected}
           onOpenChange={() => setSelected(null)}
           title={`Invoice ${selected.invoice_number}`}
-          badge={{ label: selected.status, className: statusStyles[selected.status] }}
+          badge={{ label: selected.status }}
           fields={[
             { label: "Client", value: selected.organisations?.name },
             { label: "Project", value: selected.projects?.name },

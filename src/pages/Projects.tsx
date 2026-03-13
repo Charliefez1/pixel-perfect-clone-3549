@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Progress } from "@/components/ui/progress";
 import { useProjects, useUpdateProject, Project } from "@/hooks/useProjects";
 import { useTasks } from "@/hooks/useTasks";
@@ -39,13 +40,6 @@ const pipelineStages = [
   { key: "analysis_feedback", label: "Analysis & Feedback" },
   { key: "closing", label: "Closing" },
 ] as const;
-
-const statusStyles: Record<string, string> = {
-  setup: "bg-muted text-muted-foreground",
-  active: "bg-[hsl(var(--stage-won))]/20 text-[hsl(var(--stage-won))]",
-  paused: "bg-[hsl(var(--stage-proposal))]/20 text-[hsl(var(--stage-proposal))]",
-  completed: "bg-primary/20 text-primary",
-};
 
 type FilterMode = "all" | "needs_action";
 
@@ -171,7 +165,7 @@ export default function Projects() {
                         <p className="font-medium truncate">{p.name}</p>
                         <p className="text-xs text-muted-foreground">{p.organisations?.name || "No organisation"}</p>
                       </div>
-                      <Badge className={statusStyles[p.status]}>{p.status}</Badge>
+                      <StatusBadge status={p.status} />
                     </div>
 
                     {/* NEURO phase mini bar */}
@@ -248,7 +242,7 @@ export default function Projects() {
                       <span className="text-xs text-primary font-medium hidden sm:block">Next: {summary.nextMilestone.label}</span>
                     )}
                     {summary.overdueTasks > 0 && <Badge variant="destructive" className="text-[9px]">{summary.overdueTasks} overdue</Badge>}
-                    <Badge className={statusStyles[p.status]}>{p.status}</Badge>
+                    <StatusBadge status={p.status} />
                     <span className="text-sm font-semibold text-primary w-24 text-right">£{(p.budget || 0).toLocaleString()}</span>
                   </CardContent>
                 </Card>
@@ -275,7 +269,7 @@ export default function Projects() {
                     <TableRow key={p.id} className="cursor-pointer" onClick={() => navigate(`/projects/${p.id}`)}>
                       <TableCell className="pl-6 font-medium">{p.name}</TableCell>
                       <TableCell className="text-muted-foreground">{p.organisations?.name || "—"}</TableCell>
-                      <TableCell><Badge className={statusStyles[p.status]}>{p.status}</Badge></TableCell>
+                      <TableCell><StatusBadge status={p.status} /></TableCell>
                       <TableCell className="text-primary text-sm">{summary.nextMilestone?.label || "✓ All done"}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">{summary.completedMilestones}/{summary.totalMilestones}</TableCell>
                       <TableCell className="font-semibold text-primary">£{(p.budget || 0).toLocaleString()}</TableCell>
@@ -340,7 +334,7 @@ function PipelineBoard({
                     <CardContent className="p-3 space-y-2">
                       <div className="flex items-start justify-between gap-1.5">
                         <p className="text-sm font-medium leading-tight truncate">{p.name}</p>
-                        <Badge className={`${statusStyles[p.status]} text-[9px] shrink-0`}>{p.status}</Badge>
+                        <StatusBadge status={p.status} className="text-[9px] shrink-0" />
                       </div>
                       <p className="text-[11px] text-muted-foreground truncate">
                         {p.organisations?.name || "No organisation"}
