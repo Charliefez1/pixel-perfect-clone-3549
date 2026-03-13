@@ -221,7 +221,7 @@ function AppShell() {
           <Route path="/reporting" element={<Reporting />} />
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/daily" element={<DailyBrief />} />
-          <Route path="/automations" element={<RequireRole roles={['admin', 'team']}><Automations /></RequireRole>} />
+          <Route path="/automations" element={<RequireRole roles={['admin', 'user']}><Automations /></RequireRole>} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
