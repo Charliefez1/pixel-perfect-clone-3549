@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { RequireRole } from "@/components/auth/RequireRole";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -50,6 +51,7 @@ const Reporting = lazy(() => import("@/pages/Reporting"));
 const Portfolio = lazy(() => import("@/pages/Portfolio"));
 const DailyBrief = lazy(() => import("@/pages/DailyBrief"));
 const Automations = lazy(() => import("@/pages/Automations"));
+const Settings = lazy(() => import("@/pages/Settings"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -222,6 +224,7 @@ function AppShell() {
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/daily" element={<DailyBrief />} />
           <Route path="/automations" element={<RequireRole roles={['admin', 'team']}><Automations /></RequireRole>} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -234,6 +237,7 @@ function AppShell() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+      <ThemeProvider>
       <TooltipProvider>
         <ErrorBoundary>
           <Toaster />
@@ -243,6 +247,7 @@ const App = () => (
           </BrowserRouter>
         </ErrorBoundary>
       </TooltipProvider>
+      </ThemeProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
