@@ -215,9 +215,9 @@ function AppShell() {
           <Route path="/invoices" element={<Invoices />} />
           <Route path="/scheduling" element={<Scheduling />} />
           <Route path="/purchase-orders" element={<PurchaseOrders />} />
-          <Route path="/rate-cards" element={<RequireRole roles={['admin', 'team']}><RateCards /></RequireRole>} />
-          <Route path="/services" element={<RequireRole roles={['admin', 'team']}><Services /></RequireRole>} />
-          <Route path="/templates" element={<RequireRole roles={['admin', 'team']}><Templates /></RequireRole>} />
+          <Route path="/rate-cards" element={<RequireRole roles={['admin', 'user']}><RateCards /></RequireRole>} />
+          <Route path="/services" element={<RequireRole roles={['admin', 'user']}><Services /></RequireRole>} />
+          <Route path="/templates" element={<RequireRole roles={['admin', 'user']}><Templates /></RequireRole>} />
           <Route path="/reporting" element={<Reporting />} />
           <Route path="/portfolio" element={<Portfolio />} />
           <Route path="/daily" element={<DailyBrief />} />
