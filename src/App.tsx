@@ -52,6 +52,7 @@ const Portfolio = lazy(() => import("@/pages/Portfolio"));
 const DailyBrief = lazy(() => import("@/pages/DailyBrief"));
 const Automations = lazy(() => import("@/pages/Automations"));
 const Settings = lazy(() => import("@/pages/Settings"));
+const AIAssistant = lazy(() => import("@/pages/AIAssistant"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const queryClient = new QueryClient({
