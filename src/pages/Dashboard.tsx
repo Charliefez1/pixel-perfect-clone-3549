@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FolderKanban, CheckSquare, Receipt, Calendar, AlertTriangle, PieChart, ArrowRight, Plus } from "lucide-react";
+import { FolderKanban, CheckSquare, Receipt, Calendar, AlertTriangle, PieChart, ArrowRight, Plus, Sparkles, FileText } from "lucide-react";
 import { useDialogs } from "@/App";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart as RPieChart, Pie } from "recharts";
 import { useDashboardStats, useProjectsByPhase, useUpcomingDeliveries } from "@/hooks/useDashboardStats";
@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const neuroColors = [
   { name: "Needs", color: "hsl(210, 100%, 61%)" },
@@ -158,22 +159,67 @@ export default function Dashboard() {
     },
   ];
 
+  const { profile } = useAuth();
+
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const dateStr = now.toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+  const displayName = profile?.display_name || "there";
+
   return (
-    <>
-      <div className="border-b border-border bg-card px-6 py-4 sticky top-0 z-10 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">Welcome back to NDG Hub</p>
-        </div>
+    <div className="flex-1 overflow-auto p-6 space-y-6">
+      {/* Greeting */}
+      <div className="space-y-1">
+        <p className="text-caption text-muted-foreground animate-fade-in-up" style={{ animationDelay: "0ms" }}>
+          {dateStr}
+        </p>
+        <h1
+          className="text-page-title animate-fade-in-up"
+          style={{ animationDelay: "100ms" }}
+        >
+          {greeting}, {displayName}
+        </h1>
       </div>
-      <div className="flex-1 overflow-auto p-6 space-y-6">
-        {/* Quick Actions */}
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => openCreateProject()}><Plus className="h-4 w-4" />Project</Button>
-          <Button variant="outline" size="sm" onClick={() => openCreateContact()}><Plus className="h-4 w-4" />Contact</Button>
-          <Button variant="outline" size="sm" onClick={() => openCreateInvoice()}><Plus className="h-4 w-4" />Invoice</Button>
-          <Button variant="outline" size="sm" onClick={() => navigate("/deliveries")}><Plus className="h-4 w-4" />Delivery</Button>
-        </div>
+
+      {/* Quick Action Pills */}
+      <div
+        className="flex flex-wrap gap-2 animate-fade-in-up"
+        style={{ animationDelay: "200ms" }}
+      >
+        <button
+          onClick={() => openCreateProject()}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-accent-muted text-accent-foreground text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all duration-150"
+        >
+          <Plus className="h-4 w-4" />
+          New Project
+        </button>
+        <button
+          onClick={() => navigate("/daily")}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-accent-muted text-accent-foreground text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all duration-150"
+        >
+          <FileText className="h-4 w-4" />
+          Daily Brief
+        </button>
+        <button
+          onClick={() => openCreateInvoice()}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-accent-muted text-accent-foreground text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all duration-150"
+        >
+          <Receipt className="h-4 w-4" />
+          New Invoice
+        </button>
+        <button
+          onClick={() => openCreateContact()}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-accent-muted text-accent-foreground text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all duration-150"
+        >
+          <Plus className="h-4 w-4" />
+          New Contact
+        </button>
+      </div>
         {/* Overdue alert banner */}
         {(overdueTasks.length > 0 || overdueInvoices.length > 0) && (
           <Card className="border-destructive/30 bg-destructive/5">
@@ -375,6 +421,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-    </>
+    </div>
   );
 }
