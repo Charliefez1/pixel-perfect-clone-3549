@@ -6,11 +6,17 @@ import { toast } from "sonner";
 export interface Automation {
   id: string;
   name: string;
+  description: string | null;
   trigger_type: string;
   trigger_config: any;
+  trigger_entity: string;
+  trigger_event: string;
+  trigger_conditions: any;
   action_type: string;
   action_config: any;
   active: boolean;
+  run_count: number;
+  last_run_at: string | null;
   created_at: string;
   updated_at: string;
 }

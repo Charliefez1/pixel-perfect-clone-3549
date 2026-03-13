@@ -36,7 +36,7 @@ export function usePortalMessages(organisationId: string | undefined) {
 export function useCreatePortalMessage() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (msg: { organisation_id: string; content: string; sender_id?: string; is_admin?: boolean }) => {
+    mutationFn: async (msg: Record<string, any>) => {
       const { data, error } = await supabase
         .from("portal_messages" as any)
         .insert(msg)
