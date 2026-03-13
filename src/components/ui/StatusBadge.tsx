@@ -34,7 +34,7 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
   lost: { label: "Lost", variant: "destructive" },
 };
 
-export function StatusBadge({ status }: { status: string }) {
+export function StatusBadge({ status, className }: { status: string; className?: string }) {
   const config = statusConfig[status] ?? { label: status.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()), variant: "outline" as const };
   return <Badge variant={config.variant}>{config.label}</Badge>;
 }
