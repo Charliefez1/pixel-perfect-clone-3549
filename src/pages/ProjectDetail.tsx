@@ -9,6 +9,7 @@ import { useProjectMilestones } from "@/hooks/useProjectMilestones";
 import { useProjectUpdates, useCreateProjectUpdate } from "@/hooks/useProjectUpdates";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -51,12 +52,6 @@ const neuroPhases = ["N", "E", "U", "R", "O"] as const;
 const phaseNames = ["needs", "engage", "understand", "redesign", "optimise"];
 const phaseLabels: Record<string, string> = { N: "Needs", E: "Engage", U: "Understand", R: "Redesign", O: "Optimise" };
 const phaseToIndex: Record<string, number> = { needs: 0, engage: 1, understand: 2, redesign: 3, optimise: 4 };
-const statusStyles: Record<string, string> = {
-  setup: "bg-muted text-muted-foreground",
-  active: "bg-[hsl(var(--stage-won))]/20 text-[hsl(var(--stage-won))]",
-  paused: "bg-[hsl(var(--stage-proposal))]/20 text-[hsl(var(--stage-proposal))]",
-  completed: "bg-primary/20 text-primary",
-};
 
 const stageLabels: Record<string, string> = {
   contract_signing: "Contract Signing",
@@ -373,7 +368,7 @@ Project context: ${JSON.stringify(context)}`,
           <div className="space-y-1">
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold">{project.name}</h1>
-              <Badge className={statusStyles[project.status]}>{project.status}</Badge>
+              <StatusBadge status={project.status} />
               {(project as any).stage && (
                 <Badge variant="outline" className="text-[10px]">
                   {stageLabels[(project as any).stage] || (project as any).stage}
@@ -668,7 +663,7 @@ Project context: ${JSON.stringify(context)}`,
                   <CardContent className="space-y-3 text-sm">
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Status</span>
-                      <Badge className={statusStyles[project.status]}>{project.status}</Badge>
+                      <StatusBadge status={project.status} />
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Stage</span>

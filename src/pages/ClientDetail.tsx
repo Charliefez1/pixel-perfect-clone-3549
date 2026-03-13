@@ -7,6 +7,7 @@ import { useContacts } from "@/hooks/useContacts";
 import { useInvoices } from "@/hooks/useInvoices";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -28,13 +29,6 @@ import {
 
 const neuroPhases = ["N", "E", "U", "R", "O"] as const;
 const phaseToIndex: Record<string, number> = { needs: 0, engage: 1, understand: 2, redesign: 3, optimise: 4 };
-const statusStyles: Record<string, string> = {
-  setup: "bg-muted text-muted-foreground",
-  active: "bg-[hsl(var(--stage-won))]/20 text-[hsl(var(--stage-won))]",
-  paused: "bg-[hsl(var(--stage-proposal))]/20 text-[hsl(var(--stage-proposal))]",
-  completed: "bg-primary/20 text-primary",
-};
-
 export default function ClientDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -255,7 +249,7 @@ export default function ClientDetail() {
                               <p className="text-sm font-medium truncate">{p.name}</p>
                               <p className="text-xs text-muted-foreground capitalize">{(p as any).service_type || "—"}</p>
                             </div>
-                            <Badge className={statusStyles[p.status]}>{p.status}</Badge>
+                            <StatusBadge status={p.status} />
                             <span className="text-sm font-semibold text-primary">£{(p.budget || 0).toLocaleString()}</span>
                           </div>
                         ))}
@@ -421,7 +415,7 @@ export default function ClientDetail() {
                               <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{p.description}</p>
                             )}
                           </div>
-                          <Badge className={statusStyles[p.status]}>{p.status}</Badge>
+                          <StatusBadge status={p.status} />
                         </div>
 
                         {/* NEURO phase mini bar */}
