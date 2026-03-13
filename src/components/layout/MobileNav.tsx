@@ -29,11 +29,9 @@ const allNav = [
   { to: "/services", icon: Layers, label: "Services" },
 ];
 
-interface Props {
-  onOpenAI?: () => void;
-}
+interface Props {}
 
-export function MobileNav({ onOpenAI }: Props) {
+export function MobileNav({}: Props) {
   const [open, setOpen] = useState(false);
 
   return (
