@@ -125,7 +125,7 @@ function RecentProjects({ collapsed }: { collapsed: boolean }) {
   );
 }
 
-export function AppSidebar({ onOpenAI }: { onOpenAI?: () => void }) {
+export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const { profile } = useAuth();
 
