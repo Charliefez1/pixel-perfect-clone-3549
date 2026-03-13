@@ -97,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const role = profile?.role ?? 'client';
+  const isTeamOrAdmin = role === 'admin' || role === 'user';
 
   return (
     <AuthContext.Provider
