@@ -29,10 +29,10 @@
     --secondary-foreground: 0 0% 10%;
 
     --muted: 40 6% 90%;             /* #e5e5e3 */
-    --muted-foreground: 0 0% 42%;   /* #6b6b6b */
+    --muted-foreground: 0 0% 35%;   /* #595959 — 7.0:1 on white */
 
     --background-elevated: 0 0% 100%;  /* white */
-    --foreground-subtle: 0 0% 55%;     /* #8c8c8c */
+    --foreground-subtle: 0 0% 37%;     /* #5e5e5e — 6.29:1 on white */
 
     --destructive: 0 84% 60%;       /* #dc2626 */
     --destructive-foreground: 0 0% 100%;
@@ -118,10 +118,10 @@
     --secondary-foreground: 0 0% 100%;
 
     --muted: 0 0% 29%;              /* #4a4a4a */
-    --muted-foreground: 0 0% 69%;   /* #b0b0b0 */
+    --muted-foreground: 0 0% 78%;   /* #c7c7c7 — 4.7:1 on dark card */
 
     --background-elevated: 0 0% 39%;  /* #636363 */
-    --foreground-subtle: 0 0% 60%;    /* #999 */
+    --foreground-subtle: 0 0% 72%;    /* #b8b8b8 — 4.0:1 on dark card */
 
     --destructive: 0 72% 51%;       /* #ef4444 */
     --destructive-foreground: 0 0% 100%;

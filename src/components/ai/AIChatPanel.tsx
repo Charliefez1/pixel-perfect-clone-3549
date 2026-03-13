@@ -166,7 +166,7 @@ export function AIChatPanel({ open, onOpenChange, context }: Props) {
                   {agent === "business" && "Ask for strategic advice or business overview."}
                 </p>
                 {context?.page && (
-                  <p className="text-[10px] text-muted-foreground/60 mt-2">
+                  <p className="text-[10px] text-muted-foreground mt-2">
                     Context: {context.entityName ? `${context.entityName} (${context.entityType})` : context.page}
                   </p>
                 )}

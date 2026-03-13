@@ -182,7 +182,7 @@ export default function Projects() {
                         <span>{summary.completedMilestones}/{summary.totalMilestones} milestones</span>
                       </div>
                       {summary.nextMilestone && (
-                        <span className="text-primary font-medium truncate max-w-[50%]">Next: {summary.nextMilestone.label}</span>
+                        <span className="text-foreground font-medium truncate max-w-[50%]">Next: {summary.nextMilestone.label}</span>
                       )}
                     </div>
 
@@ -239,11 +239,11 @@ export default function Projects() {
                       <p className="text-xs text-muted-foreground">{p.organisations?.name || "No organisation"}</p>
                     </div>
                     {summary.nextMilestone && (
-                      <span className="text-xs text-primary font-medium hidden sm:block">Next: {summary.nextMilestone.label}</span>
+                      <span className="text-xs text-foreground font-medium hidden sm:block">Next: {summary.nextMilestone.label}</span>
                     )}
                     {summary.overdueTasks > 0 && <Badge variant="destructive" className="text-[9px]">{summary.overdueTasks} overdue</Badge>}
                     <StatusBadge status={p.status} />
-                    <span className="text-sm font-semibold text-primary w-24 text-right">£{(p.budget || 0).toLocaleString()}</span>
+                    <span className="text-sm font-semibold text-foreground w-24 text-right">£{(p.budget || 0).toLocaleString()}</span>
                   </CardContent>
                 </Card>
               );
@@ -270,9 +270,9 @@ export default function Projects() {
                       <TableCell className="pl-6 font-medium">{p.name}</TableCell>
                       <TableCell className="text-muted-foreground">{p.organisations?.name || "—"}</TableCell>
                       <TableCell><StatusBadge status={p.status} /></TableCell>
-                      <TableCell className="text-primary text-sm">{summary.nextMilestone?.label || "✓ All done"}</TableCell>
+                      <TableCell className="text-foreground text-sm">{summary.nextMilestone?.label || "✓ All done"}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">{summary.completedMilestones}/{summary.totalMilestones}</TableCell>
-                      <TableCell className="font-semibold text-primary">£{(p.budget || 0).toLocaleString()}</TableCell>
+                      <TableCell className="font-semibold text-foreground">£{(p.budget || 0).toLocaleString()}</TableCell>
                     </TableRow>
                   );
                 })}
@@ -372,7 +372,7 @@ function PipelineBoard({
                 );
               })}
               {stageProjects.length === 0 && (
-                <div className="text-center py-6 text-xs text-muted-foreground/50">
+                <div className="text-center py-6 text-xs text-muted-foreground">
                   No projects
                 </div>
               )}

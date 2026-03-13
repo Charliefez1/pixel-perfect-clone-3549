@@ -179,7 +179,7 @@ export function NotesTab({ projectId }: NotesTabProps) {
                       <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                         {note.body}
                       </p>
-                      <p className="text-[10px] text-muted-foreground/60 mt-2">
+                      <p className="text-[10px] text-muted-foreground mt-2">
                         {format(new Date(note.created_at), "dd MMM yyyy, HH:mm")}
                         {note.updated_at !== note.created_at && " (edited)"}
                       </p>
