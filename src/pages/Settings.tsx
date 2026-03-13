@@ -11,7 +11,7 @@ export default function Settings() {
       {/* Profile section */}
       <section className="mb-10">
         <h2 className="text-overline text-muted-foreground mb-4">Profile</h2>
-        <div className="bg-card rounded-lg border border-border p-5">
+        <div className="bg-card rounded-xl border border-border p-5">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center text-accent-foreground font-bold text-lg">
               {profile?.display_name?.charAt(0)?.toUpperCase() || "U"}
@@ -27,7 +27,7 @@ export default function Settings() {
       {/* Appearance section */}
       <section>
         <h2 className="text-overline text-muted-foreground mb-4">Appearance</h2>
-        <div className="bg-card rounded-lg border border-border p-5">
+        <div className="bg-card rounded-xl border border-border p-5">
           <ThemePicker />
         </div>
       </section>
