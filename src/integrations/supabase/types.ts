@@ -1093,6 +1093,8 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          theme_accent: string
+          theme_mode: string
           updated_at: string
           user_id: string
         }
@@ -1102,6 +1104,8 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          theme_accent?: string
+          theme_mode?: string
           updated_at?: string
           user_id: string
         }
@@ -1111,6 +1115,8 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          theme_accent?: string
+          theme_mode?: string
           updated_at?: string
           user_id?: string
         }
