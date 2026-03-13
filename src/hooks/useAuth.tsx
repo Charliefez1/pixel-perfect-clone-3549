@@ -31,17 +31,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const { data, error } = await supabase
+    const { data: profileData, error: profileError } = await supabase
       .from("profiles")
-      .select("id, user_id, display_name, email, role, organisation_id, theme_accent, theme_mode")
+      .select("id, user_id, display_name, email, avatar_url, role, organisation_id, theme_accent, theme_mode")
       .eq("user_id", userId)
       .single();
 
-    if (error) {
-      console.error("Failed to fetch profile:", error);
+    if (profileError) {
+      console.error("Failed to fetch profile:", profileError);
       return null;
     }
-    return data as UserProfile;
+
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    return {
+      ...profileData,
+      role: (roleData?.role as AppRole) ?? 'client',
+    } as UserProfile;
   }, []);
 
   useEffect(() => {
@@ -87,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const role = profile?.role ?? 'client';
+  const isTeamOrAdmin = role === 'admin' || role === 'user';
 
   return (
     <AuthContext.Provider
@@ -96,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         loading,
         isAdmin: role === 'admin',
-        isTeam: role === 'team',
+        isTeam: role === 'user' || role === 'admin',
         isClient: role === 'client',
         signOut,
       }}

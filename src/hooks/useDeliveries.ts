@@ -38,7 +38,7 @@ export interface Delivery {
   updated_at: string;
   organisations?: { name: string } | null;
   deals?: { title: string } | null;
-  forms?: { title: string } | null;
+  forms?: { title: string }[] | null;
   delivery_tasks?: DeliveryTask[];
 }
 
