@@ -29,11 +29,9 @@ const allNav = [
   { to: "/services", icon: Layers, label: "Services" },
 ];
 
-interface Props {
-  onOpenAI?: () => void;
-}
+interface Props {}
 
-export function MobileNav({ onOpenAI }: Props) {
+export function MobileNav({}: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -97,17 +95,21 @@ export function MobileNav({ onOpenAI }: Props) {
               </NavLink>
             ))}
           </div>
-          {onOpenAI && (
-            <div className="p-3 border-t border-border">
-              <button
-                onClick={() => { onOpenAI(); setOpen(false); }}
-                className="flex items-center justify-center gap-2 w-full h-9 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-sm font-medium"
-              >
-                <Sparkles className="h-4 w-4" />
-                AI Assistant
-              </button>
-            </div>
-          )}
+          <div className="p-3 border-t border-border">
+            <NavLink
+              to="/ai"
+              onClick={() => setOpen(false)}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center justify-center gap-2 w-full h-9 rounded-lg text-sm font-medium transition-colors",
+                  isActive ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"
+                )
+              }
+            >
+              <Sparkles className="h-4 w-4" />
+              AI Assistant
+            </NavLink>
+          </div>
         </SheetContent>
       </Sheet>
     </>

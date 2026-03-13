@@ -125,7 +125,7 @@ function RecentProjects({ collapsed }: { collapsed: boolean }) {
   );
 }
 
-export function AppSidebar({ onOpenAI }: { onOpenAI?: () => void }) {
+export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const { profile } = useAuth();
 
@@ -197,16 +197,8 @@ export function AppSidebar({ onOpenAI }: { onOpenAI?: () => void }) {
 
       {/* Bottom section */}
       <div className="px-3 pb-2 space-y-1">
-        {/* AI Assistant toggle */}
-        {onOpenAI && (
-          <button
-            onClick={onOpenAI}
-            className="flex items-center justify-center gap-2 w-full h-9 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-150 text-sm font-medium"
-          >
-            <Sparkles className="h-4 w-4" />
-            {!collapsed && <span>AI Assistant</span>}
-          </button>
-        )}
+        {/* AI Assistant link */}
+        <NavItem item={{ to: "/ai", icon: Sparkles, label: "AI Assistant" }} collapsed={collapsed} />
 
         {/* Settings link */}
         <NavLink
