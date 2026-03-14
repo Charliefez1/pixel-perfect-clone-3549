@@ -63,7 +63,8 @@ export function useUpdateProjectNote() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      qc.invalidateQueries({ queryKey: ["project_notes", data?.project_id] });
       qc.invalidateQueries({ queryKey: ["project_notes"] });
       toast.success("Note updated");
     },
@@ -74,11 +75,13 @@ export function useUpdateProjectNote() {
 export function useDeleteProjectNote() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id, projectId }: { id: string; projectId?: string }) => {
       const { error } = await supabase.from("project_notes" as any).delete().eq("id", id);
       if (error) throw error;
+      return { projectId };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data?.projectId) qc.invalidateQueries({ queryKey: ["project_notes", data.projectId] });
       qc.invalidateQueries({ queryKey: ["project_notes"] });
       toast.success("Note deleted");
     },

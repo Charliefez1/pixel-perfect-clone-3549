@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,18 @@ export function AIChatPanel({ open, onOpenChange, context }: Props) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Cancel any in-flight stream when panel closes or component unmounts
+  useEffect(() => {
+    if (!open && abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, [open]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -38,9 +50,14 @@ export function AIChatPanel({ open, onOpenChange, context }: Props) {
     }
   }, [messages]);
 
-  const send = async () => {
+  const send = useCallback(async () => {
     const text = input.trim();
     if (!text || isLoading) return;
+
+    // Abort any previous in-flight request
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     const userMsg: Msg = { role: "user", content: text };
     const newMessages = [...messages, userMsg];
@@ -59,6 +76,7 @@ export function AIChatPanel({ open, onOpenChange, context }: Props) {
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({ messages: newMessages, agent, context }),
+        signal: controller.signal,
       });
 
       if (!resp.ok) {
@@ -72,47 +90,55 @@ export function AIChatPanel({ open, onOpenChange, context }: Props) {
       const decoder = new TextDecoder();
       let textBuffer = "";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
+      try {
+        while (true) {
+          if (controller.signal.aborted) break;
+          const { done, value } = await reader.read();
+          if (done) break;
+          textBuffer += decoder.decode(value, { stream: true });
 
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
+          let newlineIndex: number;
+          while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+            let line = textBuffer.slice(0, newlineIndex);
+            textBuffer = textBuffer.slice(newlineIndex + 1);
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (line.startsWith(":") || line.trim() === "") continue;
+            if (!line.startsWith("data: ")) continue;
 
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === "[DONE]") break;
 
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantSoFar += content;
-              setMessages((prev) => {
-                const last = prev[prev.length - 1];
-                if (last?.role === "assistant") {
-                  return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
-                }
-                return [...prev, { role: "assistant", content: assistantSoFar }];
-              });
+            try {
+              const parsed = JSON.parse(jsonStr);
+              const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+              if (content) {
+                assistantSoFar += content;
+                setMessages((prev) => {
+                  const last = prev[prev.length - 1];
+                  if (last?.role === "assistant") {
+                    return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
+                  }
+                  return [...prev, { role: "assistant", content: assistantSoFar }];
+                });
+              }
+            } catch {
+              // Incomplete JSON chunk — re-buffer and wait for more data
+              textBuffer = line + "\n" + textBuffer;
+              break;
             }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
           }
         }
+      } finally {
+        reader.releaseLock();
       }
     } catch (e: any) {
+      if (e.name === "AbortError") return; // Silently handle cancellation
       setMessages((prev) => [...prev, { role: "assistant", content: `Error: ${e.message}` }]);
     } finally {
       setIsLoading(false);
+      if (abortRef.current === controller) abortRef.current = null;
     }
-  };
+  }, [input, isLoading, messages, agent, context]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -143,6 +169,7 @@ export function AIChatPanel({ open, onOpenChange, context }: Props) {
                 size="sm"
                 className="h-7 text-xs flex-1"
                 onClick={() => { setAgent(a.id); setMessages([]); }}
+                aria-label={`Select ${a.label} agent`}
               >
                 <a.icon className={cn("h-3 w-3 mr-1", agent === a.id ? "" : a.color)} />
                 {a.label}
@@ -152,7 +179,7 @@ export function AIChatPanel({ open, onOpenChange, context }: Props) {
         </SheetHeader>
 
         <ScrollArea className="flex-1 p-4" ref={scrollRef as any}>
-          <div className="space-y-4">
+          <div className="space-y-4" role="log" aria-live="polite">
             {messages.length === 0 && (
               <div className="text-center py-8 space-y-2">
                 <currentAgent.icon className={cn("h-8 w-8 mx-auto", currentAgent.color)} />
@@ -215,6 +242,7 @@ export function AIChatPanel({ open, onOpenChange, context }: Props) {
               className="h-auto px-3"
               onClick={send}
               disabled={isLoading || !input.trim()}
+              aria-label="Send message"
             >
               <Send className="h-4 w-4" />
             </Button>

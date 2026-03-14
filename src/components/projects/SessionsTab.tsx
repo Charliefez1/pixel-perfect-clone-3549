@@ -8,14 +8,18 @@ interface Props {
 }
 
 export function SessionsTab({ projectId, type }: Props) {
-  const { data: sessions } = useSessions();
+  const { data: sessions, isLoading } = useSessions();
   const projectSessions = sessions?.filter((s) => {
     if (s.project_id !== projectId) return false;
-    if (type) return (s as any).session_type === type;
+    if (type && 'session_type' in s) return s.session_type === type;
     return true;
   }) || [];
 
   const label = type === "workshop" ? "workshops" : type === "meeting" ? "meetings" : "sessions";
+
+  if (isLoading) {
+    return <p className="text-sm text-muted-foreground animate-pulse">Loading {label}...</p>;
+  }
 
   if (!projectSessions.length) {
     return <p className="text-sm text-muted-foreground">No {label} linked to this project.</p>;

@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Vite Dev Server",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--host"],
+      "port": 5173
+    },
+    {
+      "name": "Vite Preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "preview", "--host"],
+      "port": 4173
+    },
+    {
+      "name": "Vitest Watch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vitest", "--watch"],
+      "port": 51204
+    }
+  ]
+}

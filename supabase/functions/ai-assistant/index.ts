@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { getAuthenticatedUser } from "../_shared/auth.ts";
 
 const agentPrompts: Record<string, string> = {
   pm: `You are the NDG Project Management AI Assistant for Neurodiversity Global (NDG), a consultancy specialising in neurodiversity workshops, programmes, coaching, keynotes, and audits. You help with:
@@ -98,6 +99,9 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const { user } = await getAuthenticatedUser(req);
+
     const { messages, agent = "business", context } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");

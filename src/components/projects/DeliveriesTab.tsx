@@ -13,10 +13,14 @@ const statusColors: Record<string, string> = {
 };
 
 export function DeliveriesTab({ projectId, dealId }: { projectId: string; dealId?: string | null }) {
-  const { data: deliveries } = useDeliveries();
+  const { data: deliveries, isLoading } = useDeliveries();
   const projectDeliveries = deliveries?.filter(
     (d) => d.project_id === projectId || (dealId && d.deal_id === dealId)
   ) || [];
+
+  if (isLoading) {
+    return <p className="text-sm text-muted-foreground animate-pulse">Loading deliveries...</p>;
+  }
 
   if (!projectDeliveries.length) {
     return <p className="text-sm text-muted-foreground">No deliveries linked to this project.</p>;

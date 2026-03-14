@@ -37,7 +37,7 @@ function applyThemeToDOM(accent: AccentColor, resolved: "light" | "dark") {
   }
 
   // Remove transitioning flag after animation completes
-  setTimeout(() => html.removeAttribute("data-transitioning"), 350);
+  setTimeout(() => html.removeAttribute("data-transitioning"), 250);
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

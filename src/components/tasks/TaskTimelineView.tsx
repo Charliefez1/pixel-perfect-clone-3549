@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 
 interface TaskTimelineViewProps {
   tasks: Task[];
-  subtasksByParent?: Record<string, Task[]>;
   onSelectTask: (t: Task) => void;
 }
 
@@ -62,8 +61,12 @@ export function TaskTimelineView({ tasks, onSelectTask }: TaskTimelineViewProps)
           return (
             <div
               key={task.id}
+              role="button"
+              tabIndex={0}
+              aria-label={`Task: ${task.title}, due ${format(new Date(task.due_date!), "dd MMM yyyy")}`}
               className="flex items-center border-b border-border/50 hover:bg-muted/20 cursor-pointer"
               onClick={() => onSelectTask(task)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelectTask(task); } }}
             >
               <div className="w-[280px] shrink-0 px-3 py-2 border-r">
                 <p className="text-sm font-medium truncate">{task.title}</p>

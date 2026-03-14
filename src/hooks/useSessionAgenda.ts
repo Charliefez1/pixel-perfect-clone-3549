@@ -93,10 +93,12 @@ export function useReorderAgendaItems() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ items, session_id }: { items: { id: string; position: number }[]; session_id: string }) => {
-      for (const item of items) {
-        const { error } = await supabase.from("session_agenda_items" as any).update({ position: item.position }).eq("id", item.id);
-        if (error) throw error;
-      }
+      const updates = items.map((item) =>
+        supabase.from("session_agenda_items" as any).update({ position: item.position }).eq("id", item.id)
+      );
+      const results = await Promise.all(updates);
+      const failed = results.find((r) => r.error);
+      if (failed?.error) throw failed.error;
       return { session_id };
     },
     onSuccess: (data) => {

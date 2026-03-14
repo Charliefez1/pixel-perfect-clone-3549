@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { getAuthenticatedUser, createServiceClient } from "../_shared/auth.ts";
 
 async function getAccessToken(): Promise<string> {
   const clientId = Deno.env.get("GMAIL_CLIENT_ID")!;
@@ -71,9 +72,8 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { user } = await getAuthenticatedUser(req);
+    const supabase = createServiceClient();
 
     // Get all contact emails for matching
     const { data: contacts } = await supabase

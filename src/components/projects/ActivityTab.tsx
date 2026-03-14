@@ -9,10 +9,14 @@ const typeIcons: Record<string, typeof Mail> = {
 };
 
 export function ActivityTab({ organisationId }: { organisationId?: string | null }) {
-  const { data: activities } = useActivities(
+  const { data: activities, isLoading } = useActivities(
     organisationId ? "organisation" : undefined,
     organisationId || undefined
   );
+
+  if (isLoading) {
+    return <p className="text-sm text-muted-foreground animate-pulse">Loading activity...</p>;
+  }
 
   const recent = activities?.slice(0, 20) || [];
 

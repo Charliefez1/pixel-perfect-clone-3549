@@ -52,6 +52,10 @@ export function EntityDocuments({ entityType, entityId }: Props) {
           "border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer",
           dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
         )}
+        role="button"
+        tabIndex={0}
+        aria-label="Upload document"
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileRef.current?.click(); } }}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={onDrop}
@@ -86,7 +90,7 @@ export function EntityDocuments({ entityType, entityId }: Props) {
                   {formatSize(doc.file_size)} · {doc.created_at ? format(new Date(doc.created_at), "dd MMM yyyy") : ""}
                 </p>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => download(doc)}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => download(doc)} aria-label={`Download ${doc.file_name}`}>
                 <Download className="h-3.5 w-3.5" />
               </Button>
               <Button
@@ -95,6 +99,7 @@ export function EntityDocuments({ entityType, entityId }: Props) {
                 className="h-8 w-8 text-destructive hover:text-destructive"
                 onClick={() => deleteMut.mutate(doc)}
                 disabled={deleteMut.isPending}
+                aria-label={`Delete ${doc.file_name}`}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>

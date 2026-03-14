@@ -5,6 +5,7 @@ import { format, subMonths, differenceInDays } from "date-fns";
 
 export function useRevenueByMonth() {
   return useQuery({
+    staleTime: 5 * 60 * 1000,
     queryKey: ["reporting", "revenue_by_month"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -37,6 +38,7 @@ export function useRevenueByMonth() {
 
 export function usePipelineByStage() {
   return useQuery({
+    staleTime: 5 * 60 * 1000,
     queryKey: ["reporting", "pipeline_by_stage"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -61,6 +63,7 @@ export function usePipelineByStage() {
 
 export function useInvoiceAging() {
   return useQuery({
+    staleTime: 5 * 60 * 1000,
     queryKey: ["reporting", "invoice_aging"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -87,6 +90,7 @@ export function useInvoiceAging() {
 
 export function useSatisfactionScores() {
   return useQuery({
+    staleTime: 5 * 60 * 1000,
     queryKey: ["reporting", "satisfaction"],
     queryFn: async () => {
       const { data, error } = await supabase

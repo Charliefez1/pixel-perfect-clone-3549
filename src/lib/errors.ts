@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { logError } from "@/lib/logger";
 
 interface SupabaseError {
   message: string;
@@ -27,9 +28,7 @@ export function handleSupabaseError(error: SupabaseError, context?: string): voi
   const message = getErrorMessage(error);
   const label = context ? `${context}: ${message}` : message;
 
-  if (import.meta.env.DEV) {
-    console.error(`[Supabase Error]`, { context, error });
-  }
+  logError(error.message, { component: "Supabase", action: context, code: error.code, details: error.details });
 
   toast.error(label);
 }

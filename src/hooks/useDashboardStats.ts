@@ -5,6 +5,7 @@ import { handleSupabaseError } from "@/lib/errors";
 export function useDashboardStats() {
   return useQuery({
     queryKey: ["dashboard-stats"],
+    staleTime: 2 * 60 * 1000, // 2 minutes
     queryFn: async () => {
       // Get active projects
       const { count: activeProjects, error: e1 } = await supabase
@@ -44,6 +45,7 @@ export function useDashboardStats() {
 export function useProjectsByPhase() {
   return useQuery({
     queryKey: ["projects-by-phase"],
+    staleTime: 2 * 60 * 1000,
     queryFn: async () => {
       const { data: projects, error } = await supabase
         .from("projects")
@@ -72,6 +74,7 @@ export function useProjectsByPhase() {
 export function useUpcomingDeliveries() {
   return useQuery({
     queryKey: ["upcoming-deliveries"],
+    staleTime: 2 * 60 * 1000,
     queryFn: async () => {
       const now = new Date();
       const weekFromNow = new Date(now);

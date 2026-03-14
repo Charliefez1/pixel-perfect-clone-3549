@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { getAuthenticatedUser } from "../_shared/auth.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -8,6 +9,9 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const { user } = await getAuthenticatedUser(req);
+
     const { invoice_id } = await req.json();
     if (!invoice_id) throw new Error("invoice_id is required");
 

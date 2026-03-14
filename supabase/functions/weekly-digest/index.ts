@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
 
     // Get all admin users to send digest to
     const { data: admins } = await supabase
-      .from("user_roles")
+      .from("profiles")
       .select("user_id")
       .eq("role", "admin");
 

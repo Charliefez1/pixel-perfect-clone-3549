@@ -224,7 +224,7 @@
 
 /* ── Base styles ── */
 @layer base {
-  * {
+  body {
     @apply border-border;
   }
 
@@ -244,9 +244,12 @@
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
 
-  /* Theme transition on mode/accent switch */
-  html[data-transitioning] * {
-    transition: background-color 0.3s, color 0.3s, border-color 0.3s !important;
+  /* Theme transition on mode/accent switch — narrowed to key elements */
+  html[data-transitioning] .bg-background,
+  html[data-transitioning] .bg-card,
+  html[data-transitioning] .bg-sidebar,
+  html[data-transitioning] .text-foreground {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
 
   /* Custom scrollbars */

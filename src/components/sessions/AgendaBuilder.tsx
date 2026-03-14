@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,14 @@ export function AgendaBuilder({ sessionId, sessionDuration }: AgendaBuilderProps
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerItemIdx, setTimerItemIdx] = useState(0);
   const [timerElapsed, setTimerElapsed] = useState(0);
-  const [timerInterval, setTimerIntervalId] = useState<ReturnType<typeof setInterval> | null>(null);
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cleanup timer on unmount to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    };
+  }, []);
 
   const totalPlanned = items?.reduce((s, i) => s + i.duration_minutes, 0) || 0;
   const remaining = (sessionDuration || 0) - totalPlanned;
@@ -106,14 +113,16 @@ export function AgendaBuilder({ sessionId, sessionDuration }: AgendaBuilderProps
     setTimerRunning(true);
     setTimerItemIdx(0);
     setTimerElapsed(0);
-    const id = setInterval(() => setTimerElapsed((e) => e + 1), 1000);
-    setTimerIntervalId(id);
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    timerIntervalRef.current = setInterval(() => setTimerElapsed((e) => e + 1), 1000);
   };
 
   const stopTimer = () => {
     setTimerRunning(false);
-    if (timerInterval) clearInterval(timerInterval);
-    setTimerIntervalId(null);
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
   };
 
   const resetTimer = () => {
@@ -207,10 +216,10 @@ export function AgendaBuilder({ sessionId, sessionDuration }: AgendaBuilderProps
               >
                 <CardContent className="p-3 flex items-center gap-3">
                   <div className="flex flex-col gap-0.5">
-                    <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleMove(idx, -1)} disabled={idx === 0}>
+                    <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleMove(idx, -1)} disabled={idx === 0} aria-label="Move item up">
                       <ChevronUp className="h-3 w-3" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleMove(idx, 1)} disabled={idx === items.length - 1}>
+                    <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => handleMove(idx, 1)} disabled={idx === items.length - 1} aria-label="Move item down">
                       <ChevronDown className="h-3 w-3" />
                     </Button>
                   </div>
@@ -244,6 +253,7 @@ export function AgendaBuilder({ sessionId, sessionDuration }: AgendaBuilderProps
                     size="icon"
                     className="h-7 w-7 text-muted-foreground hover:text-destructive"
                     onClick={() => handleDelete(item.id)}
+                    aria-label="Delete item"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>

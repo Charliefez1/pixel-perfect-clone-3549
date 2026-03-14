@@ -237,7 +237,7 @@ export default function Tasks() {
             </Table>
           </Card>
         ) : view === "timeline" ? (
-          <TaskTimelineView tasks={parentTasks} subtasksByParent={subtasksByParent} onSelectTask={setSelectedTask} />
+          <TaskTimelineView tasks={parentTasks} onSelectTask={setSelectedTask} />
         ) : (
           <TaskCalendarView tasks={tasks || []} date={calendarDate} onDateChange={setCalendarDate} onSelectTask={setSelectedTask} />
         )}

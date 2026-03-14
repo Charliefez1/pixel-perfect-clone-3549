@@ -94,16 +94,16 @@ export function useAutomationLogs(automationId?: string) {
   return useQuery({
     queryKey: ["automation_logs", automationId],
     queryFn: async () => {
-      const query = supabase
+      let query = supabase
         .from("automation_logs" as any)
         .select("*")
         .order("created_at", { ascending: false })
         .limit(50);
-      if (automationId) query.eq("automation_id", automationId);
+      if (automationId) query = query.eq("automation_id", automationId);
       const { data, error } = await query;
       if (error) { handleSupabaseError(error, "Loading automation logs"); return []; }
       return data as unknown as AutomationLog[];
     },
-    enabled: !!automationId || automationId === undefined,
+    enabled: !!automationId,
   });
 }

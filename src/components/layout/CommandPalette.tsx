@@ -74,7 +74,7 @@ export function CommandPalette({ onCreateTask, onCreateClient, onCreateContact, 
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Search or jump to…" />
+      <CommandInput placeholder="Search or jump to…" aria-label="Search commands" />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
 

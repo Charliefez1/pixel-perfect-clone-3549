@@ -28,7 +28,7 @@ export function useActivityLog(entityType?: string, entityId?: string) {
       if (error) { handleSupabaseError(error, "Loading activity log"); return []; }
       return data as ActivityEntry[];
     },
-    enabled: !entityId || !!entityId,
+    enabled: true,
   });
 }
 

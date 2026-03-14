@@ -38,6 +38,10 @@ export function TaskCalendarView({ tasks, date, onDateChange, onSelectTask }: Ta
           return (
             <div
               key={day.toISOString()}
+              role="button"
+              tabIndex={0}
+              aria-label={format(day, "EEEE, MMMM d, yyyy")}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onDateChange(day); } }}
               className={cn(
                 "min-h-[100px] border-b border-r border-border/50 p-1",
                 !isCurrentMonth && "bg-muted/20",

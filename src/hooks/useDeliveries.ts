@@ -76,6 +76,7 @@ export function useDelivery(id: string | undefined) {
         .eq("id", id)
         .maybeSingle();
       if (error) { handleSupabaseError(error, "Loading delivery"); return null; }
+      return data as Delivery | null;
     },
     enabled: !!id,
   });

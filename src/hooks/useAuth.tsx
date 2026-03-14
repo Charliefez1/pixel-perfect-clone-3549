@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { UserProfile, AppRole } from "@/types/auth";
+import { logError, logWarning } from "@/lib/logger";
 
 interface AuthContextType {
   session: Session | null;
@@ -39,26 +40,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (profileError || !profileData) {
-        console.error("Failed to fetch profile:", profileError);
+        logError(profileError, { component: "AuthProvider", action: "fetchProfile" });
         return null;
       }
 
-      // user_roles table may not exist — gracefully fallback to 'client'
-      let role: AppRole = 'client';
-      try {
-        const { data: roleData, error: roleError } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId)
-          .maybeSingle();
-        if (!roleError && roleData?.role) role = roleData.role as AppRole;
-      } catch {
-        // table doesn't exist or network issue — keep default
+      // Prefer role from profiles table (set by security migration), fallback to user_roles
+      let role: AppRole = (profileData.role as AppRole) || 'client';
+      if (!profileData.role) {
+        try {
+          const { data: roleData, error: roleError } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (!roleError && roleData?.role) role = roleData.role as AppRole;
+        } catch {
+          // table doesn't exist or network issue — keep default
+        }
       }
 
       return { ...profileData, role } as UserProfile;
     } catch (err) {
-      console.error("fetchProfile crashed:", err);
+      logError(err, { component: "AuthProvider", action: "fetchProfile" });
       return null;
     }
   }, []);
@@ -69,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Safety net: if auth never resolves, force loading off after 8s
     const timeout = setTimeout(() => {
       if (mounted && loading) {
-        console.warn("Auth loading timeout — forcing loading off");
+        logWarning("Auth loading timeout — forcing loading off", { component: "AuthProvider" });
         setLoading(false);
       }
     }, 8000);
@@ -85,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (mounted) setLoading(false);
     }).catch((err) => {
-      console.error("getSession failed:", err);
+      logError(err, { component: "AuthProvider", action: "getSession" });
       if (mounted) setLoading(false);
     });
 
@@ -102,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setProfile(null);
           }
         } catch (err) {
-          console.error("onAuthStateChange handler failed:", err);
+          logError(err, { component: "AuthProvider", action: "onAuthStateChange" });
         } finally {
           if (mounted) setLoading(false);
         }

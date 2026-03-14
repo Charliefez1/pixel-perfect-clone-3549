@@ -47,10 +47,10 @@ export function TopBar({ title }: TopBarProps) {
     <header className="h-14 border-b border-border bg-background-elevated flex items-center justify-between px-6 sticky top-0 z-10">
       <h1 className="text-section-title">{title}</h1>
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="relative h-8 w-8" onClick={() => navigate("/notifications")}>
+        <Button variant="ghost" size="icon" className="relative h-8 w-8" onClick={() => navigate("/notifications")} aria-label="Notifications">
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+            <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center" aria-live="polite">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}

@@ -32,6 +32,7 @@ export function ThemePicker() {
               <button
                 key={opt.value}
                 onClick={() => setMode(opt.value)}
+                aria-label={`Set theme mode to ${opt.label}`}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-150",
                   isActive
@@ -58,7 +59,7 @@ export function ThemePicker() {
                 key={swatch.name}
                 onClick={() => setAccent(swatch.name)}
                 className="flex flex-col items-center gap-1.5 group"
-                title={swatch.label}
+                aria-label={`Set accent color to ${swatch.label}`}
               >
                 <div
                   className={cn(
