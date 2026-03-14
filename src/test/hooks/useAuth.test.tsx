@@ -3,8 +3,36 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { ReactNode } from "react";
 import { createMockSupabaseClient } from "../mocks/supabase";
 
-// Create the mock client before vi.mock so the factory can reference it
-const mockSupabase = createMockSupabaseClient();
+const { mockSupabase } = vi.hoisted(() => {
+  // Must inline the mock creation since vi.hoisted runs before imports
+  const fn = vi.fn;
+
+  function createBuilder(data: any = null, error: any = null) {
+    const b: Record<string, any> = {};
+    for (const m of ["select","insert","update","delete","eq","neq","order","limit","single","maybeSingle","filter","match","range","not","or"]) {
+      b[m] = fn().mockReturnValue(b);
+    }
+    Object.defineProperty(b, "then", {
+      value: (resolve: any) => Promise.resolve({ data, error }).then(resolve),
+      writable: true, configurable: true,
+    });
+    return b;
+  }
+
+  const unsubscribe = fn();
+  return {
+    mockSupabase: {
+      from: fn().mockReturnValue(createBuilder()),
+      auth: {
+        getSession: fn().mockResolvedValue({ data: { session: null }, error: null }),
+        getUser: fn().mockResolvedValue({ data: { user: null }, error: null }),
+        onAuthStateChange: fn().mockReturnValue({ data: { subscription: { unsubscribe } } }),
+        signOut: fn().mockResolvedValue({ error: null }),
+        signInWithPassword: fn().mockResolvedValue({ data: { session: null, user: null }, error: null }),
+      },
+    },
+  };
+});
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: mockSupabase,
@@ -25,7 +53,6 @@ function wrapper({ children }: { children: ReactNode }) {
 describe("useAuth", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset default auth mocks
     mockSupabase.auth.getSession.mockResolvedValue({
       data: { session: null },
       error: null,
@@ -36,7 +63,6 @@ describe("useAuth", () => {
   });
 
   it("returns loading=true initially", () => {
-    // Make getSession hang so loading stays true
     mockSupabase.auth.getSession.mockReturnValue(new Promise(() => {}));
 
     const { result } = renderHook(() => useAuth(), { wrapper });
@@ -64,7 +90,6 @@ describe("useAuth", () => {
       error: null,
     });
 
-    // Mock profile query: from("profiles").select("*").eq("user_id", ...).single()
     const profileBuilder: Record<string, any> = {};
     profileBuilder.select = vi.fn().mockReturnValue(profileBuilder);
     profileBuilder.eq = vi.fn().mockReturnValue(profileBuilder);
@@ -79,7 +104,6 @@ describe("useAuth", () => {
 
     mockSupabase.from.mockImplementation((table: string) => {
       if (table === "profiles") return profileBuilder;
-      // user_roles fallback
       return {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -111,7 +135,7 @@ describe("useAuth", () => {
       display_name: "Team Member",
       email: "team@example.com",
       avatar_url: null,
-      role: "user", // role set on profile
+      role: "user",
     };
 
     mockSupabase.auth.getSession.mockResolvedValue({
@@ -129,7 +153,6 @@ describe("useAuth", () => {
 
     mockSupabase.from.mockImplementation((table: string) => {
       if (table === "profiles") return profileBuilder;
-      // user_roles should NOT be called when profile.role exists
       return {
         select: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -145,7 +168,6 @@ describe("useAuth", () => {
       expect(result.current.loading).toBe(false);
     });
 
-    // Should use "user" from profiles, not "admin" from user_roles
     expect(result.current.profile?.role).toBe("user");
     expect(result.current.isTeam).toBe(true);
     expect(result.current.isAdmin).toBe(false);

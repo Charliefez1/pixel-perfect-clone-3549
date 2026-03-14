@@ -2,9 +2,35 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement, ReactNode } from "react";
-import { createMockSupabaseClient, createMockQueryBuilder } from "../mocks/supabase";
 
-const mockSupabase = createMockSupabaseClient();
+const { mockSupabase, createBuilder } = vi.hoisted(() => {
+  const fn = vi.fn;
+
+  function createBuilder(data: any = null, error: any = null) {
+    const b: Record<string, any> = {};
+    for (const m of ["select","insert","update","delete","eq","neq","order","limit","single","maybeSingle","filter","match","range","not","or"]) {
+      b[m] = fn().mockReturnValue(b);
+    }
+    Object.defineProperty(b, "then", {
+      value: (resolve: any) => Promise.resolve({ data, error }).then(resolve),
+      writable: true, configurable: true,
+    });
+    return b;
+  }
+
+  return {
+    mockSupabase: {
+      from: fn().mockReturnValue(createBuilder()),
+      auth: {
+        getSession: fn().mockResolvedValue({ data: { session: null }, error: null }),
+        getUser: fn().mockResolvedValue({ data: { user: null }, error: null }),
+        onAuthStateChange: fn().mockReturnValue({ data: { subscription: { unsubscribe: fn() } } }),
+        signOut: fn().mockResolvedValue({ error: null }),
+      },
+    },
+    createBuilder,
+  };
+});
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: mockSupabase,
@@ -49,7 +75,7 @@ describe("useDelivery", () => {
       forms: null,
     };
 
-    const builder = createMockQueryBuilder(fakeDelivery, null);
+    const builder = createBuilder(fakeDelivery, null);
     mockSupabase.from.mockReturnValue(builder);
 
     const { result } = renderHook(() => useDelivery("del-1"), {
