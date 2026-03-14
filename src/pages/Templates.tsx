@@ -174,7 +174,7 @@ function useDocumentTemplates() {
 }
 
 export default function Templates() {
-  const { data: templates, isLoading } = useDocumentTemplates();
+  const { data: templates, isLoading, error, refetch } = useDocumentTemplates();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTasks, setEditTasks] = useState<TaskItem[]>([]);
   const [editContent, setEditContent] = useState("");
@@ -293,6 +293,12 @@ export default function Templates() {
   return (
     <>
       <PageHeader title="Templates" searchPlaceholder="Search templates..." actionLabel="New Template" onAction={() => setCreateOpen(true)} onSearch={setSearch} />
+      {error ? (
+        <div className="p-6 text-center">
+          <p className="text-destructive">{error.message}</p>
+          <Button onClick={() => refetch()} className="mt-4">Retry</Button>
+        </div>
+      ) : (
       <div className="flex-1 overflow-auto p-6 space-y-6">
         <Tabs defaultValue="project">
           <TabsList>
@@ -472,6 +478,7 @@ export default function Templates() {
           })}
         </Tabs>
       </div>
+      )}
 
       {/* Create Template Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>

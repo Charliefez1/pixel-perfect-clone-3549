@@ -52,7 +52,7 @@ const orgCSVColumns: CSVColumn[] = [
 ];
 
 export default function Clients() {
-  const { data: clients, isLoading } = useOrganisations();
+  const { data: clients, isLoading, error, refetch } = useOrganisations();
   const [selected, setSelected] = useState<Organisation | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -85,6 +85,12 @@ export default function Clients() {
         onSuccess={() => queryClient.invalidateQueries({ queryKey: ["organisations"] })}
       />
       <div className="flex-1 overflow-auto">
+        {error ? (
+          <div className="p-6 text-center">
+            <p className="text-destructive">{error.message}</p>
+            <Button onClick={() => refetch()} className="mt-4">Retry</Button>
+          </div>
+        ) : (
         <Card className="border-0 rounded-none shadow-none">
           <CardContent className="p-0">
             {isLoading ? (
@@ -144,6 +150,7 @@ export default function Clients() {
             )}
           </CardContent>
         </Card>
+        )}
       </div>
 
       {selected && <ClientDetailPanel client={selected} onClose={() => setSelected(null)} />}

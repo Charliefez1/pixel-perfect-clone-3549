@@ -9,15 +9,32 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { RequireRole } from "@/components/auth/RequireRole";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { CommandPalette } from "@/components/layout/CommandPalette";
-import { CreateTaskDialog } from "@/components/dialogs/CreateTaskDialog";
-import { CreateClientDialog } from "@/components/dialogs/CreateClientDialog";
-import { CreateContactDialog } from "@/components/dialogs/CreateContactDialog";
-import { CreateProjectDialog } from "@/components/dialogs/CreateProjectDialog";
-import { CreateSessionDialog } from "@/components/dialogs/CreateSessionDialog";
-import { CreateInvoiceDialog } from "@/components/dialogs/CreateInvoiceDialog";
-import { CreateProjectFromPlanDialog } from "@/components/dialogs/CreateProjectFromPlanDialog";
+import { BrandSpinner, PageSkeleton, DashboardSkeleton, SettingsSkeleton } from "@/components/layout/RouteLoadingFallback";
 import { useState, useEffect, createContext, useContext, useCallback, lazy, Suspense } from "react";
 import { AIContext, useAIContextProvider } from "@/hooks/useAIContext";
+
+// Lazy-loaded dialog components — only loaded when user opens a dialog
+const CreateTaskDialog = lazy(() =>
+  import("@/components/dialogs/CreateTaskDialog").then(m => ({ default: m.CreateTaskDialog }))
+);
+const CreateClientDialog = lazy(() =>
+  import("@/components/dialogs/CreateClientDialog").then(m => ({ default: m.CreateClientDialog }))
+);
+const CreateContactDialog = lazy(() =>
+  import("@/components/dialogs/CreateContactDialog").then(m => ({ default: m.CreateContactDialog }))
+);
+const CreateProjectDialog = lazy(() =>
+  import("@/components/dialogs/CreateProjectDialog").then(m => ({ default: m.CreateProjectDialog }))
+);
+const CreateSessionDialog = lazy(() =>
+  import("@/components/dialogs/CreateSessionDialog").then(m => ({ default: m.CreateSessionDialog }))
+);
+const CreateInvoiceDialog = lazy(() =>
+  import("@/components/dialogs/CreateInvoiceDialog").then(m => ({ default: m.CreateInvoiceDialog }))
+);
+const CreateProjectFromPlanDialog = lazy(() =>
+  import("@/components/dialogs/CreateProjectFromPlanDialog").then(m => ({ default: m.CreateProjectFromPlanDialog }))
+);
 
 // Lazy-loaded page components for code splitting
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
@@ -92,13 +109,7 @@ function ProtectedRoutes() {
   const { session, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm animate-pulse">
-          N
-        </div>
-      </div>
-    );
+    return <BrandSpinner />;
   }
 
   if (!session) {
@@ -177,60 +188,223 @@ function AppShell() {
         onCreateProject={dialogs.openCreateProject}
         onCreateInvoice={dialogs.openCreateInvoice}
       />
-      <CreateTaskDialog open={taskOpen} onOpenChange={setTaskOpen} />
-      <CreateClientDialog open={clientOpen} onOpenChange={setClientOpen} />
-      <CreateContactDialog open={contactOpen} onOpenChange={setContactOpen} />
-      <CreateProjectDialog open={projectOpen} onOpenChange={setProjectOpen} />
-      <CreateSessionDialog open={sessionOpen} onOpenChange={setSessionOpen} />
-      <CreateInvoiceDialog open={invoiceOpen} onOpenChange={setInvoiceOpen} />
-      <CreateProjectFromPlanDialog open={planOpen} onOpenChange={setPlanOpen} />
-      <Suspense fallback={
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm animate-pulse">
-            N
-          </div>
-        </div>
-      }>
-      <Routes>
-        <Route path="/auth" element={<AuthRoute />} />
-        {/* Public routes — no auth required */}
-        <Route path="/form/:formId" element={<PublicForm />} />
-        <Route path="/portal/:orgId" element={<PortalView />} />
-        <Route element={<ProtectedRoutes />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/clients" element={<Clients />} />
-          <Route path="/clients/:id" element={<ClientDetail />} />
-          <Route path="/contacts" element={<Contacts />} />
-          <Route path="/meetings" element={<Meetings />} />
-          <Route path="/contracts" element={<Contracts />} />
-          <Route path="/deliveries" element={<Deliveries />} />
-          <Route path="/forms" element={<Forms />} />
-          <Route path="/forms/:id" element={<FormDetail />} />
-          <Route path="/forms/:id/edit" element={<FormBuilder />} />
-          <Route path="/client-portal" element={<ClientPortal />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/projects/:id" element={<ProjectDetail />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/time-tracking" element={<TimeTracking />} />
-          <Route path="/resourcing" element={<Resourcing />} />
-          <Route path="/timesheets" element={<Timesheets />} />
-          <Route path="/invoices" element={<Invoices />} />
-          <Route path="/scheduling" element={<Scheduling />} />
-          <Route path="/purchase-orders" element={<PurchaseOrders />} />
-          <Route path="/rate-cards" element={<RequireRole roles={['admin', 'user']}><RateCards /></RequireRole>} />
-          <Route path="/services" element={<RequireRole roles={['admin', 'user']}><Services /></RequireRole>} />
-          <Route path="/templates" element={<RequireRole roles={['admin', 'user']}><Templates /></RequireRole>} />
-          <Route path="/reporting" element={<Reporting />} />
-          <Route path="/portfolio" element={<Portfolio />} />
-          <Route path="/daily" element={<DailyBrief />} />
-          <Route path="/automations" element={<RequireRole roles={['admin', 'user']}><Automations /></RequireRole>} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/ai" element={<AIAssistant />} />
-        </Route>
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      {/* Lazy-loaded dialogs — each wrapped in its own Suspense so they load independently */}
+      <Suspense fallback={null}>
+        {taskOpen && <CreateTaskDialog open={taskOpen} onOpenChange={setTaskOpen} />}
       </Suspense>
+      <Suspense fallback={null}>
+        {clientOpen && <CreateClientDialog open={clientOpen} onOpenChange={setClientOpen} />}
+      </Suspense>
+      <Suspense fallback={null}>
+        {contactOpen && <CreateContactDialog open={contactOpen} onOpenChange={setContactOpen} />}
+      </Suspense>
+      <Suspense fallback={null}>
+        {projectOpen && <CreateProjectDialog open={projectOpen} onOpenChange={setProjectOpen} />}
+      </Suspense>
+      <Suspense fallback={null}>
+        {sessionOpen && <CreateSessionDialog open={sessionOpen} onOpenChange={setSessionOpen} />}
+      </Suspense>
+      <Suspense fallback={null}>
+        {invoiceOpen && <CreateInvoiceDialog open={invoiceOpen} onOpenChange={setInvoiceOpen} />}
+      </Suspense>
+      <Suspense fallback={null}>
+        {planOpen && <CreateProjectFromPlanDialog open={planOpen} onOpenChange={setPlanOpen} />}
+      </Suspense>
+
+      <Routes>
+        {/* Auth route */}
+        <Route path="/auth" element={
+          <Suspense fallback={<BrandSpinner />}>
+            <AuthRoute />
+          </Suspense>
+        } />
+
+        {/* Public routes — no auth required */}
+        <Route path="/form/:formId" element={
+          <Suspense fallback={<BrandSpinner />}>
+            <PublicForm />
+          </Suspense>
+        } />
+        <Route path="/portal/:orgId" element={
+          <Suspense fallback={<BrandSpinner />}>
+            <PortalView />
+          </Suspense>
+        } />
+
+        <Route element={<ProtectedRoutes />}>
+          {/* Dashboard & overview routes */}
+          <Route path="/" element={
+            <Suspense fallback={<DashboardSkeleton />}>
+              <Dashboard />
+            </Suspense>
+          } />
+          <Route path="/notifications" element={
+            <Suspense fallback={<PageSkeleton label="notifications" />}>
+              <Notifications />
+            </Suspense>
+          } />
+          <Route path="/daily" element={
+            <Suspense fallback={<DashboardSkeleton />}>
+              <DailyBrief />
+            </Suspense>
+          } />
+          <Route path="/portfolio" element={
+            <Suspense fallback={<DashboardSkeleton />}>
+              <Portfolio />
+            </Suspense>
+          } />
+          <Route path="/reporting" element={
+            <Suspense fallback={<DashboardSkeleton />}>
+              <Reporting />
+            </Suspense>
+          } />
+
+          {/* Client & contact routes */}
+          <Route path="/clients" element={
+            <Suspense fallback={<PageSkeleton label="clients" />}>
+              <Clients />
+            </Suspense>
+          } />
+          <Route path="/clients/:id" element={
+            <Suspense fallback={<PageSkeleton label="client details" />}>
+              <ClientDetail />
+            </Suspense>
+          } />
+          <Route path="/contacts" element={
+            <Suspense fallback={<PageSkeleton label="contacts" />}>
+              <Contacts />
+            </Suspense>
+          } />
+          <Route path="/client-portal" element={
+            <Suspense fallback={<PageSkeleton label="client portal" />}>
+              <ClientPortal />
+            </Suspense>
+          } />
+
+          {/* Project & task routes */}
+          <Route path="/projects" element={
+            <Suspense fallback={<PageSkeleton label="projects" />}>
+              <Projects />
+            </Suspense>
+          } />
+          <Route path="/projects/:id" element={
+            <Suspense fallback={<PageSkeleton label="project details" />}>
+              <ProjectDetail />
+            </Suspense>
+          } />
+          <Route path="/tasks" element={
+            <Suspense fallback={<PageSkeleton label="tasks" />}>
+              <Tasks />
+            </Suspense>
+          } />
+          <Route path="/deliveries" element={
+            <Suspense fallback={<PageSkeleton label="deliveries" />}>
+              <Deliveries />
+            </Suspense>
+          } />
+
+          {/* Scheduling & time routes */}
+          <Route path="/meetings" element={
+            <Suspense fallback={<PageSkeleton label="meetings" />}>
+              <Meetings />
+            </Suspense>
+          } />
+          <Route path="/scheduling" element={
+            <Suspense fallback={<PageSkeleton label="scheduling" />}>
+              <Scheduling />
+            </Suspense>
+          } />
+          <Route path="/time-tracking" element={
+            <Suspense fallback={<PageSkeleton label="time tracking" />}>
+              <TimeTracking />
+            </Suspense>
+          } />
+          <Route path="/timesheets" element={
+            <Suspense fallback={<PageSkeleton label="timesheets" />}>
+              <Timesheets />
+            </Suspense>
+          } />
+          <Route path="/resourcing" element={
+            <Suspense fallback={<PageSkeleton label="resourcing" />}>
+              <Resourcing />
+            </Suspense>
+          } />
+
+          {/* Finance routes */}
+          <Route path="/invoices" element={
+            <Suspense fallback={<PageSkeleton label="invoices" />}>
+              <Invoices />
+            </Suspense>
+          } />
+          <Route path="/purchase-orders" element={
+            <Suspense fallback={<PageSkeleton label="purchase orders" />}>
+              <PurchaseOrders />
+            </Suspense>
+          } />
+          <Route path="/contracts" element={
+            <Suspense fallback={<PageSkeleton label="contracts" />}>
+              <Contracts />
+            </Suspense>
+          } />
+
+          {/* Forms routes */}
+          <Route path="/forms" element={
+            <Suspense fallback={<PageSkeleton label="forms" />}>
+              <Forms />
+            </Suspense>
+          } />
+          <Route path="/forms/:id" element={
+            <Suspense fallback={<PageSkeleton label="form details" />}>
+              <FormDetail />
+            </Suspense>
+          } />
+          <Route path="/forms/:id/edit" element={
+            <Suspense fallback={<PageSkeleton label="form builder" />}>
+              <FormBuilder />
+            </Suspense>
+          } />
+
+          {/* Admin & settings routes */}
+          <Route path="/rate-cards" element={
+            <Suspense fallback={<SettingsSkeleton />}>
+              <RequireRole roles={['admin', 'user']}><RateCards /></RequireRole>
+            </Suspense>
+          } />
+          <Route path="/services" element={
+            <Suspense fallback={<SettingsSkeleton />}>
+              <RequireRole roles={['admin', 'user']}><Services /></RequireRole>
+            </Suspense>
+          } />
+          <Route path="/templates" element={
+            <Suspense fallback={<SettingsSkeleton />}>
+              <RequireRole roles={['admin', 'user']}><Templates /></RequireRole>
+            </Suspense>
+          } />
+          <Route path="/automations" element={
+            <Suspense fallback={<SettingsSkeleton />}>
+              <RequireRole roles={['admin', 'user']}><Automations /></RequireRole>
+            </Suspense>
+          } />
+          <Route path="/settings" element={
+            <Suspense fallback={<SettingsSkeleton />}>
+              <Settings />
+            </Suspense>
+          } />
+
+          {/* AI route */}
+          <Route path="/ai" element={
+            <Suspense fallback={<PageSkeleton label="AI assistant" />}>
+              <AIAssistant />
+            </Suspense>
+          } />
+        </Route>
+
+        <Route path="*" element={
+          <Suspense fallback={<BrandSpinner />}>
+            <NotFound />
+          </Suspense>
+        } />
+      </Routes>
     </DialogContext.Provider>
     </AIContext.Provider>
   );

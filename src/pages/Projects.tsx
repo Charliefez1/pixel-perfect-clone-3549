@@ -44,7 +44,7 @@ const pipelineStages = [
 type FilterMode = "all" | "needs_action";
 
 export default function Projects() {
-  const { data: projects, isLoading } = useProjects();
+  const { data: projects, isLoading, error, refetch } = useProjects();
   const { data: tasks } = useTasks();
   const { data: sessions } = useSessions();
   const { data: deliveries } = useDeliveries();
@@ -146,11 +146,17 @@ export default function Projects() {
         onSuccess={() => queryClient.invalidateQueries({ queryKey: ["projects"] })}
       />
       <div className="flex-1 overflow-auto p-6">
-        {isLoading ? (
+        {error ? (
+          <div className="p-6 text-center">
+            <p className="text-destructive">{error.message}</p>
+            <Button onClick={() => refetch()} className="mt-4">Retry</Button>
+          </div>
+        ) : isLoading ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-48 w-full" />)}</div>
         ) : !filteredProjects?.length ? (
-          <div className="p-12 text-center text-muted-foreground">
-            <p>{filter === "needs_action" ? "Nothing needs your attention right now 🎉" : "No projects yet. Create your first project to get started."}</p>
+          <div className="p-12 text-center text-muted-foreground space-y-3">
+            <p>{filter === "needs_action" ? "Nothing needs your attention right now." : "No projects yet. Create your first project to get started."}</p>
+            {filter !== "needs_action" && <Button variant="outline" onClick={openCreateProject}>Create Project</Button>}
           </div>
         ) : view === "board" ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

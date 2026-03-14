@@ -30,7 +30,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export default function ClientPortal() {
-  const { data: organisations, isLoading: orgsLoading } = useOrganisations();
+  const { data: organisations, isLoading: orgsLoading, error: orgsError, refetch: refetchOrgs } = useOrganisations();
   const { data: projects } = useProjects();
   const [portalEnabled, setPortalEnabled] = useState(false);
   const [welcomeText, setWelcomeText] = useState(
@@ -273,8 +273,17 @@ export default function ClientPortal() {
               Manage portal access for each client organisation. Enable the portal and send an
               invite email.
             </p>
-            {orgsLoading ? (
+            {orgsError ? (
+              <div className="p-6 text-center">
+                <p className="text-destructive">{orgsError.message}</p>
+                <Button onClick={() => refetchOrgs()} className="mt-4">Retry</Button>
+              </div>
+            ) : orgsLoading ? (
               <Skeleton className="h-64 w-full" />
+            ) : !organisations?.length ? (
+              <div className="p-12 text-center text-muted-foreground">
+                <p>No client organisations found. Add organisations first.</p>
+              </div>
             ) : (
               <Card>
                 <Table>

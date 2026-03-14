@@ -39,7 +39,7 @@ const contactCSVColumns: CSVColumn[] = [
 ];
 
 export default function Contacts() {
-  const { data: contacts, isLoading } = useContacts();
+  const { data: contacts, isLoading, error, refetch } = useContacts();
   const [selected, setSelected] = useState<Contact | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -71,6 +71,12 @@ export default function Contacts() {
         onSuccess={() => queryClient.invalidateQueries({ queryKey: ["contacts"] })}
       />
       <div className="flex-1 overflow-auto">
+        {error ? (
+          <div className="p-6 text-center">
+            <p className="text-destructive">{error.message}</p>
+            <Button onClick={() => refetch()} className="mt-4">Retry</Button>
+          </div>
+        ) : (
         <Card className="border-0 rounded-none shadow-none">
           <CardContent className="p-0">
             {isLoading ? (
@@ -136,6 +142,7 @@ export default function Contacts() {
             )}
           </CardContent>
         </Card>
+        )}
       </div>
 
       {selected && <ContactDetailPanel contact={selected} onClose={() => setSelected(null)} />}

@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Calendar, ChevronDown, ChevronRight, Plus } from "lucide-react";
+import { Calendar, CheckSquare, ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTasks, Task, useUpdateTask, useDeleteTask, useCreateTask } from "@/hooks/useTasks";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,7 +38,7 @@ const priorityStyles: Record<string, string> = {
 };
 
 export default function Tasks() {
-  const { data: tasks, isLoading } = useTasks();
+  const { data: tasks, isLoading, error, refetch } = useTasks();
   const updateTask = useUpdateTask();
   const [view, setView] = useState<ViewMode>("board");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -104,7 +104,12 @@ export default function Tasks() {
       </PageHeader>
 
       <div className="flex-1 overflow-auto p-6">
-        {isLoading ? (
+        {error ? (
+          <div className="p-6 text-center">
+            <p className="text-destructive">{error.message}</p>
+            <Button onClick={() => refetch()} className="mt-4">Retry</Button>
+          </div>
+        ) : isLoading ? (
           <div className="flex gap-4">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="w-72 space-y-2">
@@ -112,6 +117,12 @@ export default function Tasks() {
                 <Skeleton className="h-28 w-full" />
               </div>
             ))}
+          </div>
+        ) : !tasks?.length ? (
+          <div className="p-12 text-center text-muted-foreground space-y-3">
+            <CheckSquare className="h-8 w-8 mx-auto text-muted-foreground/50" />
+            <p>No tasks yet. Create your first task to get started.</p>
+            <Button variant="outline" onClick={openCreateTask}>Create Task</Button>
           </div>
         ) : view === "board" ? (
           /* ── Board View ── */

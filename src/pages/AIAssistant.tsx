@@ -104,7 +104,7 @@ export default function AIAssistant() {
         }
       }
     } catch (e: any) {
-      setMessages((prev) => [...prev, { role: "assistant", content: `Error: ${e.message}` }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: `Error: ${e.message}. Click "Retry" below to try again.` }]);
     } finally {
       setIsLoading(false);
     }
@@ -175,6 +175,19 @@ export default function AIAssistant() {
                   <div className="bg-muted rounded-lg px-4 py-2.5 text-sm text-muted-foreground animate-pulse">
                     Thinking…
                   </div>
+                </div>
+              )}
+              {!isLoading && messages.length > 0 && messages[messages.length - 1]?.role === "assistant" && messages[messages.length - 1]?.content.startsWith("Error:") && (
+                <div className="flex justify-start">
+                  <Button variant="outline" size="sm" onClick={() => {
+                    const lastUserMsg = [...messages].reverse().find(m => m.role === "user");
+                    if (lastUserMsg) {
+                      setMessages(prev => prev.filter((_, i) => i !== prev.length - 1));
+                      setInput(lastUserMsg.content);
+                    }
+                  }}>
+                    Retry
+                  </Button>
                 </div>
               )}
             </div>

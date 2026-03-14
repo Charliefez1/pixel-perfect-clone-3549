@@ -19,7 +19,7 @@ import { Eye, Send, CheckCircle2, Receipt, Loader2 } from "lucide-react";
 import { EntityDocuments } from "@/components/documents/EntityDocuments";
 
 export default function Invoices() {
-  const { data: invoices, isLoading } = useInvoices();
+  const { data: invoices, isLoading, error, refetch } = useInvoices();
   const [selected, setSelected] = useState<Invoice | null>(null);
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [search, setSearch] = useState("");
@@ -66,6 +66,12 @@ export default function Invoices() {
     <>
       <PageHeader title="Invoices" searchPlaceholder="Search invoices..." actionLabel="New Invoice" onAction={openCreateInvoice} onSearch={setSearch} />
       <div className="flex-1 overflow-auto p-6 space-y-6">
+        {error ? (
+          <div className="p-6 text-center">
+            <p className="text-destructive">{error.message}</p>
+            <Button onClick={() => refetch()} className="mt-4">Retry</Button>
+          </div>
+        ) : (<>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Outstanding</p>{isLoading ? <Skeleton className="h-8 w-24" /> : <p className="text-2xl font-bold">£{outstanding.toLocaleString()}</p>}</CardContent></Card>
           <Card><CardContent className="p-4"><p className="text-sm text-muted-foreground">Paid This Month</p>{isLoading ? <Skeleton className="h-8 w-24" /> : <p className="text-2xl font-bold">£{paidThisMonth.toLocaleString()}</p>}</CardContent></Card>
@@ -112,6 +118,7 @@ export default function Invoices() {
             )}
           </CardContent>
         </Card>
+        </>)}
       </div>
 
       {selected && (

@@ -1,6 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 import { getCorsHeaders } from "../_shared/cors.ts";
+
+// No request body expected for this cron function, but validate if one is provided
+const RequestSchema = z.object({}).optional();
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -8,6 +12,25 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Validate request body if present
+    const contentType = req.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const rawBody = await req.json();
+      const parseResult = RequestSchema.safeParse(rawBody);
+      if (!parseResult.success) {
+        return new Response(
+          JSON.stringify({
+            error: parseResult.error.issues.map((i) => i.message).join("; "),
+            code: "VALIDATION_ERROR",
+          }),
+          {
+            status: 400,
+            headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -21,7 +44,15 @@ Deno.serve(async (req) => {
       .eq("status", "sent")
       .lt("due_date", today);
 
-    if (fetchError) throw fetchError;
+    if (fetchError) {
+      return new Response(
+        JSON.stringify({ error: fetchError.message, code: "DB_ERROR" }),
+        {
+          status: 500,
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        }
+      );
+    }
 
     if (!overdueInvoices || overdueInvoices.length === 0) {
       return new Response(JSON.stringify({ message: "No overdue invoices found" }), {
@@ -36,7 +67,15 @@ Deno.serve(async (req) => {
       .update({ status: "overdue" })
       .in("id", ids);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      return new Response(
+        JSON.stringify({ error: updateError.message, code: "DB_UPDATE_ERROR" }),
+        {
+          status: 500,
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        }
+      );
+    }
 
     // Log activity for each
     const activityEntries = overdueInvoices.map((inv) => ({
@@ -54,9 +93,12 @@ Deno.serve(async (req) => {
       { headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
     );
   } catch (error) {
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
-      status: 500,
-      headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: (error as Error).message, code: "INTERNAL_ERROR" }),
+      {
+        status: 500,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      }
+    );
   }
 });

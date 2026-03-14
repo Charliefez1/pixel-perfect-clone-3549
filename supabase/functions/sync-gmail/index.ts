@@ -1,10 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { getAuthenticatedUser, createServiceClient } from "../_shared/auth.ts";
 
-async function getAccessToken(): Promise<string> {
+const REQUEST_TIMEOUT_MS = 30_000;
+
+// No request body fields expected; this function is triggered without a body
+const RequestSchema = z.object({}).optional();
+
+async function getAccessToken(signal?: AbortSignal): Promise<string> {
   const clientId = Deno.env.get("GMAIL_CLIENT_ID")!;
   const clientSecret = Deno.env.get("GMAIL_CLIENT_SECRET")!;
   const refreshToken = Deno.env.get("GMAIL_REFRESH_TOKEN")!;
@@ -18,6 +24,7 @@ async function getAccessToken(): Promise<string> {
       refresh_token: refreshToken,
       grant_type: "refresh_token",
     }),
+    signal,
   });
 
   const data = await response.json();
@@ -25,13 +32,14 @@ async function getAccessToken(): Promise<string> {
   return data.access_token;
 }
 
-async function fetchRecentEmails(accessToken: string, hoursBack: number = 24) {
+async function fetchRecentEmails(accessToken: string, hoursBack: number = 24, signal?: AbortSignal) {
   const after = Math.floor((Date.now() - hoursBack * 60 * 60 * 1000) / 1000);
   const query = encodeURIComponent(`after:${after}`);
   const listUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${query}&maxResults=50`;
 
   const listRes = await fetch(listUrl, {
     headers: { Authorization: `Bearer ${accessToken}` },
+    signal,
   });
   const listData = await listRes.json();
 
@@ -42,6 +50,7 @@ async function fetchRecentEmails(accessToken: string, hoursBack: number = 24) {
     const msgUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Subject&metadataHeaders=Date`;
     const msgRes = await fetch(msgUrl, {
       headers: { Authorization: `Bearer ${accessToken}` },
+      signal,
     });
     const msgData = await msgRes.json();
 
@@ -73,6 +82,26 @@ serve(async (req) => {
 
   try {
     const { user } = await getAuthenticatedUser(req);
+
+    // Validate request body if present
+    const contentType = req.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const rawBody = await req.json();
+      const parseResult = RequestSchema.safeParse(rawBody);
+      if (!parseResult.success) {
+        return new Response(
+          JSON.stringify({
+            error: parseResult.error.issues.map((i) => i.message).join("; "),
+            code: "VALIDATION_ERROR",
+          }),
+          {
+            status: 400,
+            headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
     const supabase = createServiceClient();
 
     // Get all contact emails for matching
@@ -90,8 +119,31 @@ serve(async (req) => {
     const ourEmailsRaw = Deno.env.get("OUR_EMAILS") || "";
     const ourEmails = new Set(ourEmailsRaw.split(",").map(e => e.trim().toLowerCase()).filter(Boolean));
 
-    const accessToken = await getAccessToken();
-    const emails = await fetchRecentEmails(accessToken, 24);
+    // Set up request timeout for external API calls
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    let accessToken: string;
+    let emails: any[];
+
+    try {
+      accessToken = await getAccessToken(controller.signal);
+      emails = await fetchRecentEmails(accessToken, 24, controller.signal);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError instanceof DOMException && fetchError.name === "AbortError") {
+        return new Response(
+          JSON.stringify({ error: "Request to Gmail API timed out", code: "TIMEOUT" }),
+          {
+            status: 504,
+            headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+          }
+        );
+      }
+      throw fetchError;
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     let synced = 0;
     let skipped = 0;
@@ -159,9 +211,23 @@ serve(async (req) => {
     );
   } catch (e) {
     console.error("sync-gmail error:", e);
+
+    if (e instanceof DOMException && e.name === "AbortError") {
+      return new Response(
+        JSON.stringify({ error: "Request timed out after 30 seconds", code: "TIMEOUT" }),
+        {
+          status: 504,
+          headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+        }
+      );
+    }
+
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
-      { status: 500, headers: { ...getCorsHeaders(req), "Content-Type": "application/json" } }
+      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error", code: "INTERNAL_ERROR" }),
+      {
+        status: 500,
+        headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
+      }
     );
   }
 });

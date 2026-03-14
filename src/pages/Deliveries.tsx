@@ -52,7 +52,7 @@ function getSatisfactionColor(score: number | null): string {
 }
 
 export default function Deliveries() {
-  const { data: deliveries, isLoading } = useDeliveries();
+  const { data: deliveries, isLoading, error, refetch } = useDeliveries();
   const { data: forms } = useForms();
   const updateDelivery = useUpdateDelivery();
   const logActivity = useLogActivity();
@@ -140,7 +140,12 @@ export default function Deliveries() {
       </div>
 
       <div className="flex-1 overflow-auto p-6">
-        {isLoading ? (
+        {error ? (
+          <div className="p-6 text-center">
+            <p className="text-destructive">{error.message}</p>
+            <Button onClick={() => refetch()} className="mt-4">Retry</Button>
+          </div>
+        ) : isLoading ? (
           <div className="flex gap-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="w-72 space-y-2">
@@ -148,6 +153,12 @@ export default function Deliveries() {
                 <Skeleton className="h-32 w-full" />
               </div>
             ))}
+          </div>
+        ) : !filtered?.length ? (
+          <div className="p-12 text-center text-muted-foreground space-y-3">
+            <ClipboardList className="h-8 w-8 mx-auto text-muted-foreground/50" />
+            <p>{search ? "No deliveries match your search." : "No deliveries yet. Create your first delivery to get started."}</p>
+            {!search && <Button variant="outline" onClick={() => setCreateOpen(true)}>Create Delivery</Button>}
           </div>
         ) : view === "board" ? (
           <div className="flex gap-4 overflow-x-auto pb-4 min-h-[calc(100vh-16rem)]">

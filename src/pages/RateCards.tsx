@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { CreditCard, Pencil, Trash2, Loader2 } from "lucide-react";
 
 export default function RateCards() {
-  const { data: rates, isLoading } = useRateCards();
+  const { data: rates, isLoading, error, refetch } = useRateCards();
   const createRate = useCreateRateCard();
   const updateRate = useUpdateRateCard();
   const deleteRate = useDeleteRateCard();
@@ -88,6 +88,12 @@ export default function RateCards() {
     <>
       <PageHeader title="Rate Cards" searchPlaceholder="Search rates..." actionLabel="New Rate Card" onAction={() => setDialogOpen(true)} onSearch={setSearch} />
       <div className="flex-1 overflow-auto p-6 space-y-6">
+        {error ? (
+          <div className="p-6 text-center">
+            <p className="text-destructive">{error.message}</p>
+            <Button onClick={() => refetch()} className="mt-4">Retry</Button>
+          </div>
+        ) : (
         <Card>
           <CardContent className="p-0">
             {isLoading ? (
@@ -129,6 +135,7 @@ export default function RateCards() {
             )}
           </CardContent>
         </Card>
+        )}
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

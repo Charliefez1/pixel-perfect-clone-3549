@@ -42,6 +42,7 @@ export default function PortalView() {
   const [org, setOrg] = useState<PortalOrg | null>(null);
   const [projects, setProjects] = useState<PortalProject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<PortalProject | null>(null);
   const [invoices, setInvoices] = useState<PortalInvoice[]>([]);
   const { data: portalMessages } = usePortalMessages(orgId);
@@ -55,9 +56,14 @@ export default function PortalView() {
       supabase.from("projects").select("id, name, status, neuro_phase, budget, description").eq("organisation_id", orgId).order("created_at", { ascending: false }),
       supabase.from("invoices").select("id, invoice_number, status, total, issue_date, due_date, paid_date").eq("organisation_id", orgId).order("created_at", { ascending: false }),
     ]).then(([orgRes, projRes, invRes]) => {
+      if (orgRes.error) throw orgRes.error;
       if (orgRes.data) setOrg(orgRes.data);
       if (projRes.data) setProjects(projRes.data as PortalProject[]);
       if (invRes.data) setInvoices(invRes.data as PortalInvoice[]);
+      setError(null);
+      setLoading(false);
+    }).catch((e) => {
+      setError(e.message || "Failed to load portal data");
       setLoading(false);
     });
   }, [orgId]);
@@ -68,6 +74,17 @@ export default function PortalView() {
         <div className="w-full max-w-4xl px-4 space-y-6">
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-64 w-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <p className="text-destructive">{error}</p>
+          <Button onClick={() => { setLoading(true); setError(null); window.location.reload(); }} className="mt-4">Retry</Button>
         </div>
       </div>
     );
