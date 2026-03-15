@@ -276,20 +276,13 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Row 3: Charts (lazy loaded) */}
-      <Suspense fallback={
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card><CardContent className="p-4"><Skeleton className="h-[220px] w-full" /></CardContent></Card>
-          <Card><CardContent className="p-4"><Skeleton className="h-[220px] w-full" /></CardContent></Card>
-        </div>
-      }>
-        <DashboardCharts
-          neuroData={neuroData}
-          completionRate={completionRate}
-          doneTasks={doneTasks}
-          totalTasks={totalTasks}
-        />
-      </Suspense>
+      {/* Row 3: Charts */}
+      <DashboardCharts
+        neuroData={neuroData}
+        completionRate={completionRate}
+        doneTasks={doneTasks}
+        totalTasks={totalTasks}
+      />
 
       {/* Row 4: Upcoming Sessions This Week */}
       <Card>
