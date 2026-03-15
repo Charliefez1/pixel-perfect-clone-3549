@@ -32,7 +32,7 @@ export function NotesTab({ projectId }: NotesTabProps) {
       return;
     }
     createNote.mutate(
-      { project_id: projectId, title: newTitle || null, body: newBody },
+      { project_id: projectId, title: newTitle || "", body: newBody },
       {
         onSuccess: () => {
           toast.success("Note added");
@@ -47,7 +47,7 @@ export function NotesTab({ projectId }: NotesTabProps) {
   const startEditing = (note: ProjectNote) => {
     setEditingId(note.id);
     setEditTitle(note.title || "");
-    setEditBody(note.body);
+    setEditBody(note.body || "");
   };
 
   const handleUpdate = () => {
@@ -64,7 +64,7 @@ export function NotesTab({ projectId }: NotesTabProps) {
   };
 
   const handleDelete = (id: string) => {
-    deleteNote.mutate(id, {
+    deleteNote.mutate({ id }, {
       onSuccess: () => toast.success("Note deleted"),
     });
   };
