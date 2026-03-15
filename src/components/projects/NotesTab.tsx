@@ -64,7 +64,7 @@ export function NotesTab({ projectId }: NotesTabProps) {
   };
 
   const handleDelete = (id: string) => {
-    deleteNote.mutate(id, {
+    deleteNote.mutate({ id }, {
       onSuccess: () => toast.success("Note deleted"),
     });
   };

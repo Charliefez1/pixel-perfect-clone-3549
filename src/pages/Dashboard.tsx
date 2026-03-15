@@ -271,7 +271,8 @@ export default function Dashboard() {
                   </div>
                     <Badge variant="secondary" className="text-[10px]">{d.status}</Badge>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>

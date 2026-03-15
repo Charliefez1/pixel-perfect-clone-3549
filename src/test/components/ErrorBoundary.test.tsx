@@ -49,7 +49,7 @@ describe("ErrorBoundary", () => {
   });
 
   it("displays fallback message when error has no message", () => {
-    function ThrowEmpty() {
+    function ThrowEmpty(): JSX.Element {
       throw new Error("");
     }
 

@@ -69,7 +69,7 @@ export default function Deliveries() {
   );
 
   const activeDeliveries = deliveries?.filter((d) => d.status !== "complete").length || 0;
-  const avgSatisfaction = deliveries?.filter((d) => d.satisfaction_score).reduce((sum, d) => sum + (d.satisfaction_score || 0), 0) / (deliveries?.filter((d) => d.satisfaction_score).length || 1) || 0;
+  const avgSatisfaction = (deliveries?.filter((d) => d.satisfaction_score) ?? []).reduce((sum, d) => sum + (d.satisfaction_score || 0), 0) / ((deliveries?.filter((d) => d.satisfaction_score)?.length) || 1) || 0;
 
   const handleDragStart = useCallback((e: React.DragEvent, id: string) => {
     setDraggedId(id);
