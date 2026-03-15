@@ -32,7 +32,7 @@ export function NotesTab({ projectId }: NotesTabProps) {
       return;
     }
     createNote.mutate(
-      { project_id: projectId, title: newTitle || null, body: newBody },
+      { project_id: projectId, title: newTitle || "", body: newBody },
       {
         onSuccess: () => {
           toast.success("Note added");
