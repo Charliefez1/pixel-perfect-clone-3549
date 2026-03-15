@@ -257,11 +257,13 @@ export default function Dashboard() {
               <p className="text-sm text-muted-foreground py-4">No deliveries scheduled this week.</p>
             ) : (
               <div className="space-y-2">
-                {upcomingDeliveries.slice(0, 5).map((d) => (
+                {upcomingDeliveries.slice(0, 5).map((d) => {
+                  const dateStr = d.delivery_date ? d.delivery_date : "";
+                  return (
                   <div key={d.id} className="flex items-center gap-3 p-2 rounded-md hover:bg-accent/50 transition-colors">
                     <div className="text-center shrink-0 w-12">
-                      <p className="text-xs text-muted-foreground">{format(parseISO(d.delivery_date), "EEE")}</p>
-                      <p className="text-lg font-bold">{format(parseISO(d.delivery_date), "d")}</p>
+                      <p className="text-xs text-muted-foreground">{dateStr ? format(parseISO(dateStr), "EEE") : ""}</p>
+                      <p className="text-lg font-bold">{dateStr ? format(parseISO(dateStr), "d") : ""}</p>
                     </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{d.title}</p>
