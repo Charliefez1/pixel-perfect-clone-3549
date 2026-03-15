@@ -1,4 +1,4 @@
-import { useMemo, lazy, Suspense } from "react";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FolderKanban, CheckSquare, Receipt, Calendar, AlertTriangle, PieChart, ArrowRight, Plus, FileText } from "lucide-react";
@@ -16,9 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-
-// Lazy-load heavy chart components
-const DashboardCharts = lazy(() => import("@/components/dashboard/DashboardCharts"));
+import DashboardCharts from "@/components/dashboard/DashboardCharts";
 
 const neuroColors = [
   { name: "Needs", color: "hsl(210, 100%, 61%)" },
@@ -109,7 +107,7 @@ export default function Dashboard() {
         items.push({
           type: "session",
           title: s.title,
-          org: s.projects?.organisations?.name || s.projects?.name || "",
+          org: s.projects?.organisations?.name || s.projects?.name || "N/A",
           date: parseISO(s.session_date),
         });
       }
@@ -265,10 +263,10 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{format(parseISO(d.delivery_date), "EEE")}</p>
                       <p className="text-lg font-bold">{format(parseISO(d.delivery_date), "d")}</p>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{d.title}</p>
-                      <p className="text-xs text-muted-foreground">{d.organisations?.name || d.projects?.name || ""}</p>
-                    </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{d.title}</p>
+                    <p className="text-xs text-muted-foreground">{d.organisations?.name || d.projects?.name || "N/A"}</p>
+                  </div>
                     <Badge variant="secondary" className="text-[10px]">{d.status}</Badge>
                   </div>
                 ))}
@@ -278,20 +276,13 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Row 3: Charts (lazy loaded) */}
-      <Suspense fallback={
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card><CardContent className="p-4"><Skeleton className="h-[220px] w-full" /></CardContent></Card>
-          <Card><CardContent className="p-4"><Skeleton className="h-[220px] w-full" /></CardContent></Card>
-        </div>
-      }>
-        <DashboardCharts
-          neuroData={neuroData}
-          completionRate={completionRate}
-          doneTasks={doneTasks}
-          totalTasks={totalTasks}
-        />
-      </Suspense>
+      {/* Row 3: Charts */}
+      <DashboardCharts
+        neuroData={neuroData}
+        completionRate={completionRate}
+        doneTasks={doneTasks}
+        totalTasks={totalTasks}
+      />
 
       {/* Row 4: Upcoming Sessions This Week */}
       <Card>

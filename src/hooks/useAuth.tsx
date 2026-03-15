@@ -44,19 +44,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      // Prefer role from profiles table (set by security migration), fallback to user_roles
-      let role: AppRole = (profileData.role as AppRole) || 'client';
-      if (!profileData.role) {
-        try {
-          const { data: roleData, error: roleError } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", userId)
-            .maybeSingle();
-          if (!roleError && roleData?.role) role = roleData.role as AppRole;
-        } catch {
-          // table doesn't exist or network issue — keep default
-        }
+      // Fetch role from user_roles table
+      let role: AppRole = 'client';
+      try {
+        const { data: roleData, error: roleError } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (!roleError && roleData?.role) role = roleData.role as AppRole;
+      } catch {
+        // table doesn't exist or network issue — keep default
       }
 
       return { ...profileData, role } as UserProfile;
