@@ -1,4 +1,4 @@
-import { useMemo, lazy, Suspense } from "react";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FolderKanban, CheckSquare, Receipt, Calendar, AlertTriangle, PieChart, ArrowRight, Plus, FileText } from "lucide-react";
@@ -16,9 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-
-// Lazy-load heavy chart components
-const DashboardCharts = lazy(() => import("@/components/dashboard/DashboardCharts"));
+import DashboardCharts from "@/components/dashboard/DashboardCharts";
 
 const neuroColors = [
   { name: "Needs", color: "hsl(210, 100%, 61%)" },
