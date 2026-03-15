@@ -107,7 +107,7 @@ export default function Dashboard() {
         items.push({
           type: "session",
           title: s.title,
-          org: s.projects?.organisations?.name || s.projects?.name || "",
+          org: s.projects?.organisations?.name || s.projects?.name || "N/A",
           date: parseISO(s.session_date),
         });
       }
