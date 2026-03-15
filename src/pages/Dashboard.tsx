@@ -263,10 +263,10 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{format(parseISO(d.delivery_date), "EEE")}</p>
                       <p className="text-lg font-bold">{format(parseISO(d.delivery_date), "d")}</p>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{d.title}</p>
-                      <p className="text-xs text-muted-foreground">{d.organisations?.name || d.projects?.name || ""}</p>
-                    </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{d.title}</p>
+                    <p className="text-xs text-muted-foreground">{d.organisations?.name || d.projects?.name || "N/A"}</p>
+                  </div>
                     <Badge variant="secondary" className="text-[10px]">{d.status}</Badge>
                   </div>
                 ))}
