@@ -47,7 +47,7 @@ export function NotesTab({ projectId }: NotesTabProps) {
   const startEditing = (note: ProjectNote) => {
     setEditingId(note.id);
     setEditTitle(note.title || "");
-    setEditBody(note.body);
+    setEditBody(note.body || "");
   };
 
   const handleUpdate = () => {
